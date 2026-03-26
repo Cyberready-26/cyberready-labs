@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Lab 2 — Trace Rahul's Request | CyberReady India</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:       #0a0e1a;
+    --surface:  #111827;
+    --panel:    #1a2236;
+    --border:   #2a3a52;
+    --accent:   #3b82f6;
+    --accent2:  #06b6d4;
+    --green:    #10b981;
+    --amber:    #f59e0b;
+    --red:      #ef4444;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --mono:     'JetBrains Mono', monospace;
+    --sans:     'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .topbar-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .06em;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── HEADER ── */
+  .lab-header {
+    margin-bottom: 40px;
+  }
+  .lab-badge {
+    display: inline-block;
+    background: rgba(59,130,246,.15);
+    border: 1px solid rgba(59,130,246,.35);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .lab-title {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #f8fafc;
+    margin-bottom: 10px;
+  }
+  .lab-subtitle {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* ── SECTION BLOCKS ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 14px;
+  }
+  .section p { color: var(--text); margin-bottom: 12px; }
+  .section p:last-child { margin-bottom: 0; }
+
+  /* ── STORY BLOCK ── */
+  .story-block {
+    background: var(--panel);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-style: italic;
+    color: #cbd5e1;
+    font-size: 14.5px;
+  }
+
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .arch-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 24px;
+    margin-bottom: 24px;
+  }
+  .arch-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+  }
+
+  .arch-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 16px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--panel);
+    width: 140px;
+    transition: all .2s ease;
+    position: relative;
+    user-select: none;
+  }
+  .arch-node:hover {
+    border-color: var(--accent);
+    background: rgba(59,130,246,.08);
+    transform: translateY(-2px);
+  }
+  .arch-node.active {
+    border-color: var(--accent);
+    background: rgba(59,130,246,.15);
+    box-shadow: 0 0 18px rgba(59,130,246,.3);
+  }
+  .arch-node.visited {
+    border-color: var(--green);
+    background: rgba(16,185,129,.08);
+  }
+  .arch-node.visited .node-icon { opacity: 1; }
+  .arch-node.locked {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+  .arch-node.locked:hover { transform: none; border-color: var(--border); background: var(--panel); }
+
+  .node-icon { font-size: 28px; margin-bottom: 8px; }
+  .node-name {
+    font-weight: 600;
+    font-size: 12.5px;
+    text-align: center;
+    color: #f1f5f9;
+    line-height: 1.3;
+  }
+  .node-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  .visited-check {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: var(--green);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #fff;
+  }
+  .visited .visited-check { display: flex; }
+
+  .arch-arrow {
+    color: var(--muted);
+    font-size: 22px;
+    padding: 0 6px;
+    flex-shrink: 0;
+    transition: color .3s;
+  }
+  .arch-arrow.lit { color: var(--accent); }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-top: 20px;
+    display: none;
+    animation: fadeSlide .25s ease;
+  }
+  .detail-panel.show { display: block; }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .detail-icon { font-size: 26px; }
+  .detail-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .detail-layer {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .detail-body { color: #cbd5e1; font-size: 14.5px; }
+  .detail-body strong { color: #f8fafc; }
+
+  .detail-analogy {
+    background: rgba(245,158,11,.08);
+    border: 1px solid rgba(245,158,11,.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 13.5px;
+    color: #fde68a;
+  }
+
+  .detail-next-btn {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .detail-next-btn:hover { background: #2563eb; }
+  .detail-next-btn:disabled { background: var(--muted); cursor: default; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width .4s ease;
+    width: 0%;
+  }
+  .progress-pct {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ── QUIZ ── */
+  .quiz-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: none;
+  }
+  .quiz-section.show { display: block; }
+
+  .quiz-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .quiz-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .quiz-counter {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .question-block {
+    display: none;
+  }
+  .question-block.show { display: block; }
+
+  .question-text {
+    font-size: 15.5px;
+    font-weight: 500;
+    color: #f1f5f9;
+    margin-bottom: 20px;
+    line-height: 1.55;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .option-btn {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 18px;
+    text-align: left;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    cursor: pointer;
+    transition: all .18s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(59,130,246,.08);
+  }
+  .option-btn.correct {
+    border-color: var(--green);
+    background: rgba(16,185,129,.12);
+    color: #a7f3d0;
+  }
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: rgba(239,68,68,.1);
+    color: #fca5a5;
+  }
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .correct .option-letter { background: var(--green); color: #fff; }
+  .wrong .option-letter   { background: var(--red);   color: #fff; }
+
+  .feedback-box {
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 14px;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb {
+    background: rgba(16,185,129,.1);
+    border: 1px solid rgba(16,185,129,.3);
+    color: #a7f3d0;
+  }
+  .feedback-box.wrong-fb {
+    background: rgba(239,68,68,.1);
+    border: 1px solid rgba(239,68,68,.3);
+    color: #fca5a5;
+  }
+
+  .quiz-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .next-q-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .next-q-btn:hover { background: #2563eb; }
+  .next-q-btn:disabled { background: var(--muted); cursor: default; }
+
+  /* ── RESULT ── */
+  .result-section {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 32px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .result-section.show { display: block; }
+  .result-icon { font-size: 56px; margin-bottom: 16px; }
+  .result-score {
+    font-size: 52px;
+    font-weight: 800;
+    color: #f8fafc;
+    font-family: var(--mono);
+    margin-bottom: 6px;
+  }
+  .result-label {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+  .result-msg {
+    font-size: 16px;
+    max-width: 500px;
+    margin: 0 auto 28px;
+    color: #cbd5e1;
+    line-height: 1.6;
+  }
+  .retry-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .retry-btn:hover { background: var(--accent); color: #fff; }
+
+  /* ── INSTRUCTION TIP ── */
+  .tip {
+    background: rgba(6,182,212,.07);
+    border: 1px solid rgba(6,182,212,.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: #a5f3fc;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+
+  /* responsive */
+  @media (max-width: 640px) {
+    .arch-node { width: 110px; padding: 12px 8px; }
+    .arch-arrow { font-size: 18px; }
+    .node-name { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">CyberReady India</div>
+  <div class="topbar-label">Module 1 · Concept Lab 2</div>
+</div>
+
+<div class="wrapper">
+
+  <!-- LAB HEADER -->
+  <div class="lab-header">
+    <div class="lab-badge">Concept Lab</div>
+    <h1 class="lab-title">Trace Rahul's Request</h1>
+    <div class="lab-subtitle">Module 1 — Systems Thinking &amp; Digital Infrastructure &nbsp;|&nbsp; 5-question quiz at the end</div>
+  </div>
+
+  <!-- STORY -->
+  <div class="story-block">
+    "It's 9:43 AM. Rahul opens the NorthBridge mobile banking app on his phone and taps <strong>Check Balance</strong>. In the next few seconds, his request will travel through several different systems before a number appears on his screen. Your job is to follow that journey — one system at a time."
+  </div>
+
+  <!-- INTRO -->
+  <div class="section">
+    <div class="section-title">Your Mission</div>
+    <p>Click each system component in the architecture diagram below, in order from left to right. Read what each component does before moving to the next one. You cannot skip ahead — each step unlocks only when the previous one is complete.</p>
+    <p>When you have visited all five components, the quiz will unlock. Complete the quiz to finish this lab.</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap">
+    <div class="progress-label">Trace progress</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-pct" id="progressPct">0 / 5</div>
+  </div>
+
+  <!-- ARCHITECTURE DIAGRAM -->
+  <div class="arch-wrapper">
+    <div class="arch-title">NorthBridge Banking Infrastructure — Rahul's Request Path</div>
+
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <div>Click each component to learn what it does. Components unlock in order — start with <strong>Rahul's Device</strong>.</div>
+    </div>
+
+    <div class="arch-flow" id="archFlow">
+
+      <div class="arch-node active" id="node-device" onclick="openNode('device')">
+        <div class="visited-check">✓</div>
+        <div class="node-icon">📱</div>
+        <div class="node-name">Rahul's Device</div>
+        <div class="node-sub">Step 1</div>
+      </div>
+
+      <div class="arch-arrow" id="arrow-1">→</div>
+
+      <div class="arch-node locked" id="node-firewall" onclick="openNode('firewall')">
+        <div class="visited-check">✓</div>
+        <div class="node-icon">🛡️</div>
+        <div class="node-name">Firewall</div>
+        <div class="node-sub">Step 2</div>
+      </div>
+
+      <div class="arch-arrow" id="arrow-2">→</div>
+
+      <div class="arch-node locked" id="node-lb" onclick="openNode('lb')">
+        <div class="visited-check">✓</div>
+        <div class="node-icon">⚖️</div>
+        <div class="node-name">Load Balancer</div>
+        <div class="node-sub">Step 3</div>
+      </div>
+
+      <div class="arch-arrow" id="arrow-3">→</div>
+
+      <div class="arch-node locked" id="node-app" onclick="openNode('app')">
+        <div class="visited-check">✓</div>
+        <div class="node-icon">🖥️</div>
+        <div class="node-name">App Server</div>
+        <div class="node-sub">Step 4</div>
+      </div>
+
+      <div class="arch-arrow" id="arrow-4">→</div>
+
+      <div class="arch-node locked" id="node-db" onclick="openNode('db')">
+        <div class="visited-check">✓</div>
+        <div class="node-icon">🗄️</div>
+        <div class="node-name">Database</div>
+        <div class="node-sub">Step 5</div>
+      </div>
+
+    </div>
+
+    <!-- DETAIL PANEL -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        <div class="detail-icon" id="dIcon"></div>
+        <div>
+          <div class="detail-name" id="dName"></div>
+          <div class="detail-layer" id="dLayer"></div>
+        </div>
+      </div>
+      <div class="detail-body" id="dBody"></div>
+      <div class="detail-analogy" id="dAnalogy"></div>
+      <button class="detail-next-btn" id="detailNextBtn" onclick="markVisited()">
+        <span id="nextBtnText">Got it — Next Step →</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- QUIZ SECTION -->
+  <div class="quiz-section" id="quizSection">
+    <div class="quiz-header-row">
+      <div class="quiz-title">Quiz — Trace Rahul's Request</div>
+      <div class="quiz-counter" id="quizCounter">Question 1 of 5</div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="question-block show" id="q1">
+      <div class="question-text">1. Rahul taps "Check Balance" in his banking app. What does his device do first?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(1,'A')" data-q="1" data-opt="A">
+          <span class="option-letter">A</span>
+          It stores the balance request in the database directly.
+        </button>
+        <button class="option-btn" onclick="answer(1,'B')" data-q="1" data-opt="B">
+          <span class="option-letter">B</span>
+          It sends a request message across the internet toward the bank's systems.
+        </button>
+        <button class="option-btn" onclick="answer(1,'C')" data-q="1" data-opt="C">
+          <span class="option-letter">C</span>
+          It checks the balance from a local file saved on the phone.
+        </button>
+        <button class="option-btn" onclick="answer(1,'D')" data-q="1" data-opt="D">
+          <span class="option-letter">D</span>
+          It contacts the load balancer directly, bypassing all security systems.
+        </button>
+      </div>
+      <div class="feedback-box" id="fb1"></div>
+      <div class="quiz-nav">
+        <div></div>
+        <button class="next-q-btn" id="nxt1" onclick="nextQ(2)" disabled>Next Question →</button>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <div class="question-text">2. The request arrives at NorthBridge's network boundary. What is the firewall's job at this point?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(2,'A')" data-q="2" data-opt="A">
+          <span class="option-letter">A</span>
+          To speed up the request by sending it directly to the database.
+        </button>
+        <button class="option-btn" onclick="answer(2,'B')" data-q="2" data-opt="B">
+          <span class="option-letter">B</span>
+          To inspect the request and decide whether it is allowed to pass into the bank's systems.
+        </button>
+        <button class="option-btn" onclick="answer(2,'C')" data-q="2" data-opt="C">
+          <span class="option-letter">C</span>
+          To send a copy of the request to the monitoring system.
+        </button>
+        <button class="option-btn" onclick="answer(2,'D')" data-q="2" data-opt="D">
+          <span class="option-letter">D</span>
+          To verify Rahul's account balance before forwarding the request.
+        </button>
+      </div>
+      <div class="feedback-box" id="fb2"></div>
+      <div class="quiz-nav">
+        <div></div>
+        <button class="next-q-btn" id="nxt2" onclick="nextQ(3)" disabled>Next Question →</button>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <div class="question-text">3. NorthBridge runs multiple app servers. Why does the load balancer exist in the architecture?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(3,'A')" data-q="3" data-opt="A">
+          <span class="option-letter">A</span>
+          To store customer account data so the database does not have to.
+        </button>
+        <button class="option-btn" onclick="answer(3,'B')" data-q="3" data-opt="B">
+          <span class="option-letter">B</span>
+          To block suspicious requests before they reach the app servers.
+        </button>
+        <button class="option-btn" onclick="answer(3,'C')" data-q="3" data-opt="C">
+          <span class="option-letter">C</span>
+          To distribute incoming requests across multiple app servers so no single server is overwhelmed.
+        </button>
+        <button class="option-btn" onclick="answer(3,'D')" data-q="3" data-opt="D">
+          <span class="option-letter">D</span>
+          To encrypt Rahul's request before it enters the internal network.
+        </button>
+      </div>
+      <div class="feedback-box" id="fb3"></div>
+      <div class="quiz-nav">
+        <div></div>
+        <button class="next-q-btn" id="nxt3" onclick="nextQ(4)" disabled>Next Question →</button>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <div class="question-text">4. The app server receives Rahul's balance request. What does the app server do that the other components cannot do?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(4,'A')" data-q="4" data-opt="A">
+          <span class="option-letter">A</span>
+          It blocks the request if it looks suspicious.
+        </button>
+        <button class="option-btn" onclick="answer(4,'B')" data-q="4" data-opt="B">
+          <span class="option-letter">B</span>
+          It runs the banking business logic — verifying Rahul's identity and deciding what data to retrieve.
+        </button>
+        <button class="option-btn" onclick="answer(4,'C')" data-q="4" data-opt="C">
+          <span class="option-letter">C</span>
+          It permanently stores the balance result for future use.
+        </button>
+        <button class="option-btn" onclick="answer(4,'D')" data-q="4" data-opt="D">
+          <span class="option-letter">D</span>
+          It distributes the request to multiple databases in parallel.
+        </button>
+      </div>
+      <div class="feedback-box" id="fb4"></div>
+      <div class="quiz-nav">
+        <div></div>
+        <button class="next-q-btn" id="nxt4" onclick="nextQ(5)" disabled>Next Question →</button>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <div class="question-text">5. The app server queries the database. Why is the database the most protected component in the entire architecture?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(5,'A')" data-q="5" data-opt="A">
+          <span class="option-letter">A</span>
+          Because it is the fastest component and must never slow down.
+        </button>
+        <button class="option-btn" onclick="answer(5,'B')" data-q="5" data-opt="B">
+          <span class="option-letter">B</span>
+          Because it is directly connected to the internet and exposed to attacks.
+        </button>
+        <button class="option-btn" onclick="answer(5,'C')" data-q="5" data-opt="C">
+          <span class="option-letter">C</span>
+          Because it stores all customer account balances, transaction history, and personal data — a breach here is catastrophic.
+        </button>
+        <button class="option-btn" onclick="answer(5,'D')" data-q="5" data-opt="D">
+          <span class="option-letter">D</span>
+          Because it runs the business logic that processes all transactions.
+        </button>
+      </div>
+      <div class="feedback-box" id="fb5"></div>
+      <div class="quiz-nav">
+        <div></div>
+        <button class="next-q-btn" id="nxt5" onclick="showResult()" disabled>See My Result →</button>
+      </div>
+    </div>
+
+  </div><!-- /quiz-section -->
+
+  <!-- RESULT -->
+  <div class="result-section" id="resultSection">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-label">out of 5 questions</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="retry-btn" onclick="retryQuiz()">Retry Quiz</button>
+  </div>
+
+</div><!-- /wrapper -->
+
+<script>
+// ── NODE DATA ──────────────────────────────────────────────────────────────────
+const nodes = {
+  device: {
+    icon: '📱',
+    name: "Rahul's Device",
+    layer: 'Step 1 — Origin of the Request',
+    body: `<p>Rahul is using the <strong>NorthBridge mobile banking app</strong> on his smartphone. When he taps <em>Check Balance</em>, his device packages that action into a <strong>request message</strong> and sends it out over the internet toward NorthBridge's systems.</p>
+           <p>The device does not know his balance — it cannot. It only knows how to <strong>ask</strong>. The answer will come back from systems deep inside the bank.</p>
+           <p>Every customer action — checking a balance, transferring funds, viewing a statement — starts exactly this way. A device sends a request. Systems respond.</p>`,
+    analogy: `🏦 Analogy: Think of Rahul's phone as a customer standing outside the bank, sliding a note through a slot that says "I'd like to know my balance." The bank's internal systems will process that note and slide an answer back.`
+  },
+  firewall: {
+    icon: '🛡️',
+    name: 'Firewall',
+    layer: 'Step 2 — Security Checkpoint at the Network Boundary',
+    body: `<p>Before Rahul's request can enter the bank's internal network, it must pass through the <strong>firewall</strong>. The firewall sits at the boundary between the open internet and the bank's protected systems.</p>
+           <p>It inspects every packet of data arriving from the internet and applies a set of <strong>rules</strong>: Is this request coming from an allowed source? Is it the right type of traffic? Does it look like an attack?</p>
+           <p>Legitimate requests — like Rahul's balance check — are allowed through. Suspicious or malformed traffic is <strong>blocked and logged</strong>. Without this checkpoint, anyone on the internet could attempt to communicate directly with the bank's internal systems.</p>`,
+    analogy: `🛂 Analogy: Think of the firewall as the security checkpoint at the entrance of a bank building — a guard who checks your ID and the type of business you are there for before allowing you inside. Authorised visitors pass through. Unknown or suspicious visitors are turned away.`
+  },
+  lb: {
+    icon: '⚖️',
+    name: 'Load Balancer',
+    layer: 'Step 3 — Traffic Distribution',
+    body: `<p>Once the request passes the firewall, it reaches the <strong>load balancer</strong>. NorthBridge does not run just one app server — it runs several, so the bank can serve thousands of customers simultaneously.</p>
+           <p>The load balancer's job is to receive every incoming request and <strong>decide which app server should handle it</strong>. It continuously monitors how busy each server is and routes each request to one that has capacity — keeping the workload evenly spread.</p>
+           <p>If one app server were to fail, the load balancer automatically stops sending requests to it and routes traffic to the healthy ones instead. This is what makes the banking service <strong>highly available</strong> — a single server failure does not take down the entire system.</p>`,
+    analogy: `🛒 Analogy: Think of the load balancer as a supermarket manager standing at the entrance directing each customer to the shortest checkout queue. No single cashier gets overwhelmed, and if one till breaks down, customers are simply redirected to the others.`
+  },
+  app: {
+    icon: '🖥️',
+    name: 'App Server',
+    layer: 'Step 4 — Business Logic Processing',
+    body: `<p>This is where the actual banking work happens. The <strong>application server</strong> receives Rahul's request and begins processing it:</p>
+           <p><strong>1. Authentication</strong> — Is this really Rahul? Was his session token valid when he logged in?<br>
+           <strong>2. Authorisation</strong> — Is Rahul allowed to view this account?<br>
+           <strong>3. Data retrieval</strong> — The app server sends a query to the database asking for Rahul's current balance.</p>
+           <p>Once it has the balance, it packages the result into a response and sends it back. The app server <strong>never stores data permanently</strong> — it processes requests and relies entirely on the database for the actual records.</p>
+           <p>Every transaction, every login, every page load produces activity on the app server — making it the <strong>busiest and most closely monitored</strong> component in the architecture.</p>`,
+    analogy: `👩‍💼 Analogy: Think of the app server as the bank teller behind the counter. The teller receives your request, checks your ID, walks to the filing room (the database) to retrieve your records, and hands you the result. The teller processes the work — the filing room stores the records.`
+  },
+  db: {
+    icon: '🗄️',
+    name: 'Database',
+    layer: 'Step 5 — Persistent Data Storage',
+    body: `<p>The <strong>database</strong> is the innermost and most protected component in the entire architecture. It holds everything that matters: every customer's <strong>account balance, transaction history, personal details, and audit records</strong>.</p>
+           <p>Only the app server is allowed to communicate with the database — no other system, and no human, can connect to it directly. Every piece of data stored in it is <strong>encrypted at rest</strong>, meaning that even if someone physically stole the storage hardware, they could not read the data without the encryption keys.</p>
+           <p>When the app server queries the balance, the database retrieves the correct record and returns it. The app server carries the result back through the chain to Rahul's phone.</p>
+           <p><strong>The full journey complete:</strong> Device → Firewall → Load Balancer → App Server → Database → App Server → Rahul's screen.</p>`,
+    analogy: `🏦 Analogy: Think of the database as the bank's physical vault — the most secure room in the building, accessible only to authorised staff, holding the most valuable records. No customer ever enters the vault directly. The teller (app server) retrieves what you need on your behalf.`
+  }
+};
+
+// ── CORRECT ANSWERS ────────────────────────────────────────────────────────────
+const correct = { 1:'B', 2:'B', 3:'C', 4:'B', 5:'C' };
+const feedbacks = {
+  1: { B: "✓ Correct. Rahul's device sends a request message across the internet. The balance data lives on the bank's servers — the device only initiates the request.", wrong: "Not quite. The device cannot directly access the database or check a local file. It sends a request across the internet toward the bank's systems, which process the request and return the result." },
+  2: { B: "✓ Correct. The firewall's role is to inspect traffic at the network boundary and decide what is allowed in. It is the first line of defence between the internet and internal systems.", wrong: "Not quite. The firewall's job is inspection and access control — deciding what traffic is allowed to enter the internal network. It does not process requests, store data, or route traffic to specific servers." },
+  3: { C: "✓ Correct. The load balancer distributes requests across multiple app servers. This prevents any single server from being overwhelmed and keeps the service available even if one server fails.", wrong: "Not quite. The load balancer's specific role is distributing incoming requests across multiple servers — ensuring no single server handles too much traffic and that the service stays available even if one server fails." },
+  4: { B: "✓ Correct. The app server runs the banking business logic — it verifies who Rahul is, checks what he is authorised to see, and retrieves the right data from the database.", wrong: "Not quite. The app server is the component that processes the actual banking work — authentication, authorisation, and data retrieval. The other components handle routing, security boundary enforcement, and storage." },
+  5: { C: "✓ Correct. The database holds the bank's most sensitive data: every customer's balance, transaction history, and personal records. A breach here is catastrophic, which is why it sits behind multiple layers of protection and only the app server can query it.", wrong: "Not quite. The database is the most protected because it stores the 'crown jewels' — all customer financial and personal data. It does not face the internet, and only the app server is allowed to communicate with it." }
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+const order    = ['device','firewall','lb','app','db'];
+let visited    = [];
+let currentNode= 'device';
+let scores     = {};
+let currentQ   = 1;
+
+// ── OPEN NODE ─────────────────────────────────────────────────────────────────
+function openNode(id) {
+  const idx = order.indexOf(id);
+  const prevId = idx > 0 ? order[idx-1] : null;
+  if (idx > 0 && !visited.includes(prevId)) return; // locked
+  if (document.getElementById('node-' + id).classList.contains('locked')) return;
+
+  currentNode = id;
+  const d = nodes[id];
+
+  // update active state
+  order.forEach(n => {
+    const el = document.getElementById('node-' + n);
+    el.classList.remove('active');
+  });
+  document.getElementById('node-' + id).classList.add('active');
+
+  // fill panel
+  document.getElementById('dIcon').textContent  = d.icon;
+  document.getElementById('dName').textContent  = d.name;
+  document.getElementById('dLayer').textContent = d.layer;
+  document.getElementById('dBody').innerHTML    = d.body;
+  document.getElementById('dAnalogy').textContent = d.analogy;
+
+  const isLast = id === 'db';
+  document.getElementById('nextBtnText').textContent = isLast ? 'Complete — Start Quiz ✓' : 'Got it — Next Step →';
+
+  const panel = document.getElementById('detailPanel');
+  panel.classList.remove('show');
+  void panel.offsetWidth; // reflow for animation
+  panel.classList.add('show');
+
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── MARK VISITED ───────────────────────────────────────────────────────────────
+function markVisited() {
+  const id  = currentNode;
+  const idx = order.indexOf(id);
+
+  if (!visited.includes(id)) {
+    visited.push(id);
+    document.getElementById('node-' + id).classList.add('visited');
+    document.getElementById('node-' + id).classList.remove('active');
+
+    // light up arrow
+    if (idx < order.length - 1) {
+      document.getElementById('arrow-' + (idx + 1)).classList.add('lit');
+    }
+
+    // unlock next
+    if (idx < order.length - 1) {
+      const nextId = order[idx + 1];
+      const nextEl = document.getElementById('node-' + nextId);
+      nextEl.classList.remove('locked');
+      nextEl.classList.add('active');
+    }
+  }
+
+  updateProgress();
+
+  // auto-open next
+  if (idx < order.length - 1) {
+    openNode(order[idx + 1]);
+  } else {
+    // all visited — unlock quiz
+    document.getElementById('detailPanel').classList.remove('show');
+    document.getElementById('quizSection').classList.add('show');
+    document.getElementById('quizSection').scrollIntoView({ behavior:'smooth' });
+  }
+}
+
+function updateProgress() {
+  const pct = (visited.length / 5) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent   = visited.length + ' / 5';
+}
+
+// ── QUIZ ───────────────────────────────────────────────────────────────────────
+function answer(q, opt) {
+  if (scores[q] !== undefined) return; // already answered
+
+  const btns = document.querySelectorAll(`[data-q="${q}"]`);
+  btns.forEach(b => {
+    b.disabled = true;
+    if (b.dataset.opt === correct[q]) b.classList.add('correct');
+    if (b.dataset.opt === opt && opt !== correct[q]) b.classList.add('wrong');
+  });
+
+  const isRight = opt === correct[q];
+  scores[q] = isRight ? 1 : 0;
+
+  const fb = document.getElementById('fb' + q);
+  fb.textContent  = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
+  fb.className    = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('nxt' + q).disabled = false;
+
+  document.getElementById('quizCounter').textContent = `Question ${q} of 5`;
+}
+
+function nextQ(n) {
+  document.getElementById('q' + (n-1)).classList.remove('show');
+  document.getElementById('q' + n).classList.add('show');
+  document.getElementById('quizCounter').textContent = `Question ${n} of 5`;
+  currentQ = n;
+}
+
+function showResult() {
+  document.getElementById('q5').classList.remove('show');
+  document.getElementById('quizSection').classList.remove('show');
+
+  const total = Object.values(scores).reduce((a,b) => a+b, 0);
+  const rs    = document.getElementById('resultSection');
+  rs.classList.add('show');
+
+  document.getElementById('resultScore').textContent = `${total} / 5`;
+
+  let icon, msg;
+  if (total === 5) {
+    icon = '🏆';
+    msg  = "Perfect score. You have traced Rahul's request through all five components and can explain what each one does. You are ready for Lesson 3.";
+  } else if (total >= 3) {
+    icon = '✅';
+    msg  = "Good work. You understand the core architecture. Review the components you missed, then move on to Lesson 3.";
+  } else {
+    icon = '📖';
+    msg  = "A few gaps to close. Work back through the architecture diagram — click each component and re-read the explanation — then try the quiz again.";
+  }
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultMsg').textContent  = msg;
+
+  rs.scrollIntoView({ behavior:'smooth' });
+}
+
+function retryQuiz() {
+  scores   = {};
+  currentQ = 1;
+
+  for (let i = 1; i <= 5; i++) {
+    const fb = document.getElementById('fb' + i);
+    fb.className = 'feedback-box';
+    fb.textContent = '';
+    document.getElementById('nxt' + i).disabled = true;
+
+    const btns = document.querySelectorAll(`[data-q="${i}"]`);
+    btns.forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct','wrong');
+    });
+  }
+
+  document.getElementById('q1').classList.add('show');
+  for (let i = 2; i <= 5; i++) document.getElementById('q'+i).classList.remove('show');
+  document.getElementById('quizCounter').textContent = 'Question 1 of 5';
+
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior:'smooth' });
+}
+</script>
+</body>
+</html>
