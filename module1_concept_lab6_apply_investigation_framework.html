@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Lab 6 — Apply the Investigation Framework | CyberReady India</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:      #0a0e1a;
+    --surface: #111827;
+    --panel:   #1a2236;
+    --border:  #2a3a52;
+    --accent:  #3b82f6;
+    --accent2: #06b6d4;
+    --green:   #10b981;
+    --amber:   #f59e0b;
+    --red:     #ef4444;
+    --purple:  #8b5cf6;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --mono:    'JetBrains Mono', monospace;
+    --sans:    'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.65; min-height: 100vh; }
+
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 12px 28px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-brand { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+  .topbar-label { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; }
+
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .lab-header { margin-bottom: 40px; }
+  .lab-badge {
+    display: inline-block; background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.35);
+    color: var(--purple); font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 4px; margin-bottom: 16px;
+  }
+  .lab-title { font-size: 28px; font-weight: 700; line-height: 1.2; color: #f8fafc; margin-bottom: 10px; }
+  .lab-subtitle { color: var(--muted); font-size: 14px; }
+
+  .story-block {
+    background: var(--panel); border-left: 3px solid var(--purple);
+    border-radius: 0 8px 8px 0; padding: 18px 22px; margin-bottom: 24px;
+    font-style: italic; color: #cbd5e1; font-size: 14.5px;
+  }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; }
+  .section-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 14px; }
+  .section p { color: var(--text); margin-bottom: 10px; }
+  .section p:last-child { margin-bottom: 0; }
+
+  /* FRAMEWORK STEPS OVERVIEW */
+  .framework-strip {
+    display: flex; gap: 0; margin-bottom: 28px; overflow-x: auto;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px 16px;
+    align-items: center; flex-wrap: wrap; row-gap: 10px; justify-content: center;
+  }
+  .fw-step {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--bg); border: 2px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; min-width: 120px; text-align: center;
+    transition: all .2s;
+  }
+  .fw-step.current { border-color: var(--purple); background: rgba(139,92,246,.1); }
+  .fw-step.done    { border-color: var(--green);  background: rgba(16,185,129,.08); }
+  .fw-step-num { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .1em; margin-bottom: 4px; }
+  .fw-step-icon { font-size: 20px; margin-bottom: 5px; }
+  .fw-step-name { font-size: 11.5px; font-weight: 600; color: #f1f5f9; line-height: 1.3; }
+  .fw-arrow { color: var(--muted); font-size: 18px; padding: 0 6px; flex-shrink: 0; }
+  .fw-step.done .fw-step-num { color: var(--green); }
+  .fw-step.current .fw-step-num { color: var(--purple); }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px;
+  }
+  .progress-label { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent)); border-radius: 99px; transition: width .4s ease; width: 0%; }
+  .progress-pct { font-family: var(--mono); font-size: 12px; color: var(--purple); white-space: nowrap; }
+
+  /* STEP CARD */
+  .step-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-bottom: 24px; display: none;
+  }
+  .step-card.show { display: block; animation: fadeSlide .25s ease; }
+  @keyframes fadeSlide { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .step-card-header {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 16px 24px; display: flex; align-items: center; gap: 14px;
+  }
+  .step-card-icon { font-size: 22px; }
+  .step-card-meta { flex: 1; }
+  .step-card-label { font-family: var(--mono); font-size: 10px; color: var(--purple); letter-spacing: .1em; text-transform: uppercase; }
+  .step-card-title { font-size: 16px; font-weight: 700; color: #f8fafc; }
+
+  .step-card-body { padding: 28px 32px; }
+
+  /* INCIDENT BOX */
+  .incident-box {
+    background: #0d1117; border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px 20px; margin-bottom: 22px;
+  }
+  .incident-header { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .incident-line { font-family: var(--mono); font-size: 13px; margin-bottom: 7px; display: flex; gap: 10px; }
+  .inc-label { color: var(--muted); flex-shrink: 0; min-width: 90px; }
+  .inc-val   { color: #a5f3fc; }
+  .inc-val.red { color: #fca5a5; }
+  .inc-val.amber { color: #fde68a; }
+
+  /* QUESTION PROMPT */
+  .step-question {
+    font-size: 15.5px; font-weight: 500; color: #f1f5f9;
+    margin-bottom: 18px; line-height: 1.55;
+  }
+  .step-subtext { font-size: 13.5px; color: var(--muted); margin-bottom: 18px; }
+
+  /* CHOICE BUTTONS */
+  .choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .choice-btn {
+    background: var(--panel); border: 2px solid var(--border); border-radius: 8px;
+    padding: 14px 18px; text-align: left; color: var(--text); font-family: var(--sans);
+    font-size: 14.5px; cursor: pointer; transition: all .18s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .choice-btn:hover:not(:disabled) { border-color: var(--purple); background: rgba(139,92,246,.08); }
+  .choice-btn.correct { border-color: var(--green); background: rgba(16,185,129,.12); color: #a7f3d0; }
+  .choice-btn.wrong   { border-color: var(--red);   background: rgba(239,68,68,.1);    color: #fca5a5; }
+  .choice-btn:disabled { cursor: default; }
+  .choice-letter {
+    width: 28px; height: 28px; border-radius: 6px; background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .correct .choice-letter { background: var(--green); color: #fff; }
+  .wrong   .choice-letter { background: var(--red);   color: #fff; }
+
+  .step-feedback {
+    border-radius: 8px; padding: 16px 20px; font-size: 14px; line-height: 1.6;
+    margin-bottom: 20px; display: none;
+  }
+  .step-feedback.show { display: block; }
+  .step-feedback.correct-fb { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #a7f3d0; }
+  .step-feedback.wrong-fb   { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: #fca5a5; }
+  .fb-label { font-weight: 700; margin-bottom: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; font-family: var(--mono); }
+
+  .next-step-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--purple); color: #fff; border: none; border-radius: 8px;
+    padding: 11px 24px; font-family: var(--sans); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background .2s;
+  }
+  .next-step-btn:hover { background: #7c3aed; }
+
+  /* TIP */
+  .tip {
+    background: rgba(139,92,246,.07); border: 1px solid rgba(139,92,246,.2);
+    border-radius: 8px; padding: 12px 16px; font-size: 13.5px; color: #ddd6fe;
+    margin-bottom: 18px; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 15px; }
+
+  /* QUIZ */
+  .quiz-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-bottom: 24px; display: none; }
+  .quiz-section.show { display: block; }
+  .quiz-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .quiz-title { font-size: 18px; font-weight: 700; color: #f8fafc; }
+  .quiz-counter { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .question-block { display: none; }
+  .question-block.show { display: block; }
+  .question-text { font-size: 15.5px; font-weight: 500; color: #f1f5f9; margin-bottom: 20px; line-height: 1.55; }
+
+  .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .option-btn {
+    background: var(--panel); border: 2px solid var(--border); border-radius: 8px;
+    padding: 13px 18px; text-align: left; color: var(--text); font-family: var(--sans);
+    font-size: 14.5px; cursor: pointer; transition: all .18s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(59,130,246,.08); }
+  .option-btn.correct { border-color: var(--green); background: rgba(16,185,129,.12); color: #a7f3d0; }
+  .option-btn.wrong   { border-color: var(--red);   background: rgba(239,68,68,.1);    color: #fca5a5; }
+  .option-btn:disabled { cursor: default; }
+  .option-letter {
+    width: 26px; height: 26px; border-radius: 6px; background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .correct .option-letter { background: var(--green); color: #fff; }
+  .wrong   .option-letter { background: var(--red);   color: #fff; }
+
+  .feedback-box { border-radius: 8px; padding: 14px 18px; font-size: 14px; margin-bottom: 18px; display: none; }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #a7f3d0; }
+  .feedback-box.wrong-fb   { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.3);  color: #fca5a5; }
+
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; }
+  .next-q-btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 24px; font-family: var(--sans); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background .2s;
+  }
+  .next-q-btn:hover { background: #2563eb; }
+  .next-q-btn:disabled { background: var(--muted); cursor: default; }
+
+  /* RESULT */
+  .result-section { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 48px 32px; text-align: center; margin-bottom: 24px; }
+  .result-section.show { display: block; }
+  .result-icon { font-size: 56px; margin-bottom: 16px; }
+  .result-score { font-size: 52px; font-weight: 800; color: #f8fafc; font-family: var(--mono); margin-bottom: 6px; }
+  .result-label { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  .result-msg { font-size: 16px; max-width: 500px; margin: 0 auto 28px; color: #cbd5e1; line-height: 1.6; }
+  .retry-btn {
+    background: transparent; color: var(--accent); border: 2px solid var(--accent);
+    border-radius: 8px; padding: 10px 28px; font-family: var(--sans); font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: all .2s;
+  }
+  .retry-btn:hover { background: var(--accent); color: #fff; }
+
+  @media (max-width: 640px) {
+    .fw-step { min-width: 90px; padding: 10px 8px; }
+    .fw-step-name { font-size: 10px; }
+    .step-card-body { padding: 20px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">CyberReady India</div>
+  <div class="topbar-label">Module 1 · Concept Lab 6</div>
+</div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="lab-header">
+    <div class="lab-badge">Concept Lab</div>
+    <h1 class="lab-title">Apply the Investigation Framework</h1>
+    <div class="lab-subtitle">Module 1 — Systems Thinking &amp; Digital Infrastructure &nbsp;|&nbsp; 4 steps · 5-question quiz</div>
+  </div>
+
+  <!-- STORY -->
+  <div class="story-block">
+    "It's Monday morning at NorthBridge Bank. The operations desk starts receiving calls at 8:47 AM. Customers are reporting they cannot log in. You are a junior engineer on the team. Your senior engineer turns to you: <strong>'Apply the framework. Walk me through it step by step.'</strong> This is not the time to guess. This is the time to think like an engineer."
+  </div>
+
+  <!-- FRAMEWORK OVERVIEW -->
+  <div class="section">
+    <div class="section-title">The Investigation Framework — 4 Steps</div>
+    <p>The structured troubleshooting framework engineers use has four steps, always in this order. You cannot skip a step — each one builds on the previous.</p>
+  </div>
+
+  <!-- FRAMEWORK STRIP -->
+  <div class="framework-strip" id="frameworkStrip">
+    <div class="fw-step current" id="fw0">
+      <div class="fw-step-num">STEP 1</div>
+      <div class="fw-step-icon">👁️</div>
+      <div class="fw-step-name">Observe Symptoms</div>
+    </div>
+    <div class="fw-arrow">→</div>
+    <div class="fw-step" id="fw1">
+      <div class="fw-step-num">STEP 2</div>
+      <div class="fw-step-icon">💡</div>
+      <div class="fw-step-name">Form a Hypothesis</div>
+    </div>
+    <div class="fw-arrow">→</div>
+    <div class="fw-step" id="fw2">
+      <div class="fw-step-num">STEP 3</div>
+      <div class="fw-step-icon">🔎</div>
+      <div class="fw-step-name">Gather Evidence</div>
+    </div>
+    <div class="fw-arrow">→</div>
+    <div class="fw-step" id="fw3">
+      <div class="fw-step-num">STEP 4</div>
+      <div class="fw-step-icon">✅</div>
+      <div class="fw-step-name">Confirm Root Cause</div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap">
+    <div class="progress-label">Framework progress</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0 / 4 steps</div>
+  </div>
+
+  <!-- STEP 1: OBSERVE SYMPTOMS -->
+  <div class="step-card show" id="step1">
+    <div class="step-card-header">
+      <div class="step-card-icon">👁️</div>
+      <div class="step-card-meta">
+        <div class="step-card-label">Step 1 of 4</div>
+        <div class="step-card-title">Observe Symptoms</div>
+      </div>
+    </div>
+    <div class="step-card-body">
+
+      <div class="incident-box">
+        <div class="incident-header">📋 Monday Morning — Incoming Reports — 08:47 AM</div>
+        <div class="incident-line"><span class="inc-label">08:47 AM</span><span class="inc-val red">Customer: "I cannot log in — I get an error saying service unavailable"</span></div>
+        <div class="incident-line"><span class="inc-label">08:49 AM</span><span class="inc-val red">Customer: "App crashes immediately when I try to log in"</span></div>
+        <div class="incident-line"><span class="inc-label">08:51 AM</span><span class="inc-val amber">Customer: "Homepage loads fine but login does not work"</span></div>
+        <div class="incident-line"><span class="inc-label">08:52 AM</span><span class="inc-val amber">Customer: "I was logged in, then it kicked me out and now I cannot get back in"</span></div>
+        <div class="incident-line"><span class="inc-label">08:54 AM</span><span class="inc-val">Internal: No firewall alerts. No network outage detected.</span></div>
+      </div>
+
+      <div class="tip"><div class="tip-icon">💡</div><div>In Step 1, your only job is to <strong>observe and record</strong> what is happening — not to guess why. Symptoms are what customers experience. They are your starting data.</div></div>
+
+      <div class="step-question">Based on these reports, which statement best describes what the symptoms tell you?</div>
+      <div class="choices" id="ch1">
+        <button class="choice-btn" onclick="stepAnswer(1,'A')"><span class="choice-letter">A</span>The entire NorthBridge system is down — customers cannot access anything at all</button>
+        <button class="choice-btn" onclick="stepAnswer(1,'B')"><span class="choice-letter">B</span>Login functionality is failing but the homepage is accessible — the failure is specific, not total</button>
+        <button class="choice-btn" onclick="stepAnswer(1,'C')"><span class="choice-letter">C</span>The firewall has failed — customers are being blocked from the network</button>
+        <button class="choice-btn" onclick="stepAnswer(1,'D')"><span class="choice-letter">D</span>The database is down — customer records cannot be retrieved</button>
+      </div>
+      <div class="step-feedback" id="sfb1"></div>
+      <div id="snext1" style="display:none;"><button class="next-step-btn" onclick="goStep(2)">Step 2 — Form a Hypothesis →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: FORM HYPOTHESIS -->
+  <div class="step-card" id="step2">
+    <div class="step-card-header">
+      <div class="step-card-icon">💡</div>
+      <div class="step-card-meta">
+        <div class="step-card-label">Step 2 of 4</div>
+        <div class="step-card-title">Form a Hypothesis</div>
+      </div>
+    </div>
+    <div class="step-card-body">
+
+      <div class="incident-box">
+        <div class="incident-header">🧠 What You Know So Far</div>
+        <div class="incident-line"><span class="inc-label">Symptom</span><span class="inc-val">Homepage loads correctly for all customers</span></div>
+        <div class="incident-line"><span class="inc-label">Symptom</span><span class="inc-val red">Login fails for all customers — "service unavailable" error</span></div>
+        <div class="incident-line"><span class="inc-label">Symptom</span><span class="inc-val">No firewall alerts. No network outage.</span></div>
+        <div class="incident-line"><span class="inc-label">Pattern</span><span class="inc-val amber">Failure is at the login step specifically — not at connectivity</span></div>
+      </div>
+
+      <div class="tip"><div class="tip-icon">💡</div><div>In Step 2, you form a <strong>hypothesis</strong> — your best educated guess about which component is responsible, based only on the symptoms. A hypothesis is not a conclusion. You have not proven anything yet.</div></div>
+
+      <div class="step-question">Based on the symptom pattern, which is the most logical first hypothesis?</div>
+      <div class="step-subtext">Remember: the homepage loads (so traffic is reaching the system) but login fails (so something that processes login requests has a problem).</div>
+      <div class="choices" id="ch2">
+        <button class="choice-btn" onclick="stepAnswer(2,'A')"><span class="choice-letter">A</span>Hypothesis: The firewall has failed and is blocking login traffic selectively</button>
+        <button class="choice-btn" onclick="stepAnswer(2,'B')"><span class="choice-letter">B</span>Hypothesis: The app server handling login business logic has failed or become unresponsive</button>
+        <button class="choice-btn" onclick="stepAnswer(2,'C')"><span class="choice-letter">C</span>Hypothesis: The database is down and customer records cannot be retrieved</button>
+        <button class="choice-btn" onclick="stepAnswer(2,'D')"><span class="choice-letter">D</span>Hypothesis: The internet connection to NorthBridge has failed</button>
+      </div>
+      <div class="step-feedback" id="sfb2"></div>
+      <div id="snext2" style="display:none;"><button class="next-step-btn" onclick="goStep(3)">Step 3 — Gather Evidence →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: GATHER EVIDENCE -->
+  <div class="step-card" id="step3">
+    <div class="step-card-header">
+      <div class="step-card-icon">🔎</div>
+      <div class="step-card-meta">
+        <div class="step-card-label">Step 3 of 4</div>
+        <div class="step-card-title">Gather Evidence</div>
+      </div>
+    </div>
+    <div class="step-card-body">
+
+      <div class="incident-box">
+        <div class="incident-header">🔍 Evidence Gathered — 09:02 AM</div>
+        <div class="incident-line"><span class="inc-label">Check 1</span><span class="inc-val">Firewall — ALL RULES NORMAL. No blocked traffic on port 443.</span></div>
+        <div class="incident-line"><span class="inc-label">Check 2</span><span class="inc-val">Load Balancer — ROUTING NORMALLY. Traffic reaching app servers.</span></div>
+        <div class="incident-line"><span class="inc-label">Check 3</span><span class="inc-val red">App Server 1 — NOT RESPONDING. Process auth-service: STOPPED.</span></div>
+        <div class="incident-line"><span class="inc-label">Check 4</span><span class="inc-val red">App Server 2 — NOT RESPONDING. Process auth-service: STOPPED.</span></div>
+        <div class="incident-line"><span class="inc-label">Check 5</span><span class="inc-val">Database — RUNNING NORMALLY. All data accessible.</span></div>
+        <div class="incident-line"><span class="inc-label">Log Entry</span><span class="inc-val red">08:43 AM — auth-service crashed on both app servers. Error: out of memory.</span></div>
+      </div>
+
+      <div class="tip"><div class="tip-icon">💡</div><div>In Step 3, you <strong>test your hypothesis</strong> by gathering real evidence from the system. You check logs, run health checks, and look at monitoring data. Evidence either supports or eliminates your hypothesis.</div></div>
+
+      <div class="step-question">You have gathered the evidence. What does the evidence tell you about your hypothesis?</div>
+      <div class="choices" id="ch3">
+        <button class="choice-btn" onclick="stepAnswer(3,'A')"><span class="choice-letter">A</span>The evidence contradicts the hypothesis — the app server is fine, so we need a new hypothesis</button>
+        <button class="choice-btn" onclick="stepAnswer(3,'B')"><span class="choice-letter">B</span>The evidence supports the hypothesis — the auth-service process on both app servers has crashed</button>
+        <button class="choice-btn" onclick="stepAnswer(3,'C')"><span class="choice-letter">C</span>The evidence is inconclusive — we need to check the firewall logs next</button>
+        <button class="choice-btn" onclick="stepAnswer(3,'D')"><span class="choice-letter">D</span>The evidence shows the database failed, not the app server — we need to revise the hypothesis</button>
+      </div>
+      <div class="step-feedback" id="sfb3"></div>
+      <div id="snext3" style="display:none;"><button class="next-step-btn" onclick="goStep(4)">Step 4 — Confirm Root Cause →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: CONFIRM ROOT CAUSE -->
+  <div class="step-card" id="step4">
+    <div class="step-card-header">
+      <div class="step-card-icon">✅</div>
+      <div class="step-card-meta">
+        <div class="step-card-label">Step 4 of 4</div>
+        <div class="step-card-title">Confirm Root Cause</div>
+      </div>
+    </div>
+    <div class="step-card-body">
+
+      <div class="incident-box">
+        <div class="incident-header">📌 Full Evidence Summary — 09:08 AM</div>
+        <div class="incident-line"><span class="inc-label">Symptom</span><span class="inc-val">Login fails for all customers. Homepage accessible.</span></div>
+        <div class="incident-line"><span class="inc-label">Hypothesis</span><span class="inc-val">App server handling login business logic has failed</span></div>
+        <div class="incident-line"><span class="inc-label">Evidence</span><span class="inc-val red">auth-service process stopped on both app servers at 08:43 AM</span></div>
+        <div class="incident-line"><span class="inc-label">Evidence</span><span class="inc-val red">Error logged: auth-service crashed — out of memory</span></div>
+        <div class="incident-line"><span class="inc-label">Evidence</span><span class="inc-val">Firewall, load balancer, database — all running normally</span></div>
+        <div class="incident-line"><span class="inc-label">Timing</span><span class="inc-val amber">First customer complaint: 08:47 AM — 4 minutes after the crash</span></div>
+      </div>
+
+      <div class="tip"><div class="tip-icon">💡</div><div>In Step 4, you state the <strong>confirmed root cause</strong> — not a guess, but a conclusion supported by evidence. The root cause explains both the symptom and the evidence together.</div></div>
+
+      <div class="step-question">Based on all four steps, which statement correctly identifies the root cause?</div>
+      <div class="choices" id="ch4">
+        <button class="choice-btn" onclick="stepAnswer(4,'A')"><span class="choice-letter">A</span>Root cause: The firewall blocked login traffic starting at 08:43 AM</button>
+        <button class="choice-btn" onclick="stepAnswer(4,'B')"><span class="choice-letter">B</span>Root cause: The database became unreachable, causing login to fail</button>
+        <button class="choice-btn" onclick="stepAnswer(4,'C')"><span class="choice-letter">C</span>Root cause: The auth-service process crashed on both app servers due to an out-of-memory error at 08:43 AM, making login processing impossible for all customers</button>
+        <button class="choice-btn" onclick="stepAnswer(4,'D')"><span class="choice-letter">D</span>Root cause: A network outage disconnected customers from the banking system</button>
+      </div>
+      <div class="step-feedback" id="sfb4"></div>
+      <div id="snext4" style="display:none;"><button class="next-step-btn" onclick="unlockQuiz()">Framework Complete — Start Quiz ✓</button></div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section" id="quizSection">
+    <div class="quiz-header-row">
+      <div class="quiz-title">Quiz — Apply the Investigation Framework</div>
+      <div class="quiz-counter" id="quizCounter">Question 1 of 5</div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="question-block show" id="q1">
+      <div class="question-text">1. In the investigation framework, what is the correct order of steps?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(1,'A')"><span class="option-letter">A</span>Form hypothesis → Gather evidence → Observe symptoms → Confirm root cause</button>
+        <button class="option-btn" onclick="answer(1,'B')"><span class="option-letter">B</span>Observe symptoms → Form hypothesis → Gather evidence → Confirm root cause</button>
+        <button class="option-btn" onclick="answer(1,'C')"><span class="option-letter">C</span>Confirm root cause → Observe symptoms → Gather evidence → Form hypothesis</button>
+        <button class="option-btn" onclick="answer(1,'D')"><span class="option-letter">D</span>Gather evidence → Observe symptoms → Form hypothesis → Confirm root cause</button>
+      </div>
+      <div class="feedback-box" id="fb1"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt1" onclick="nextQ(2)" disabled>Next →</button></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <div class="question-text">2. Why do engineers form a hypothesis before gathering evidence — rather than checking every system at once?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(2,'A')"><span class="option-letter">A</span>Because checking every system simultaneously is technically impossible</button>
+        <button class="option-btn" onclick="answer(2,'B')"><span class="option-letter">B</span>Because a hypothesis focuses the investigation — it tells you where to look first and avoids wasting time checking systems that the symptoms already ruled out</button>
+        <button class="option-btn" onclick="answer(2,'C')"><span class="option-letter">C</span>Because the hypothesis is always correct and evidence is just a formality</button>
+        <button class="option-btn" onclick="answer(2,'D')"><span class="option-letter">D</span>Because gathering evidence without a hypothesis is against operational policy</button>
+      </div>
+      <div class="feedback-box" id="fb2"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt2" onclick="nextQ(3)" disabled>Next →</button></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <div class="question-text">3. In the Monday morning scenario, customers report that the homepage loads but login fails. At which step does an engineer use this information?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(3,'A')"><span class="option-letter">A</span>Step 4 — Confirm root cause</button>
+        <button class="option-btn" onclick="answer(3,'B')"><span class="option-letter">B</span>Step 3 — Gather evidence</button>
+        <button class="option-btn" onclick="answer(3,'C')"><span class="option-letter">C</span>Step 1 — Observe symptoms</button>
+        <button class="option-btn" onclick="answer(3,'D')"><span class="option-letter">D</span>Step 2 — Form hypothesis</button>
+      </div>
+      <div class="feedback-box" id="fb3"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt3" onclick="nextQ(4)" disabled>Next →</button></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <div class="question-text">4. The evidence shows the auth-service crashed on both app servers at 08:43 AM. What does an engineer do with evidence that supports the hypothesis?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(4,'A')"><span class="option-letter">A</span>Discard it and form a new hypothesis — one piece of evidence is never enough</button>
+        <button class="option-btn" onclick="answer(4,'B')"><span class="option-letter">B</span>Use it to confirm the root cause, then document the finding and begin the fix</button>
+        <button class="option-btn" onclick="answer(4,'C')"><span class="option-letter">C</span>Escalate immediately without documenting — speed is more important than records</button>
+        <button class="option-btn" onclick="answer(4,'D')"><span class="option-letter">D</span>Continue gathering evidence from all other systems before taking any action</button>
+      </div>
+      <div class="feedback-box" id="fb4"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt4" onclick="nextQ(5)" disabled>Next →</button></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <div class="question-text">5. What is the difference between a symptom and a root cause?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(5,'A')"><span class="option-letter">A</span>A symptom is what the engineer observes in logs; a root cause is what customers report</button>
+        <button class="option-btn" onclick="answer(5,'B')"><span class="option-letter">B</span>There is no difference — symptoms and root causes describe the same thing</button>
+        <button class="option-btn" onclick="answer(5,'C')"><span class="option-letter">C</span>A symptom is what is experienced (login fails); a root cause is why it happened (auth-service crashed due to out-of-memory error)</button>
+        <button class="option-btn" onclick="answer(5,'D')"><span class="option-letter">D</span>A symptom is a minor problem; a root cause is a major problem</button>
+      </div>
+      <div class="feedback-box" id="fb5"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt5" onclick="showResult()" disabled>See My Result →</button></div>
+    </div>
+
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-section" id="resultSection">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-label">out of 5 questions</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="retry-btn" onclick="retryQuiz()">Retry Quiz</button>
+  </div>
+
+</div>
+
+<script>
+// ── STEP ANSWERS ──────────────────────────────────────────────────────────────
+const stepCorrect = { 1:'B', 2:'B', 3:'B', 4:'C' };
+const stepFeedback = {
+  1: {
+    B: '✓ Correct. The symptom pattern tells you the failure is specific, not total. The homepage is accessible — so the network, firewall, and load balancer are passing traffic. Only login is failing. This precise pattern is your starting data for the next step.',
+    wrong: 'Not quite. Look at the symptom pattern more carefully: the homepage loads correctly for customers. That tells you connectivity is fine. Only login is failing — which means the failure is specific to the login function, not a total system outage.'
+  },
+  2: {
+    B: '✓ Correct. Your hypothesis is that the app server handling login business logic has failed. This is the logical deduction: the homepage works (so traffic is reaching the system) but login fails (so something that processes authentication is broken). The app server processes all business logic including authentication.',
+    wrong: 'Not quite. The firewall and internet connection hypotheses are ruled out by the symptom: the homepage loads — meaning traffic is reaching internal systems. The database hypothesis is possible but premature — the first component to suspect when login business logic fails is the app server, not the database. The app server is where authentication processing happens.'
+  },
+  3: {
+    B: '✓ Correct. The evidence strongly supports the hypothesis. The auth-service — the specific process responsible for authentication — has crashed on both app servers. The database and firewall are both healthy. The crash happened at 08:43 AM, four minutes before the first customer complaint — exactly the right timing.',
+    wrong: 'Not quite. Read the evidence log again: the firewall, load balancer, and database are all running normally. But the auth-service process — the process that handles login authentication — has crashed on both app servers. This directly supports the hypothesis. When evidence matches the hypothesis, you move to confirmation.'
+  },
+  4: {
+    C: '✓ Correct. The root cause is specific, evidence-backed, and complete. It names the component (app server), the specific process (auth-service), the cause of the crash (out-of-memory), and the timing (08:43 AM). A good root cause statement explains both what failed and why — and it matches all the evidence.',
+    wrong: 'Not quite. The evidence has eliminated the firewall (no alerts, rules normal), the network (homepage loads), and the database (running normally). The confirmed root cause must match everything: the auth-service crashed on both app servers due to an out-of-memory error, which directly explains why all login attempts failed from 08:43 AM onwards.'
+  }
+};
+
+// ── QUIZ ANSWERS ──────────────────────────────────────────────────────────────
+const correct = { 1:'B', 2:'B', 3:'C', 4:'B', 5:'C' };
+const feedbacks = {
+  1: { B: '✓ Correct. Observe symptoms → Form hypothesis → Gather evidence → Confirm root cause. This order is non-negotiable. Skipping steps leads to guessing and wasted effort.', wrong: 'Not quite. The correct order is: Observe symptoms first (what is happening?), then Form a hypothesis (what might be causing it?), then Gather evidence (is the hypothesis correct?), then Confirm root cause (what exactly caused this?).' },
+  2: { B: '✓ Correct. A hypothesis uses symptom patterns to narrow the investigation. If the homepage loads but login fails, you have already eliminated the firewall and load balancer — no need to spend time checking them first.', wrong: 'Not quite. A hypothesis is a focused starting point — it uses what the symptoms already tell you to direct your evidence gathering toward the most likely component. This saves time and prevents random checking.' },
+  3: { C: '✓ Correct. Customer reports — what they experience — are symptoms. They are observed and recorded in Step 1. Step 2 uses those symptoms to form a hypothesis.', wrong: 'Not quite. What customers report is what they experience — that is a symptom. Symptoms are the input to Step 1: Observe Symptoms.' },
+  4: { B: '✓ Correct. When evidence supports the hypothesis, you confirm it as the root cause, document the finding clearly, and begin remediation. Documentation is not optional — it creates the record needed for post-incident review.', wrong: 'Not quite. When evidence supports your hypothesis, you confirm the root cause and document it. You do not need to check every other system if the evidence is clear — that is the point of the framework.' },
+  5: { C: '✓ Correct. A symptom is the visible effect — what customers or engineers observe. A root cause is the underlying reason — the specific failure that produced the symptom. Fixing the symptom without identifying the root cause means the problem will recur.', wrong: 'Not quite. A symptom is what is experienced or observed (login fails). A root cause is the underlying technical reason that caused the symptom (auth-service crashed due to out-of-memory). Engineers must identify root causes — not just symptoms — to prevent recurrence.' }
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let stepsCompleted = 0;
+let quizScores = {};
+
+// ── STEP LOGIC ─────────────────────────────────────────────────────────────────
+function stepAnswer(step, opt) {
+  const btns = document.querySelectorAll(`#ch${step} .choice-btn`);
+  btns.forEach(b => {
+    b.disabled = true;
+    const letter = b.querySelector('.choice-letter').textContent;
+    if (letter === stepCorrect[step]) b.classList.add('correct');
+    if (letter === opt && opt !== stepCorrect[step]) b.classList.add('wrong');
+  });
+
+  const isRight = opt === stepCorrect[step];
+  const fb = document.getElementById('sfb' + step);
+  fb.innerHTML = `<div class="fb-label">${isRight ? '✓ Correct' : '✗ Not quite'}</div>${isRight ? stepFeedback[step][opt] : stepFeedback[step].wrong}`;
+  fb.className = 'step-feedback show ' + (isRight ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('snext' + step).style.display = 'block';
+
+  stepsCompleted = Math.max(stepsCompleted, step);
+  updateProgress();
+  updateFrameworkStrip(step);
+}
+
+function goStep(n) {
+  document.getElementById('step' + (n-1)).style.opacity = '.6';
+  document.getElementById('step' + n).classList.add('show');
+  document.getElementById('step' + n).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  updateFrameworkStrip(n - 1);
+}
+
+function updateFrameworkStrip(doneUpTo) {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById('fw' + i);
+    el.className = 'fw-step';
+    if (i < doneUpTo) el.classList.add('done');
+    else if (i === doneUpTo) el.classList.add('current');
+  }
+}
+
+function updateProgress() {
+  const pct = (stepsCompleted / 4) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = stepsCompleted + ' / 4 steps';
+}
+
+function unlockQuiz() {
+  updateFrameworkStrip(4);
+  updateProgress();
+  document.querySelectorAll('.step-card').forEach(c => c.style.opacity = '.6');
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── QUIZ ───────────────────────────────────────────────────────────────────────
+function answer(q, opt) {
+  if (quizScores[q] !== undefined) return;
+  const btns = document.querySelectorAll(`#q${q} .option-btn`);
+  btns.forEach(b => {
+    b.disabled = true;
+    const letter = b.querySelector('.option-letter').textContent;
+    if (letter === correct[q]) b.classList.add('correct');
+    if (letter === opt && opt !== correct[q]) b.classList.add('wrong');
+  });
+  const isRight = opt === correct[q];
+  quizScores[q] = isRight ? 1 : 0;
+  const fb = document.getElementById('fb' + q);
+  fb.textContent = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
+  fb.className = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
+  document.getElementById('nxt' + q).disabled = false;
+}
+
+function nextQ(n) {
+  document.getElementById('q' + (n-1)).classList.remove('show');
+  document.getElementById('q' + n).classList.add('show');
+  document.getElementById('quizCounter').textContent = `Question ${n} of 5`;
+}
+
+function showResult() {
+  document.getElementById('q5').classList.remove('show');
+  document.getElementById('quizSection').classList.remove('show');
+  const total = Object.values(quizScores).reduce((a,b) => a+b, 0);
+  const rs = document.getElementById('resultSection');
+  rs.classList.add('show');
+  document.getElementById('resultScore').textContent = `${total} / 5`;
+  let icon, msg;
+  if (total === 5) {
+    icon = '🏆'; msg = 'Perfect score. You can apply the full investigation framework to a real scenario and explain each step. You are ready for Lesson 7.';
+  } else if (total >= 3) {
+    icon = '✅'; msg = 'Good work. You understand the framework structure. Review the steps you missed, then move on to Lesson 7.';
+  } else {
+    icon = '📖'; msg = 'Work back through the four steps of the framework above and re-read the explanations at each stage. The order and purpose of each step are the key things to lock in.';
+  }
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultMsg').textContent = msg;
+  rs.scrollIntoView({ behavior: 'smooth' });
+}
+
+function retryQuiz() {
+  quizScores = {};
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('fb' + i).className = 'feedback-box';
+    document.getElementById('fb' + i).textContent = '';
+    document.getElementById('nxt' + i).disabled = true;
+    document.querySelectorAll(`#q${i} .option-btn`).forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct', 'wrong');
+    });
+  }
+  document.getElementById('q1').classList.add('show');
+  for (let i = 2; i <= 5; i++) document.getElementById('q' + i).classList.remove('show');
+  document.getElementById('quizCounter').textContent = 'Question 1 of 5';
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
