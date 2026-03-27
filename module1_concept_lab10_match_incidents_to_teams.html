@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Lab 10 — Match Incidents to Teams | CyberReady India</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:      #0a0e1a;
+    --surface: #111827;
+    --panel:   #1a2236;
+    --border:  #2a3a52;
+    --accent:  #3b82f6;
+    --accent2: #06b6d4;
+    --green:   #10b981;
+    --amber:   #f59e0b;
+    --red:     #ef4444;
+    --purple:  #8b5cf6;
+    --teal:    #14b8a6;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --mono:    'JetBrains Mono', monospace;
+    --sans:    'DM Sans', sans-serif;
+
+    /* team colours */
+    --soc-col:   #ef4444;
+    --noc-col:   #3b82f6;
+    --sre-col:   #10b981;
+    --dev-col:   #8b5cf6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.65; min-height: 100vh; }
+
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .topbar-brand { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+  .topbar-label { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .wrapper { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .lab-header { margin-bottom: 40px; }
+  .lab-badge { display: inline-block; background: rgba(20,184,166,.12); border: 1px solid rgba(20,184,166,.35); color: var(--teal); font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 12px; border-radius: 4px; margin-bottom: 16px; }
+  .lab-title { font-size: 28px; font-weight: 700; color: #f8fafc; margin-bottom: 10px; }
+  .lab-subtitle { color: var(--muted); font-size: 14px; }
+
+  .story-block { background: var(--panel); border-left: 3px solid var(--teal); border-radius: 0 8px 8px 0; padding: 18px 22px; margin-bottom: 24px; font-style: italic; color: #cbd5e1; font-size: 14.5px; }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; }
+  .section-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 16px; }
+
+  /* TEAM REFERENCE CARDS */
+  .teams-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 28px; }
+  @media (max-width: 600px) { .teams-grid { grid-template-columns: 1fr; } }
+
+  .team-card { border-radius: 10px; padding: 18px 20px; border: 2px solid; }
+  .team-card.soc { border-color: rgba(239,68,68,.4);  background: rgba(239,68,68,.07); }
+  .team-card.noc { border-color: rgba(59,130,246,.4); background: rgba(59,130,246,.07); }
+  .team-card.sre { border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.07); }
+  .team-card.dev { border-color: rgba(139,92,246,.4); background: rgba(139,92,246,.07); }
+
+  .team-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .team-icon { font-size: 22px; }
+  .team-name { font-size: 15px; font-weight: 700; }
+  .team-card.soc .team-name { color: #fca5a5; }
+  .team-card.noc .team-name { color: #93c5fd; }
+  .team-card.sre .team-name { color: #6ee7b7; }
+  .team-card.dev .team-name { color: #c4b5fd; }
+  .team-full { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+  .team-desc { font-size: 13px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.5; }
+  .team-analogy { font-size: 12.5px; color: var(--muted); font-style: italic; }
+
+  /* PROGRESS */
+  .progress-bar-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
+  .progress-label { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--accent)); border-radius: 99px; transition: width .4s ease; width: 0%; }
+  .progress-pct { font-family: var(--mono); font-size: 12px; color: var(--teal); white-space: nowrap; }
+
+  /* INCIDENTS PANEL */
+  .incidents-wrap { margin-bottom: 28px; }
+
+  .incident-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 16px; overflow: hidden; transition: border-color .2s;
+  }
+  .incident-card.answered { border-color: var(--border); opacity: .75; }
+
+  .incident-top { padding: 18px 22px; display: flex; align-items: flex-start; gap: 14px; }
+  .incident-num { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; padding-top: 2px; }
+  .incident-text { flex: 1; }
+  .incident-title { font-size: 14.5px; font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+  .incident-detail { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+
+  /* TEAM BUTTONS */
+  .team-btns { display: flex; gap: 8px; padding: 12px 22px 18px; flex-wrap: wrap; }
+  .team-btn {
+    border: 2px solid; border-radius: 7px; padding: 8px 16px;
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .18s; background: transparent;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .team-btn.soc-btn { border-color: rgba(239,68,68,.4);  color: #fca5a5; }
+  .team-btn.noc-btn { border-color: rgba(59,130,246,.4); color: #93c5fd; }
+  .team-btn.sre-btn { border-color: rgba(16,185,129,.4); color: #6ee7b7; }
+  .team-btn.dev-btn { border-color: rgba(139,92,246,.4); color: #c4b5fd; }
+  .team-btn.soc-btn:hover:not(:disabled) { background: rgba(239,68,68,.12); }
+  .team-btn.noc-btn:hover:not(:disabled) { background: rgba(59,130,246,.12); }
+  .team-btn.sre-btn:hover:not(:disabled) { background: rgba(16,185,129,.12); }
+  .team-btn.dev-btn:hover:not(:disabled) { background: rgba(139,92,246,.12); }
+
+  .team-btn.correct { opacity: 1; }
+  .team-btn.soc-btn.correct { background: rgba(239,68,68,.2);  border-color: var(--soc-col); }
+  .team-btn.noc-btn.correct { background: rgba(59,130,246,.2); border-color: var(--noc-col); }
+  .team-btn.sre-btn.correct { background: rgba(16,185,129,.2); border-color: var(--sre-col); }
+  .team-btn.dev-btn.correct { background: rgba(139,92,246,.2); border-color: var(--dev-col); }
+  .team-btn.wrong  { background: rgba(239,68,68,.1); border-color: var(--red) !important; color: #fca5a5 !important; }
+  .team-btn:disabled { cursor: default; opacity: .5; }
+  .team-btn.correct:disabled { opacity: 1; }
+  .team-btn.wrong:disabled { opacity: .6; }
+
+  /* FEEDBACK STRIP */
+  .incident-feedback { padding: 12px 22px 16px; border-top: 1px solid var(--border); font-size: 13.5px; line-height: 1.55; display: none; }
+  .incident-feedback.show { display: block; }
+  .incident-feedback.correct-fb { color: #a7f3d0; }
+  .incident-feedback.wrong-fb   { color: #fca5a5; }
+  .fb-mini-label { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 24px; display: none;
+  }
+  .scoreboard.show { display: block; }
+  .score-title { font-family: var(--mono); font-size: 11px; color: var(--accent2); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 14px; }
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 13.5px; }
+  .score-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .score-dot.c { background: var(--green); }
+  .score-dot.w { background: var(--red); }
+  .score-num { font-family: var(--mono); font-weight: 700; font-size: 15px; }
+  .score-total { font-size: 28px; font-weight: 800; font-family: var(--mono); color: #f8fafc; margin-bottom: 6px; }
+  .score-unlock { margin-top: 16px; display: flex; gap: 12px; align-items: center; }
+  .unlock-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .unlock-btn:hover { background: #2563eb; }
+
+  .tip { background: rgba(20,184,166,.07); border: 1px solid rgba(20,184,166,.2); border-radius: 8px; padding: 12px 16px; font-size: 13.5px; color: #99f6e4; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; }
+  .tip-icon { flex-shrink: 0; }
+
+  /* QUIZ */
+  .quiz-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-bottom: 24px; display: none; }
+  .quiz-section.show { display: block; }
+  .quiz-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .quiz-title { font-size: 18px; font-weight: 700; color: #f8fafc; }
+  .quiz-counter { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .question-block { display: none; }
+  .question-block.show { display: block; }
+  .question-text { font-size: 15.5px; font-weight: 500; color: #f1f5f9; margin-bottom: 20px; line-height: 1.55; }
+  .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .option-btn { background: var(--panel); border: 2px solid var(--border); border-radius: 8px; padding: 13px 18px; text-align: left; color: var(--text); font-family: var(--sans); font-size: 14.5px; cursor: pointer; transition: all .18s; display: flex; align-items: center; gap: 12px; }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(59,130,246,.08); }
+  .option-btn.correct { border-color: var(--green); background: rgba(16,185,129,.12); color: #a7f3d0; }
+  .option-btn.wrong   { border-color: var(--red);   background: rgba(239,68,68,.1);    color: #fca5a5; }
+  .option-btn:disabled { cursor: default; }
+  .option-letter { width: 26px; height: 26px; border-radius: 6px; background: var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .correct .option-letter { background: var(--green); color: #fff; }
+  .wrong   .option-letter { background: var(--red);   color: #fff; }
+  .feedback-box { border-radius: 8px; padding: 14px 18px; font-size: 14px; margin-bottom: 18px; display: none; }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #a7f3d0; }
+  .feedback-box.wrong-fb   { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.3);  color: #fca5a5; }
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; }
+  .next-q-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .next-q-btn:hover { background: #2563eb; }
+  .next-q-btn:disabled { background: var(--muted); cursor: default; }
+
+  .result-section { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 48px 32px; text-align: center; margin-bottom: 24px; }
+  .result-section.show { display: block; }
+  .result-icon { font-size: 56px; margin-bottom: 16px; }
+  .result-score { font-size: 52px; font-weight: 800; color: #f8fafc; font-family: var(--mono); margin-bottom: 6px; }
+  .result-label { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  .result-msg { font-size: 16px; max-width: 500px; margin: 0 auto 28px; color: #cbd5e1; line-height: 1.6; }
+  .retry-btn { background: transparent; color: var(--accent); border: 2px solid var(--accent); border-radius: 8px; padding: 10px 28px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .retry-btn:hover { background: var(--accent); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">CyberReady India</div>
+  <div class="topbar-label">Module 1 · Concept Lab 10</div>
+</div>
+
+<div class="wrapper">
+
+  <div class="lab-header">
+    <div class="lab-badge">Concept Lab</div>
+    <h1 class="lab-title">Match Incidents to Teams</h1>
+    <div class="lab-subtitle">Module 1 — Systems Thinking &amp; Digital Infrastructure &nbsp;|&nbsp; 10 incidents · 5-question quiz</div>
+  </div>
+
+  <div class="story-block">
+    "The NorthBridge operations desk is flooded. Ten separate incidents have been reported in the last hour. The incident coordinator turns to you: <strong>'Route each of these to the right team.'</strong> Sending an incident to the wrong team wastes time. At NorthBridge, response time matters — every minute of delay costs money and customer trust."
+  </div>
+
+  <!-- TEAM REFERENCE -->
+  <div class="section">
+    <div class="section-title">The Four Teams — Reference Guide</div>
+    <div class="teams-grid">
+      <div class="team-card soc">
+        <div class="team-card-header">
+          <div class="team-icon">🔴</div>
+          <div>
+            <div class="team-name">SOC</div>
+            <div class="team-full">Security Operations Centre</div>
+          </div>
+        </div>
+        <div class="team-desc">Monitors for threats, attacks, and suspicious activity 24×7. Responds to security incidents — unauthorised access, malware, data exfiltration, policy violations.</div>
+        <div class="team-analogy">🔒 Analogy: Security guards — focused on threats and intrusions</div>
+      </div>
+      <div class="team-card noc">
+        <div class="team-card-header">
+          <div class="team-icon">🔵</div>
+          <div>
+            <div class="team-name">NOC</div>
+            <div class="team-full">Network Operations Centre</div>
+          </div>
+        </div>
+        <div class="team-desc">Monitors and maintains network infrastructure — routers, switches, firewalls, bandwidth, connectivity. Responds to network outages and performance issues.</div>
+        <div class="team-analogy">🏗️ Analogy: Facilities management — keeps the building infrastructure running</div>
+      </div>
+      <div class="team-card sre">
+        <div class="team-card-header">
+          <div class="team-icon">🟢</div>
+          <div>
+            <div class="team-name">SRE</div>
+            <div class="team-full">Site Reliability Engineering</div>
+          </div>
+        </div>
+        <div class="team-desc">Owns service availability, performance, and reliability. Responds when applications crash, degrade, or fail to meet SLA — restoring service as quickly as possible.</div>
+        <div class="team-analogy">🏥 Analogy: Hospital ICU — responds when systems are critically unwell</div>
+      </div>
+      <div class="team-card dev">
+        <div class="team-card-header">
+          <div class="team-icon">🟣</div>
+          <div>
+            <div class="team-name">DevOps</div>
+            <div class="team-full">Development Operations</div>
+          </div>
+        </div>
+        <div class="team-desc">Owns the deployment pipeline and application code releases. Responds to deployment failures, build errors, and code-level application bugs introduced by a release.</div>
+        <div class="team-analogy">🚀 Analogy: Construction crew — builds and deploys new systems</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap">
+    <div class="progress-label">Incidents matched</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0 / 10</div>
+  </div>
+
+  <div class="tip"><div class="tip-icon">💡</div><div>Read each incident carefully. Click the team button that should respond. You will see immediate feedback explaining why. All 10 must be answered before the quiz unlocks.</div></div>
+
+  <!-- INCIDENTS -->
+  <div class="incidents-wrap" id="incidentsWrap">
+    <!-- filled by JS -->
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="scoreboard" id="scoreboard">
+    <div class="score-title">All 10 Incidents Matched</div>
+    <div class="score-total" id="scoreTotal"></div>
+    <div id="scoreBreakdown"></div>
+    <div class="score-unlock">
+      <button class="unlock-btn" onclick="unlockQuiz()">Start Quiz →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section" id="quizSection">
+    <div class="quiz-header-row">
+      <div class="quiz-title">Quiz — Match Incidents to Teams</div>
+      <div class="quiz-counter" id="quizCounter">Question 1 of 5</div>
+    </div>
+
+    <div class="question-block show" id="q1">
+      <div class="question-text">1. What is the primary difference between the SOC and the NOC?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(1,'A')"><span class="option-letter">A</span>The SOC manages network infrastructure; the NOC monitors for security threats</button>
+        <button class="option-btn" onclick="answer(1,'B')"><span class="option-letter">B</span>The SOC focuses on security threats and intrusions; the NOC focuses on network infrastructure availability and performance</button>
+        <button class="option-btn" onclick="answer(1,'C')"><span class="option-letter">C</span>The SOC and NOC do the same job but work different shifts</button>
+        <button class="option-btn" onclick="answer(1,'D')"><span class="option-letter">D</span>The SOC handles P1 incidents; the NOC handles P2 and below</button>
+      </div>
+      <div class="feedback-box" id="fb1"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt1" onclick="nextQ(2)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q2">
+      <div class="question-text">2. An engineer notices that a NorthBridge application has been responding slowly for 20 minutes and is approaching its SLA breach threshold. Which team owns this incident?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(2,'A')"><span class="option-letter">A</span>SOC — slow response could indicate a denial-of-service attack</button>
+        <button class="option-btn" onclick="answer(2,'B')"><span class="option-letter">B</span>NOC — network latency is causing the slowness</button>
+        <button class="option-btn" onclick="answer(2,'C')"><span class="option-letter">C</span>SRE — service reliability and SLA compliance is their responsibility</button>
+        <button class="option-btn" onclick="answer(2,'D')"><span class="option-letter">D</span>DevOps — a recent deployment must have caused the slowness</button>
+      </div>
+      <div class="feedback-box" id="fb2"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt2" onclick="nextQ(3)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q3">
+      <div class="question-text">3. Why do technology organisations have separate teams for SOC, NOC, SRE, and DevOps — rather than one team that handles everything?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(3,'A')"><span class="option-letter">A</span>Because regulations require separate teams for compliance purposes</button>
+        <button class="option-btn" onclick="answer(3,'B')"><span class="option-letter">B</span>Because each domain requires specialised skills, tools, and focus — a single team would be overwhelmed and less effective at each</button>
+        <button class="option-btn" onclick="answer(3,'C')"><span class="option-letter">C</span>Because one team cannot work 24×7 without shift coverage</button>
+        <button class="option-btn" onclick="answer(3,'D')"><span class="option-letter">D</span>Because separate teams reduce the cost of salaries</button>
+      </div>
+      <div class="feedback-box" id="fb3"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt3" onclick="nextQ(4)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q4">
+      <div class="question-text">4. A deployment of new banking software fails halfway through — some servers have the new version, some have the old version, and transactions are behaving inconsistently. Which team responds first?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(4,'A')"><span class="option-letter">A</span>NOC — network configuration needs to be checked first</button>
+        <button class="option-btn" onclick="answer(4,'B')"><span class="option-letter">B</span>SOC — inconsistent behaviour could indicate a breach</button>
+        <button class="option-btn" onclick="answer(4,'C')"><span class="option-letter">C</span>DevOps — the deployment pipeline owns releases and must roll back or fix the failed deployment</button>
+        <button class="option-btn" onclick="answer(4,'D')"><span class="option-letter">D</span>SRE — service reliability has been affected</button>
+      </div>
+      <div class="feedback-box" id="fb4"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt4" onclick="nextQ(5)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q5">
+      <div class="question-text">5. Multiple NorthBridge customers report that their account details have appeared on an external website. Which team leads the response to this incident?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(5,'A')"><span class="option-letter">A</span>NOC — network traffic needs to be analysed for the data leak path</button>
+        <button class="option-btn" onclick="answer(5,'B')"><span class="option-letter">B</span>SRE — service availability may have been compromised</button>
+        <button class="option-btn" onclick="answer(5,'C')"><span class="option-letter">C</span>DevOps — a recent code deployment may have introduced a vulnerability</button>
+        <button class="option-btn" onclick="answer(5,'D')"><span class="option-letter">D</span>SOC — a data breach is a security incident requiring immediate threat investigation and containment</button>
+      </div>
+      <div class="feedback-box" id="fb5"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt5" onclick="showResult()" disabled>See My Result →</button></div>
+    </div>
+  </div>
+
+  <div class="result-section" id="resultSection">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-label">out of 5 questions</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="retry-btn" onclick="retryQuiz()">Retry Quiz</button>
+  </div>
+
+</div>
+
+<script>
+const incidents = [
+  {
+    id: 1,
+    title: 'Unusual login attempts from an unknown IP address in Eastern Europe',
+    detail: 'Monitoring has flagged 847 failed login attempts in the past 10 minutes from IP 185.234.xx.xx — a range not associated with any known customer region.',
+    answer: 'SOC',
+    feedback: {
+      correct: '✓ Correct — SOC. This is a security event: a potential brute-force attack or credential stuffing attempt from an unknown external IP. The SOC monitors for exactly this type of threat and will investigate, potentially block the IP, and determine if any accounts were compromised.',
+      wrong: 'This is a security incident — suspicious login activity from an unknown external source. The SOC monitors for threats and intrusions 24×7 and owns this response. Network, reliability, and deployment teams are not equipped to handle threat investigation.'
+    }
+  },
+  {
+    id: 2,
+    title: 'Core network switch failure in the Mumbai data centre',
+    detail: 'A core switch has gone offline. Approximately 30% of internal server-to-server traffic is being rerouted through backup paths, causing latency increases across multiple services.',
+    answer: 'NOC',
+    feedback: {
+      correct: '✓ Correct — NOC. A physical network switch failure is infrastructure — the NOC owns all network hardware, routing, and connectivity. They will diagnose the switch failure, activate redundancy, and restore normal routing.',
+      wrong: 'A network switch failure is infrastructure — it belongs to the NOC, whose responsibility is network availability and performance. This is not a security incident, application failure, or deployment issue.'
+    }
+  },
+  {
+    id: 3,
+    title: 'NorthBridge mobile app — error rate has jumped to 12% in the last 5 minutes',
+    detail: 'The mobile app\'s error rate has spiked from a baseline of 0.2% to 12%. Customers are receiving generic error messages. No recent deployment has been made.',
+    answer: 'SRE',
+    feedback: {
+      correct: '✓ Correct — SRE. A sudden spike in application error rate with no recent deployment is a reliability incident. SRE owns service availability and SLA compliance. They will investigate the root cause — which could be memory exhaustion, a database bottleneck, or a cascading failure — and restore service.',
+      wrong: 'A sudden error rate spike with no recent deployment is a service reliability incident. SRE owns application availability and error rate SLAs. No deployment was made — so this is not a DevOps incident. No security threat was indicated — so this is not a SOC incident.'
+    }
+  },
+  {
+    id: 4,
+    title: 'New payment service deployment failed — rollback required',
+    detail: 'The 14:30 deployment of the payment-service v2.4.1 failed at 67% completion. The deployment script returned a non-zero exit code. Approximately half the payment servers are running the new version.',
+    answer: 'DevOps',
+    feedback: {
+      correct: '✓ Correct — DevOps. A failed deployment is owned by DevOps — they manage the deployment pipeline, deployment scripts, and release process. They will investigate the failed deployment, roll back to the previous version, and diagnose what went wrong before re-attempting.',
+      wrong: 'A failed software deployment belongs to DevOps — they own the deployment pipeline and release process. Rolling back a failed deployment and fixing the deployment script is specifically their domain.'
+    }
+  },
+  {
+    id: 5,
+    title: 'Internet firewall — bandwidth utilisation at 94%',
+    detail: 'The internet-facing firewall is reporting 94% bandwidth utilisation. Normal baseline is 40-60%. No specific security alerts have been triggered. Customer traffic appears to be flowing normally.',
+    answer: 'NOC',
+    feedback: {
+      correct: '✓ Correct — NOC. High bandwidth utilisation on a network device is a network infrastructure concern — the NOC monitors network capacity and performance. They will investigate the cause (could be legitimate traffic spike, backup jobs, or a misconfiguration) and take action to prevent a saturation event.',
+      wrong: 'Bandwidth utilisation on a network device is a network infrastructure metric — the NOC monitors and manages this. No security alert was triggered, no application has failed, and no deployment is involved.'
+    }
+  },
+  {
+    id: 6,
+    title: 'Employee laptop flagged — malware detected by endpoint security',
+    detail: 'EDR (Endpoint Detection and Response) has flagged an employee laptop in the Finance department. A known banking trojan signature was detected. The laptop has been automatically isolated from the network.',
+    answer: 'SOC',
+    feedback: {
+      correct: '✓ Correct — SOC. A malware detection on an employee endpoint is a security incident. The SOC owns endpoint security events, malware response, and threat investigation. They will conduct forensic analysis of the laptop, determine the scope of the compromise, and ensure no lateral movement occurred.',
+      wrong: 'Malware on an employee endpoint is a security incident — the SOC responds. The SOC owns threat detection, investigation, and containment. Network isolation has already been done automatically; now forensic investigation is needed.'
+    }
+  },
+  {
+    id: 7,
+    title: 'Database response time has degraded — queries taking 8x longer than normal',
+    detail: 'The primary database cluster is responding to queries in 800ms on average, compared to the normal 100ms. No deployment has been made. The database CPU is at 78% and memory at 91%.',
+    answer: 'SRE',
+    feedback: {
+      correct: '✓ Correct — SRE. Database performance degradation is a service reliability issue — SRE owns the reliability of all infrastructure components including databases. They will investigate the root cause (possible memory pressure, a runaway query, or a locking issue) and restore normal performance.',
+      wrong: 'Database performance degradation is a service reliability incident — SRE owns this. It is not a security event (no threat indicators), not a network issue, and no deployment was made. SRE will investigate the database resource usage and restore normal response times.'
+    }
+  },
+  {
+    id: 8,
+    title: 'Customer data found being transmitted to an external IP address',
+    detail: 'Network monitoring has flagged an app server making outbound HTTPS connections to 203.0.113.45 — an IP address with no business justification. The connections started 35 minutes ago and are ongoing.',
+    answer: 'SOC',
+    feedback: {
+      correct: '✓ Correct — SOC. Unexplained outbound data transmission to an unknown external IP is a potential data exfiltration incident — one of the most serious security events a bank can face. The SOC will immediately investigate, isolate the affected server, capture the traffic, and begin forensic analysis.',
+      wrong: 'Unexplained outbound connections to an unknown external IP is a security incident — potential data exfiltration. The SOC leads this response. This is not an infrastructure issue or deployment failure — it is a live security threat requiring immediate investigation and containment.'
+    }
+  },
+  {
+    id: 9,
+    title: 'VPN service is down — 200 remote employees cannot connect',
+    detail: 'The NorthBridge corporate VPN has stopped accepting connections. 200 remote employees are unable to access internal systems. The VPN appliance logs show the service stopped responding at 11:22 AM.',
+    answer: 'NOC',
+    feedback: {
+      correct: '✓ Correct — NOC. The VPN is network infrastructure. A VPN service outage preventing remote access is a network availability incident owned by the NOC. They will diagnose the VPN appliance failure, restart the service, and restore access for remote employees.',
+      wrong: 'VPN is network infrastructure — a VPN outage is owned by the NOC. The NOC manages all network devices including VPN appliances, firewalls, and routers. This is not a security incident (no threat was involved), not an application failure, and not a deployment issue.'
+    }
+  },
+  {
+    id: 10,
+    title: 'API service returning incorrect transaction amounts after v3.1.0 release',
+    detail: 'Since the v3.1.0 release at 09:00 AM, the transactions API is returning amounts that are off by a factor of 100 — ₹500 is showing as ₹50,000. The bug is reproducible. A rollback has been requested.',
+    answer: 'DevOps',
+    feedback: {
+      correct: '✓ Correct — DevOps. A code bug introduced by a specific release is owned by DevOps — they deployed it and must roll it back or hotfix it. The bug is directly caused by the v3.1.0 release. DevOps will execute an emergency rollback to v3.0.x and then investigate the code defect.',
+      wrong: 'A bug introduced by a specific software release is owned by DevOps — they manage releases and are responsible for rollbacks. The timing (started at the exact release time), the reproducibility, and the nature of the error (calculation logic) all point to a code defect introduced by the deployment.'
+    }
+  }
+];
+
+const correct = { 1:'B', 2:'C', 3:'B', 4:'C', 5:'D' };
+const feedbacks = {
+  1: { B: '✓ Correct. SOC = security threats and intrusions. NOC = network infrastructure availability. These are distinct specialisations requiring different skills, tools, and focus.', wrong: 'Not quite. The SOC is the Security Operations Centre — it monitors and responds to threats, attacks, and intrusions. The NOC is the Network Operations Centre — it keeps network infrastructure running and available.' },
+  2: { C: '✓ Correct. SRE owns service reliability and SLA compliance. An application approaching its SLA breach threshold is exactly the type of incident SRE responds to, regardless of the underlying cause.', wrong: 'Not quite. SRE owns service availability and SLA compliance. When an application is degrading and approaching an SLA threshold, SRE responds — they own reliability metrics across all services.' },
+  3: { B: '✓ Correct. Each domain — security, network, reliability, deployment — requires deep specialisation. A team that tries to cover all four would be spread too thin and less effective in each area.', wrong: 'Not quite. The reason for separate teams is specialisation. Each domain requires different skills, tools, and mindsets. A network engineer and a malware analyst need fundamentally different training and toolsets.' },
+  4: { C: '✓ Correct. DevOps owns the deployment pipeline and release process. A failed deployment with a mixed-version environment is their direct responsibility — they will roll back and fix the pipeline.', wrong: 'Not quite. A failed deployment is owned by DevOps — they own the release process and are responsible for rollbacks when deployments fail. While SRE may be involved in restoring service, the root cause owner is DevOps.' },
+  5: { D: '✓ Correct. A data breach — customer data appearing externally — is a critical security incident. The SOC leads the response: threat investigation, containment, forensics, and regulatory notification.', wrong: 'Not quite. Customer data appearing on an external website is a data breach — a security incident of the highest severity. The SOC leads all security incident responses including breaches, exfiltration, and unauthorised disclosures.' }
+};
+
+let answered = {};
+let quizScores = {};
+
+function buildIncidents() {
+  const wrap = document.getElementById('incidentsWrap');
+  wrap.innerHTML = incidents.map(inc => `
+    <div class="incident-card" id="ic-${inc.id}">
+      <div class="incident-top">
+        <div class="incident-num">#${String(inc.id).padStart(2,'0')}</div>
+        <div class="incident-text">
+          <div class="incident-title">${inc.title}</div>
+          <div class="incident-detail">${inc.detail}</div>
+        </div>
+      </div>
+      <div class="team-btns" id="btns-${inc.id}">
+        <button class="team-btn soc-btn" onclick="matchTeam(${inc.id},'SOC')">🔴 SOC</button>
+        <button class="team-btn noc-btn" onclick="matchTeam(${inc.id},'NOC')">🔵 NOC</button>
+        <button class="team-btn sre-btn" onclick="matchTeam(${inc.id},'SRE')">🟢 SRE</button>
+        <button class="team-btn dev-btn" onclick="matchTeam(${inc.id},'DevOps')">🟣 DevOps</button>
+      </div>
+      <div class="incident-feedback" id="ifb-${inc.id}"></div>
+    </div>
+  `).join('');
+}
+
+function matchTeam(id, team) {
+  if (answered[id]) return;
+  answered[id] = team;
+
+  const inc = incidents.find(i => i.id === id);
+  const isCorrect = team === inc.answer;
+
+  const btns = document.querySelectorAll(`#btns-${id} .team-btn`);
+  btns.forEach(b => {
+    b.disabled = true;
+    if (b.textContent.includes(inc.answer)) b.classList.add('correct');
+    if (b.textContent.includes(team) && !isCorrect) b.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('ifb-' + id);
+  fb.innerHTML = `<div class="fb-mini-label">${isCorrect ? '✓ Correct' : '✗ Not quite'}</div>${isCorrect ? inc.feedback.correct : inc.feedback.wrong}`;
+  fb.className = 'incident-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('ic-' + id).classList.add('answered');
+
+  updateProgress();
+
+  if (Object.keys(answered).length === 10) showScoreboard();
+}
+
+function updateProgress() {
+  const n = Object.keys(answered).length;
+  document.getElementById('progressFill').style.width = (n / 10 * 100) + '%';
+  document.getElementById('progressPct').textContent = n + ' / 10';
+}
+
+function showScoreboard() {
+  const correct_count = incidents.filter(i => answered[i.id] === i.answer).length;
+  const wrong_count = 10 - correct_count;
+  const sb = document.getElementById('scoreboard');
+  sb.classList.add('show');
+  document.getElementById('scoreTotal').textContent = correct_count + ' / 10 correct';
+  document.getElementById('scoreBreakdown').innerHTML = `
+    <div class="score-row"><div class="score-dot c"></div><span>${correct_count} incidents routed to the correct team</span></div>
+    <div class="score-row"><div class="score-dot w"></div><span>${wrong_count} sent to the wrong team — review the feedback above</span></div>
+  `;
+  sb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function unlockQuiz() {
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function answer(q, opt) {
+  if (quizScores[q] !== undefined) return;
+  const btns = document.querySelectorAll(`#q${q} .option-btn`);
+  btns.forEach(b => {
+    b.disabled = true;
+    const letter = b.querySelector('.option-letter').textContent;
+    if (letter === correct[q]) b.classList.add('correct');
+    if (letter === opt && opt !== correct[q]) b.classList.add('wrong');
+  });
+  const isRight = opt === correct[q];
+  quizScores[q] = isRight ? 1 : 0;
+  const fb = document.getElementById('fb' + q);
+  fb.textContent = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
+  fb.className = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
+  document.getElementById('nxt' + q).disabled = false;
+}
+
+function nextQ(n) {
+  document.getElementById('q' + (n-1)).classList.remove('show');
+  document.getElementById('q' + n).classList.add('show');
+  document.getElementById('quizCounter').textContent = `Question ${n} of 5`;
+}
+
+function showResult() {
+  document.getElementById('q5').classList.remove('show');
+  document.getElementById('quizSection').classList.remove('show');
+  const total = Object.values(quizScores).reduce((a,b) => a+b, 0);
+  const rs = document.getElementById('resultSection');
+  rs.classList.add('show');
+  document.getElementById('resultScore').textContent = `${total} / 5`;
+  let icon, msg;
+  if (total === 5) {
+    icon = '🏆'; msg = 'Perfect score. You understand which team owns which type of incident and why. You are ready for Lesson 11.';
+  } else if (total >= 3) {
+    icon = '✅'; msg = 'Good work. You have the main distinctions. Review the questions you missed and move on to Lesson 11.';
+  } else {
+    icon = '📖'; msg = 'Revisit the team reference guide at the top of this lab. Focus on the key distinction: SOC = security threats, NOC = network infrastructure, SRE = service reliability, DevOps = deployments and code.';
+  }
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultMsg').textContent = msg;
+  rs.scrollIntoView({ behavior: 'smooth' });
+}
+
+function retryQuiz() {
+  quizScores = {};
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('fb' + i).className = 'feedback-box';
+    document.getElementById('fb' + i).textContent = '';
+    document.getElementById('nxt' + i).disabled = true;
+    document.querySelectorAll(`#q${i} .option-btn`).forEach(b => { b.disabled = false; b.classList.remove('correct','wrong'); });
+  }
+  document.getElementById('q1').classList.add('show');
+  for (let i = 2; i <= 5; i++) document.getElementById('q'+i).classList.remove('show');
+  document.getElementById('quizCounter').textContent = 'Question 1 of 5';
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+buildIncidents();
+</script>
+</body>
+</html>
