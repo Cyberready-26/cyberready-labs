@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NorthBridge Bank — Production SOC Monitoring Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #050d1a;
+  --navy-2: #0a1628;
+  --navy-3: #0f2040;
+  --navy-4: #162952;
+  --navy-5: #1e3a6e;
+  --blue: #1e6ef5;
+  --blue-dim: #1240a0;
+  --cyan: #00c8e0;
+  --cyan-dim: #007a8a;
+  --green: #00c875;
+  --green-dim: #00783f;
+  --amber: #f5a623;
+  --amber-dim: #8a5a0a;
+  --red: #ff4757;
+  --red-dim: #8a1520;
+  --purple: #9b59f5;
+  --purple-dim: #4a1a8a;
+  --teal: #00b894;
+  --text: #e8f0ff;
+  --text-2: #8a9fcc;
+  --text-3: #4a5f8a;
+  --border: rgba(255,255,255,0.08);
+  --border-bright: rgba(255,255,255,0.15);
+  --glow-blue: 0 0 20px rgba(30,110,245,0.3);
+  --glow-green: 0 0 20px rgba(0,200,117,0.3);
+  --glow-red: 0 0 20px rgba(255,71,87,0.3);
+  --glow-amber: 0 0 20px rgba(245,166,35,0.3);
+  --font: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-cond: 'IBM Plex Sans Condensed', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--navy);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(30,110,245,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,110,245,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(5,13,26,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-bright);
+  padding: 0 28px;
+  display: flex; align-items: center; gap: 20px; height: 58px;
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-icon {
+  width: 32px; height: 32px; background: var(--blue);
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: white; font-family: var(--font-cond);
+  box-shadow: var(--glow-blue);
+}
+.logo-text { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.logo-sub  { font-size: 10px; color: var(--text-3); letter-spacing: 1.5px; text-transform: uppercase; }
+
+.topbar-center { flex: 1; text-align: center; }
+.doc-title { font-size: 12px; color: var(--text-2); letter-spacing: 0.5px; }
+.doc-version { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); }
+
+/* Role filter */
+.role-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.role-btn {
+  padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  font-family: var(--font); cursor: pointer; border: 1.5px solid var(--border-bright);
+  background: transparent; color: var(--text-2); letter-spacing: 0.3px;
+  transition: all 0.2s;
+}
+.role-btn:hover { border-color: var(--blue); color: var(--text); }
+.role-btn.active { background: var(--blue); border-color: var(--blue); color: white; box-shadow: var(--glow-blue); }
+.role-btn.soc.active   { background: var(--red);    border-color: var(--red);    box-shadow: var(--glow-red); }
+.role-btn.audit.active { background: var(--amber);  border-color: var(--amber);  color: #1a0a00; box-shadow: var(--glow-amber); }
+
+.print-btn {
+  padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 500;
+  font-family: var(--font); cursor: pointer; border: 1px solid var(--border-bright);
+  background: transparent; color: var(--text-3); transition: all 0.2s;
+}
+.print-btn:hover { color: var(--text); border-color: var(--text-2); }
+
+/* ── THEME SWITCHER ── */
+.theme-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.theme-label { font-size: 10px; color: var(--text-3); white-space: nowrap; }
+.theme-btn {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.theme-btn:hover { transform: scale(1.2); }
+.theme-btn.active { border-color: white; transform: scale(1.15); }
+.theme-btn[data-theme="dark"]      { background: #050d1a; border-color: #4a6aaa; }
+.theme-btn[data-theme="navy-soft"] { background: #1a2540; border-color: #4a6aaa; }
+.theme-btn[data-theme="slate"]     { background: #1e293b; border-color: #64748b; }
+.theme-btn[data-theme="white"]     { background: #ffffff; border-color: #cbd5e1; }
+.theme-btn[data-theme="warm"]      { background: #1a1208; border-color: #8a6a20; }
+
+/* ── THEME: DARK (default) — already set via :root ── */
+
+/* ── THEME: NAVY SOFT ── */
+body.theme-navy-soft {
+  --navy: #111827; --navy-2: #1f2937; --navy-3: #1a2535; --navy-4: #253048; --navy-5: #2d3a55;
+  --text: #f1f5f9; --text-2: #94a3b8; --text-3: #64748b;
+  --border: rgba(255,255,255,0.1); --border-bright: rgba(255,255,255,0.18);
+}
+body.theme-navy-soft .topbar { background: rgba(17,24,39,0.97); }
+body.theme-navy-soft body::before { background-image: linear-gradient(rgba(148,163,184,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.04) 1px, transparent 1px); }
+
+/* ── THEME: SLATE ── */
+body.theme-slate {
+  --navy: #0f172a; --navy-2: #1e293b; --navy-3: #1a2535; --navy-4: #253045; --navy-5: #334155;
+  --text: #e2e8f0; --text-2: #94a3b8; --text-3: #64748b;
+  --border: rgba(255,255,255,0.09); --border-bright: rgba(255,255,255,0.16);
+}
+body.theme-slate .topbar { background: rgba(15,23,42,0.97); }
+
+/* ── THEME: WHITE / LIGHT ── */
+body.theme-white {
+  --navy: #f8fafc; --navy-2: #ffffff; --navy-3: #f1f5f9; --navy-4: #e2e8f0; --navy-5: #cbd5e1;
+  --text: #0f172a; --text-2: #334155; --text-3: #64748b;
+  --border: rgba(0,0,0,0.08); --border-bright: rgba(0,0,0,0.14);
+  --blue: #1d4ed8; --cyan: #0891b2; --green: #16a34a; --amber: #b45309; --red: #dc2626; --purple: #7c3aed;
+  --glow-blue: 0 0 12px rgba(29,78,216,0.2); --glow-green: 0 0 12px rgba(22,163,74,0.2);
+  --glow-red: 0 0 12px rgba(220,38,38,0.2); --glow-amber: 0 0 12px rgba(180,83,9,0.2);
+}
+body.theme-white body::before { display: none; }
+body.theme-white .topbar { background: rgba(248,250,252,0.97); border-bottom-color: rgba(0,0,0,0.12); }
+body.theme-white .section-header { background: rgba(0,0,0,0.02); }
+body.theme-white .section-header:hover { background: rgba(0,0,0,0.04); }
+body.theme-white .node-card { background: #ffffff; }
+body.theme-white .kpi-panel { background: #ffffff; }
+body.theme-white .pipe-node { background: #ffffff; }
+body.theme-white .comp-card { background: #f8fafc; }
+body.theme-white .comp-tooltip { background: #ffffff; }
+body.theme-white .detail-panel { background: #ffffff; }
+body.theme-white .tool-tag { background: rgba(29,78,216,0.08); border-color: rgba(29,78,216,0.2); color: #1d4ed8; }
+body.theme-white .tool-tag.red   { background: rgba(220,38,38,0.07); color: #dc2626; }
+body.theme-white .tool-tag.amber { background: rgba(180,83,9,0.07);  color: #b45309; }
+body.theme-white .tool-tag.green { background: rgba(22,163,74,0.07); color: #16a34a; }
+body.theme-white .stream-eng .stream-item { background: rgba(29,78,216,0.06); color: #1d4ed8; }
+body.theme-white .stream-soc .stream-item { background: rgba(220,38,38,0.06); color: #dc2626; }
+body.theme-white .corr-bridge { background: linear-gradient(135deg, rgba(124,58,237,0.06), rgba(29,78,216,0.06)); }
+body.theme-white .role-btn { color: #334155; border-color: rgba(0,0,0,0.2); }
+body.theme-white .zone-red    { background: rgba(220,38,38,0.04); }
+body.theme-white .zone-orange { background: rgba(180,83,9,0.04);  }
+body.theme-white .zone-green  { background: rgba(22,163,74,0.04); }
+body.theme-white footer { background: #f1f5f9; }
+body.theme-white .dp-section-title { color: #475569; }
+body.theme-white .dp-content { color: #334155; }
+
+/* ── THEME: WARM DARK ── */
+body.theme-warm {
+  --navy: #120c04; --navy-2: #1c1308; --navy-3: #221a0c; --navy-4: #2d2210; --navy-5: #3d2f18;
+  --text: #fef3e2; --text-2: #c8a87a; --text-3: #7a5a30;
+  --border: rgba(255,220,150,0.08); --border-bright: rgba(255,220,150,0.15);
+  --blue: #e8a020; --cyan: #e8c050; --green: #78c850; --amber: #f5a623; --red: #e85040;
+  --glow-blue: 0 0 20px rgba(232,160,32,0.3); --glow-green: 0 0 20px rgba(120,200,80,0.3);
+  --glow-red: 0 0 20px rgba(232,80,64,0.3); --glow-amber: 0 0 20px rgba(245,166,35,0.3);
+}
+body.theme-warm .topbar { background: rgba(18,12,4,0.97); border-bottom-color: rgba(255,220,150,0.15); }
+body.theme-warm .logo-icon { background: var(--amber); }
+body.theme-warm body::before { background-image: linear-gradient(rgba(232,160,32,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(232,160,32,0.03) 1px, transparent 1px); }
+
+/* ── MAIN LAYOUT ── */
+.main { position: relative; z-index: 1; padding: 24px 28px 60px; max-width: 1400px; margin: 0 auto; }
+
+/* ── SECTION ── */
+.section {
+  border-radius: 14px; border: 1px solid var(--border-bright);
+  margin-bottom: 16px; overflow: hidden;
+  transition: all 0.3s; position: relative;
+}
+.section.dimmed { opacity: 0.2; pointer-events: none; }
+.section.highlighted { border-color: var(--blue); box-shadow: var(--glow-blue); }
+.section.highlighted.soc-highlight { border-color: var(--red); box-shadow: var(--glow-red); }
+.section.highlighted.audit-highlight { border-color: var(--amber); box-shadow: var(--glow-amber); }
+
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; cursor: pointer;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid transparent;
+  transition: background 0.2s; user-select: none;
+}
+.section-header:hover { background: rgba(255,255,255,0.04); }
+.section-header.open { border-bottom-color: var(--border); }
+
+.section-num {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+.section-title-wrap { flex: 1; }
+.section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.3px; }
+.section-subtitle { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.section-badges { display: flex; gap: 5px; flex-shrink: 0; }
+.section-chevron { color: var(--text-3); font-size: 12px; transition: transform 0.25s; flex-shrink: 0; }
+.section-chevron.open { transform: rotate(180deg); }
+
+.section-body { padding: 18px 20px; display: none; }
+.section-body.open { display: block; animation: slideDown 0.25s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── ZONE COLORS ── */
+.s-perimeter .section-num { background: rgba(255,71,87,0.15); color: var(--red); }
+.s-telemetry .section-num { background: rgba(155,89,245,0.15); color: var(--purple); }
+.s-compliance .section-num { background: rgba(245,166,35,0.15); color: var(--amber); }
+.s-observability .section-num { background: rgba(30,110,245,0.15); color: var(--blue); }
+.s-incident .section-num { background: rgba(0,200,117,0.15); color: var(--green); }
+.s-kpi .section-num { background: rgba(0,200,224,0.15); color: var(--cyan); }
+
+/* ── NODES ROW ── */
+.nodes-row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+.nodes-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.nodes-grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+
+/* ── NODE CARD ── */
+.node-card {
+  background: var(--navy-2); border: 1px solid var(--border-bright);
+  border-radius: 10px; padding: 14px; position: relative;
+  cursor: pointer; transition: all 0.2s;
+}
+.node-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: var(--glow-blue); }
+.node-card.red:hover   { border-color: var(--red);    box-shadow: var(--glow-red); }
+.node-card.amber:hover { border-color: var(--amber);  box-shadow: var(--glow-amber); }
+.node-card.green:hover { border-color: var(--green);  box-shadow: var(--glow-green); }
+
+.node-icon { font-size: 26px; margin-bottom: 8px; display: block; }
+.node-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.3; }
+.node-sub  { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); line-height: 1.4; }
+.node-tools { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 8px; }
+.tool-tag {
+  background: rgba(30,110,245,0.12); border: 1px solid rgba(30,110,245,0.25);
+  border-radius: 4px; font-size: 9px; font-family: var(--font-mono);
+  color: #6ea8fe; padding: 2px 6px;
+}
+.tool-tag.red    { background: rgba(255,71,87,0.1);   border-color: rgba(255,71,87,0.25);   color: #ff8a95; }
+.tool-tag.amber  { background: rgba(245,166,35,0.1);  border-color: rgba(245,166,35,0.25);  color: #fbbf24; }
+.tool-tag.green  { background: rgba(0,200,117,0.1);   border-color: rgba(0,200,117,0.25);   color: #34d399; }
+.tool-tag.purple { background: rgba(155,89,245,0.1);  border-color: rgba(155,89,245,0.25);  color: #c4b5fd; }
+.tool-tag.cyan   { background: rgba(0,200,224,0.1);   border-color: rgba(0,200,224,0.25);   color: #67e8f9; }
+
+/* ── ZONE BANDS ── */
+.zone-band {
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.zone-band-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.zone-band-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+.zone-band-desc { font-size: 10px; color: var(--text-3); font-style: italic; }
+
+.zone-red    { background: rgba(255,71,87,0.06);   border: 1px solid rgba(255,71,87,0.2); }
+.zone-red    .zone-band-dot { background: var(--red); }
+.zone-red    .zone-band-label { color: var(--red); }
+.zone-orange { background: rgba(245,166,35,0.06);  border: 1px solid rgba(245,166,35,0.2); }
+.zone-orange .zone-band-dot { background: var(--amber); }
+.zone-orange .zone-band-label { color: var(--amber); }
+.zone-green  { background: rgba(0,200,117,0.06);   border: 1px solid rgba(0,200,117,0.2); }
+.zone-green  .zone-band-dot { background: var(--green); }
+.zone-green  .zone-band-label { color: var(--green); }
+
+/* ── FLOW ARROW ── */
+.flow-arrow {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; color: var(--text-3); font-size: 18px; flex-shrink: 0; align-self: center;
+}
+.flow-arrow.down { justify-content: flex-start; padding: 4px 0 4px 28px; font-size: 16px; }
+.corr-bridge {
+  background: linear-gradient(135deg, rgba(155,89,245,0.08), rgba(30,110,245,0.08));
+  border: 1px solid rgba(155,89,245,0.3); border-radius: 10px;
+  padding: 12px 16px; margin-top: 12px; text-align: center;
+}
+.corr-title { font-size: 12px; font-weight: 700; color: var(--purple); margin-bottom: 3px; }
+.corr-desc  { font-size: 11px; color: var(--text-3); }
+
+/* ── DUAL STREAMS ── */
+.dual-streams { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stream {
+  border-radius: 10px; padding: 14px;
+  border: 1px solid var(--border);
+}
+.stream-eng  { background: rgba(30,110,245,0.05);  border-color: rgba(30,110,245,0.2); }
+.stream-soc  { background: rgba(255,71,87,0.05);   border-color: rgba(255,71,87,0.2); }
+.stream-title { font-size: 12px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.stream-eng .stream-title { color: var(--blue); }
+.stream-soc .stream-title { color: var(--red); }
+.stream-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 7px; margin-bottom: 5px;
+  font-size: 11px;
+}
+.stream-eng .stream-item { background: rgba(30,110,245,0.08); color: #93c5fd; }
+.stream-soc .stream-item { background: rgba(255,71,87,0.08);  color: #fca5a5; }
+.stream-item-icon { font-size: 14px; flex-shrink: 0; }
+
+/* ── COMPLIANCE TABLE ── */
+.compliance-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+.comp-card {
+  background: var(--navy-2); border: 1px solid var(--border-bright);
+  border-radius: 10px; padding: 12px 14px;
+}
+.comp-card-title { font-size: 11px; font-weight: 700; color: var(--amber); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.comp-card-val   { font-size: 11px; color: var(--text-2); line-height: 1.6; }
+.retention-bar { display: flex; gap: 0; border-radius: 6px; overflow: hidden; margin-top: 8px; height: 20px; }
+.ret-hot  { background: rgba(255,71,87,0.6);  flex: 1; display: flex; align-items: center; justify-content: center; font-size: 9px; font-family: var(--font-mono); color: white; }
+.ret-warm { background: rgba(245,166,35,0.6); flex: 2; display: flex; align-items: center; justify-content: center; font-size: 9px; font-family: var(--font-mono); color: white; }
+.ret-cold { background: rgba(30,110,245,0.4); flex: 5; display: flex; align-items: center; justify-content: center; font-size: 9px; font-family: var(--font-mono); color: white; }
+
+/* ── COMPLIANCE BADGE ── */
+.cbadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 5px; padding: 3px 8px;
+  font-size: 9px; font-weight: 700; font-family: var(--font-mono);
+  letter-spacing: 0.5px; cursor: pointer; position: relative;
+  transition: all 0.2s;
+}
+.cbadge:hover { transform: translateY(-1px); }
+.cbadge.pci   { background: rgba(0,200,117,0.1);   border: 1px solid rgba(0,200,117,0.3);   color: var(--green); }
+.cbadge.rbi   { background: rgba(30,110,245,0.1);  border: 1px solid rgba(30,110,245,0.3);  color: #93c5fd; }
+.cbadge.iso   { background: rgba(155,89,245,0.1);  border: 1px solid rgba(155,89,245,0.3);  color: #c4b5fd; }
+.cbadge.soc2  { background: rgba(245,166,35,0.1);  border: 1px solid rgba(245,166,35,0.3);  color: var(--amber); }
+
+/* ── COMPLIANCE TOOLTIP ── */
+.comp-tooltip {
+  position: fixed; z-index: 500;
+  background: var(--navy-3); border: 1px solid var(--border-bright);
+  border-radius: 10px; padding: 14px 16px; width: 300px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+  display: none; pointer-events: none;
+}
+.comp-tooltip.visible { display: block; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.ct-badge { font-size: 10px; font-weight: 700; font-family: var(--font-mono); margin-bottom: 8px; }
+.ct-control { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.ct-desc { font-size: 11px; color: var(--text-2); line-height: 1.6; }
+.ct-req { font-size: 10px; font-family: var(--font-mono); color: var(--text-3); margin-top: 6px; }
+
+/* ── PIPELINE ── */
+.pipeline {
+  display: flex; align-items: center; gap: 6px;
+  overflow-x: auto; padding-bottom: 4px;
+}
+.pipe-node {
+  background: var(--navy-2); border: 1px solid var(--border-bright);
+  border-radius: 9px; padding: 10px 12px; flex-shrink: 0;
+  min-width: 110px; text-align: center; cursor: pointer;
+  transition: all 0.2s;
+}
+.pipe-node:hover { border-color: var(--green); box-shadow: var(--glow-green); }
+.pipe-node-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.pipe-node-name { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.pipe-node-sla  { font-size: 9px;  font-family: var(--font-mono); color: var(--green); margin-top: 3px; display: block; }
+.pipe-arrow { color: var(--text-3); font-size: 16px; flex-shrink: 0; }
+.slack-warn {
+  display: inline-block; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3);
+  border-radius: 4px; font-size: 9px; font-family: var(--font-mono); color: var(--amber);
+  padding: 1px 5px; margin-top: 3px; display: block;
+}
+
+/* escalation tiers */
+.esc-tiers { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+.esc-tier { border-radius: 9px; padding: 12px; }
+.esc-l1 { background: rgba(0,200,117,0.06);  border: 1px solid rgba(0,200,117,0.2); }
+.esc-l2 { background: rgba(245,166,35,0.06); border: 1px solid rgba(245,166,35,0.2); }
+.esc-l3 { background: rgba(255,71,87,0.06);  border: 1px solid rgba(255,71,87,0.2); }
+.esc-title { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+.esc-l1 .esc-title { color: var(--green); }
+.esc-l2 .esc-title { color: var(--amber); }
+.esc-l3 .esc-title { color: var(--red); }
+.esc-desc { font-size: 11px; color: var(--text-3); line-height: 1.5; }
+.esc-sla  { font-size: 10px; font-family: var(--font-mono); margin-top: 5px; }
+.esc-l1 .esc-sla { color: var(--green); }
+.esc-l2 .esc-sla { color: var(--amber); }
+.esc-l3 .esc-sla { color: var(--red); }
+
+/* ── SECTION INFO BTN ── */
+.section-info-btn {
+  padding: 3px 10px; border-radius: 5px; font-size: 10px; font-weight: 600;
+  font-family: var(--font); cursor: pointer; border: 1px solid var(--border-bright);
+  background: rgba(255,255,255,0.05); color: var(--text-2); transition: all 0.2s;
+  white-space: nowrap;
+}
+.section-info-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+/* ── BEGINNER / PRO TOGGLE ── */
+.view-toggle {
+  display: flex; gap: 0; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border-bright); margin-bottom: 14px;
+}
+.vt-btn {
+  flex: 1; padding: 7px 12px; border: none; font-size: 11px; font-weight: 600;
+  font-family: var(--font); cursor: pointer; transition: all 0.2s;
+  background: transparent; color: var(--text-3);
+}
+.vt-btn.active { background: var(--blue); color: white; }
+.vt-btn.active.beginner-btn { background: var(--green); }
+.dp-view { display: none; }
+.dp-view.active { display: block; animation: fadeIn 0.2s ease; }
+.dp-analogy {
+  background: rgba(0,200,117,0.06); border: 1px solid rgba(0,200,117,0.2);
+  border-radius: 8px; padding: 10px 12px; margin: 10px 0;
+  font-size: 12px; color: var(--text-2); line-height: 1.6;
+}
+.dp-analogy-label { font-size: 10px; font-weight: 700; color: var(--green); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.dp-why {
+  background: rgba(30,110,245,0.06); border: 1px solid rgba(30,110,245,0.2);
+  border-radius: 8px; padding: 10px 12px; margin: 10px 0;
+  font-size: 12px; color: var(--text-2); line-height: 1.6;
+}
+.dp-why-label { font-size: 10px; font-weight: 700; color: var(--blue); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.dp-example {
+  background: rgba(245,166,35,0.06); border: 1px solid rgba(245,166,35,0.2);
+  border-radius: 8px; padding: 10px 12px; margin: 10px 0;
+  font-size: 12px; color: var(--text-2); line-height: 1.6;
+}
+.dp-example-label { font-size: 10px; font-weight: 700; color: var(--amber); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+
+/* ── KPI PANELS ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.kpi-panel {
+  background: var(--navy-2); border: 1px solid var(--border-bright);
+  border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
+}
+.kpi-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.kpi-panel.blue::before  { background: var(--blue); box-shadow: var(--glow-blue); }
+.kpi-panel.green::before { background: var(--green); box-shadow: var(--glow-green); }
+.kpi-panel.amber::before { background: var(--amber); box-shadow: var(--glow-amber); }
+.kpi-panel.red::before   { background: var(--red);   box-shadow: var(--glow-red); }
+
+.kpi-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+.kpi-value { font-size: 32px; font-weight: 700; font-family: var(--font-mono); line-height: 1; margin-bottom: 6px; }
+.kpi-panel.blue  .kpi-value { color: var(--cyan); }
+.kpi-panel.green .kpi-value { color: var(--green); }
+.kpi-panel.amber .kpi-value { color: var(--amber); }
+.kpi-panel.red   .kpi-value { color: var(--red); }
+
+.kpi-trend { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+.kpi-trend .good { color: var(--green); }
+.kpi-trend .warn { color: var(--amber); }
+.kpi-trend .bad  { color: var(--red); }
+.kpi-sparkline { margin-top: 10px; height: 40px; position: relative; }
+.kpi-sparkline svg { width: 100%; height: 100%; }
+
+.pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%; display: inline-block;
+  margin-right: 5px; position: relative; top: -1px;
+  animation: pulse 2s infinite;
+}
+.pulse-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); }
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.4); }
+}
+
+.live-badge {
+  display: inline-flex; align-items: center;
+  font-size: 9px; font-family: var(--font-mono); color: var(--green);
+  background: rgba(0,200,117,0.1); border: 1px solid rgba(0,200,117,0.3);
+  border-radius: 4px; padding: 1px 6px; margin-left: 8px;
+}
+
+/* ── DETAIL PANEL (slide-in) ── */
+.detail-overlay {
+  position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px); display: none; align-items: flex-start; justify-content: flex-end;
+  padding: 16px;
+}
+.detail-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.detail-panel {
+  background: var(--navy-3); border: 1px solid var(--border-bright);
+  border-radius: 14px; width: 380px; max-height: calc(100vh - 32px);
+  overflow-y: auto; padding: 22px; animation: slideIn 0.25s ease;
+  box-shadow: -8px 0 40px rgba(0,0,0,0.5);
+}
+@keyframes slideIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+.dp-close {
+  position: absolute; top: 16px; right: 16px; background: transparent;
+  border: none; color: var(--text-3); font-size: 18px; cursor: pointer;
+  transition: color 0.2s;
+}
+.dp-close:hover { color: var(--text); }
+.dp-icon { font-size: 36px; margin-bottom: 10px; display: block; }
+.dp-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.dp-layer { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+.dp-section { margin-bottom: 14px; }
+.dp-section-title { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.dp-content { font-size: 12px; color: var(--text-2); line-height: 1.7; }
+.dp-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.dp-compliance { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border); padding: 20px 28px;
+  background: rgba(5,13,26,0.8); position: relative; z-index: 1;
+}
+.footer-inner { max-width: 1400px; margin: 0 auto; }
+.footer-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.footer-title { font-size: 11px; color: var(--text-3); }
+.footer-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.footer-bottom { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); text-align: center; }
+
+/* ── PRINT STYLES ── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; color: #0a0a0a !important; }
+  body::before { display: none; }
+  .topbar { position: static; background: white !important; border-bottom: 2px solid #ccc; }
+  .role-btns, .print-btn { display: none; }
+  .section { break-inside: avoid; border: 1.5px solid #ccc !important; box-shadow: none !important; }
+  .section-body { display: block !important; }
+  .section-header { cursor: default; }
+  .section-chevron { display: none; }
+  .node-card { background: #f8f8f8 !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+  .stream { background: #f8f8f8 !important; }
+  .kpi-panel { background: #f0f0f0 !important; }
+  .detail-overlay { display: none !important; }
+  .comp-tooltip { display: none !important; }
+  body, .node-name, .section-title { color: #0a0a0a !important; }
+  .text-2, .node-sub, .esc-desc { color: #444 !important; }
+  footer { background: white !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-icon">NB</div>
+    <div>
+      <div class="logo-text">NorthBridge Bank</div>
+      <div class="logo-sub">Security Operations Center</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="doc-title">Production SOC Monitoring Architecture — Reference Blueprint</div>
+    <div class="doc-version">v2.0 · CONFIDENTIAL · Internal Use Only</div>
+  </div>
+  <div class="role-btns">
+    <button class="role-btn active" onclick="setRole('all')">All Roles</button>
+    <button class="role-btn" onclick="setRole('engineer')">🔧 Engineer</button>
+    <button class="role-btn soc" onclick="setRole('soc')">🔴 SOC Analyst</button>
+    <button class="role-btn audit" onclick="setRole('audit')">📋 Auditor</button>
+  </div>
+  <div class="theme-wrap">
+    <span class="theme-label">Theme:</span>
+    <button class="theme-btn active" data-theme="dark"      title="Dark (default)" onclick="setTheme('dark',this)"></button>
+    <button class="theme-btn"        data-theme="navy-soft" title="Navy Soft"       onclick="setTheme('navy-soft',this)"></button>
+    <button class="theme-btn"        data-theme="slate"     title="Slate"           onclick="setTheme('slate',this)"></button>
+    <button class="theme-btn"        data-theme="white"     title="Light / White"   onclick="setTheme('white',this)"></button>
+    <button class="theme-btn"        data-theme="warm"      title="Warm Dark"       onclick="setTheme('warm',this)"></button>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨 Print / PDF</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════
+     SECTION 1 — SECURITY PERIMETER
+══════════════════════════════════════ -->
+<div class="section s-perimeter" id="s1" data-roles="engineer,soc">
+  <div class="section-header open" onclick="toggleSection('s1')">
+    <div class="section-num">01</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Security Perimeter — Multi-Zone Defense Architecture</div>
+      <div class="section-subtitle">DDoS Protection · WAF · IDS/IPS · Firewall · DMZ · Trusted Internal</div>
+    </div>
+    <div class="section-badges">
+      <span class="cbadge pci" onclick="showCompliance(event,'pci','req-1')">PCI-DSS 1.3</span>
+      <span class="cbadge rbi" onclick="showCompliance(event,'rbi','net-sec')">RBI Net.Sec</span>
+    </div>
+    <div class="section-chevron open">▼</div>
+  </div>
+  <div class="section-body open">
+
+    <!-- ZONE: Untrusted -->
+    <div class="zone-band zone-red">
+      <div class="zone-band-dot"></div>
+      <div class="zone-band-label">🔴 Untrusted Zone — Public Internet</div>
+      <div class="zone-band-desc">All traffic here is unverified and potentially hostile</div>
+    </div>
+    <div class="nodes-row" style="margin-bottom:12px;">
+      <div class="node-card red" onclick="showDetail('customer')">
+        <span class="node-icon">📱</span>
+        <div class="node-name">Customer Devices</div>
+        <div class="node-sub">Web · Mobile · API Clients</div>
+        <div class="node-tools"><span class="tool-tag">Browser</span><span class="tool-tag">Mobile SDK</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card red" onclick="showDetail('ddos')">
+        <span class="node-icon">🛡️</span>
+        <div class="node-name">DDoS Protection</div>
+        <div class="node-sub">Edge scrubbing · Anycast</div>
+        <div class="node-tools"><span class="tool-tag red">Cloudflare</span><span class="tool-tag red">AWS Shield</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card red" onclick="showDetail('edge-fw')">
+        <span class="node-icon">🧱</span>
+        <div class="node-name">Edge Firewall</div>
+        <div class="node-sub">Stateful packet filter · BGP</div>
+        <div class="node-tools"><span class="tool-tag red">pfSense</span><span class="tool-tag red">Palo Alto</span></div>
+      </div>
+    </div>
+
+    <!-- ZONE: DMZ -->
+    <div class="zone-band zone-orange">
+      <div class="zone-band-dot"></div>
+      <div class="zone-band-label">🟡 DMZ — De-Militarized Zone (Screened Subnet)</div>
+      <div class="zone-band-desc">Traffic inspected and filtered before entering trusted network</div>
+    </div>
+    <div class="nodes-row" style="margin-bottom:12px;">
+      <div class="node-card amber" onclick="showDetail('waf')">
+        <span class="node-icon">⚔️</span>
+        <div class="node-name">WAF</div>
+        <div class="node-sub">OWASP rules · SQLi/XSS block</div>
+        <div class="node-tools"><span class="tool-tag amber">ModSecurity</span><span class="tool-tag amber">AWS WAF</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card amber" onclick="showDetail('ids')">
+        <span class="node-icon">🔍</span>
+        <div class="node-name">IDS / IPS</div>
+        <div class="node-sub">Signature + anomaly detection</div>
+        <div class="node-tools"><span class="tool-tag amber">Snort</span><span class="tool-tag amber">Suricata</span><span class="tool-tag amber">Zeek</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card amber" onclick="showDetail('internal-fw')">
+        <span class="node-icon">🔒</span>
+        <div class="node-name">Internal Firewall</div>
+        <div class="node-sub">Micro-segmentation · Zero trust</div>
+        <div class="node-tools"><span class="tool-tag amber">Cisco ASA</span><span class="tool-tag amber">Fortinet</span></div>
+      </div>
+    </div>
+
+    <!-- ZONE: Trusted -->
+    <div class="zone-band zone-green">
+      <div class="zone-band-dot"></div>
+      <div class="zone-band-label">🟢 Trusted Internal Network — Application Infrastructure</div>
+      <div class="zone-band-desc">Protected zone — application servers and databases reside here</div>
+    </div>
+    <div class="nodes-row">
+      <div class="node-card green" onclick="showDetail('lb')">
+        <span class="node-icon">⚖️</span>
+        <div class="node-name">Load Balancer</div>
+        <div class="node-sub">HA · Health checks · SSL termination</div>
+        <div class="node-tools"><span class="tool-tag green">HAProxy</span><span class="tool-tag green">NGINX</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card green" onclick="showDetail('app')">
+        <span class="node-icon">🖥️</span>
+        <div class="node-name">Web + App Servers</div>
+        <div class="node-sub">HTTP/S · TLS 1.3 · Business logic</div>
+        <div class="node-tools"><span class="tool-tag green">Apache</span><span class="tool-tag green">Node.js</span><span class="tool-tag green">Spring Boot</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card green" onclick="showDetail('db')">
+        <span class="node-icon">🗄️</span>
+        <div class="node-name">Database Cluster</div>
+        <div class="node-sub">Primary + Replica · AES-256 at rest</div>
+        <div class="node-tools"><span class="tool-tag green">PostgreSQL</span><span class="tool-tag green">Oracle</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card green" onclick="showDetail('core')">
+        <span class="node-icon">💳</span>
+        <div class="node-name">Core Banking System</div>
+        <div class="node-sub">Accounts · Transactions · Ledger</div>
+        <div class="node-tools"><span class="tool-tag green">Temenos</span><span class="tool-tag green">Finacle</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 — DUAL TELEMETRY STREAMS
+══════════════════════════════════════ -->
+<div class="section s-telemetry" id="s2" data-roles="engineer,soc">
+  <div class="section-header open" onclick="toggleSection('s2')">
+    <div class="section-num">02</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Dual Telemetry Streams — Observability + Security Pipelines</div>
+      <div class="section-subtitle">Two parallel pipelines converging at unified correlation layer</div>
+    </div>
+    <div class="section-badges">
+      <span class="cbadge pci" onclick="showCompliance(event,'pci','req-10')">PCI-DSS 10.2</span>
+      <span class="cbadge iso" onclick="showCompliance(event,'iso','a12-4')">ISO A.12.4</span>
+      <button class="section-info-btn" onclick="event.stopPropagation();showDetail('dual-telemetry')">ℹ️ About this layer</button>
+    </div>
+    <div class="section-chevron open">▼</div>
+  </div>
+  <div class="section-body open">
+    <div class="dual-streams">
+      <div class="stream stream-eng">
+        <div class="stream-title">📊 Observability Stream — Engineering Team</div>
+        <div class="stream-item" onclick="showDetail('metrics')"><span class="stream-item-icon">📈</span> Metrics — CPU, Memory, Latency, Error Rate <span class="tool-tag" style="margin-left:auto">Prometheus</span></div>
+        <div class="stream-item" onclick="showDetail('logs')"><span class="stream-item-icon">📋</span> Application + System Logs <span class="tool-tag" style="margin-left:auto">Loki / Fluentd</span></div>
+        <div class="stream-item" onclick="showDetail('traces')"><span class="stream-item-icon">🔗</span> Distributed Traces — Request paths <span class="tool-tag" style="margin-left:auto">Tempo / Jaeger</span></div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(30,110,245,0.2);">
+          <div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">FLOWS INTO →</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="tool-tag">Grafana</span><span class="tool-tag">Alertmanager</span><span class="tool-tag">Prometheus TSDB</span>
+          </div>
+        </div>
+      </div>
+      <div class="stream stream-soc">
+        <div class="stream-title">🔐 Security Stream — SOC Analysts</div>
+        <div class="stream-item" onclick="showDetail('sec-events')"><span class="stream-item-icon">🎥</span> Security Events — Login, Privilege, Config <span class="tool-tag red" style="margin-left:auto">SIEM</span></div>
+        <div class="stream-item" onclick="showDetail('audit-logs')"><span class="stream-item-icon">📜</span> Audit Logs — Tamper-evident, signed <span class="tool-tag red" style="margin-left:auto">Splunk</span></div>
+        <div class="stream-item" onclick="showDetail('threat')"><span class="stream-item-icon">🚨</span> Threat Detection + IDS/IPS Feeds <span class="tool-tag red" style="margin-left:auto">Wazuh</span></div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,71,87,0.2);">
+          <div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">FLOWS INTO →</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="tool-tag red">IBM QRadar</span><span class="tool-tag red">Splunk SIEM</span><span class="tool-tag red">MITRE ATT&amp;CK</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="corr-bridge" onclick="showDetail('correlation')">
+      <div class="corr-title">⚡ Unified Correlation Layer — Cross-stream event correlation engine</div>
+      <div class="corr-desc">Observability anomalies + Security events correlated in real-time → enriched, context-aware alerts sent to Incident Response Pipeline</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 — COMPLIANCE & AUDIT
+══════════════════════════════════════ -->
+<div class="section s-compliance" id="s3" data-roles="audit,soc">
+  <div class="section-header open" onclick="toggleSection('s3')">
+    <div class="section-num">03</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Compliance &amp; Audit Layer — Regulatory Controls</div>
+      <div class="section-subtitle">Tamper-evident storage · Retention tiers · RBAC · Encryption · Regulatory mapping</div>
+    </div>
+    <div class="section-badges">
+      <span class="cbadge pci" onclick="showCompliance(event,'pci','req-10')">PCI-DSS 10</span>
+      <span class="cbadge rbi" onclick="showCompliance(event,'rbi','audit')">RBI Audit</span>
+      <span class="cbadge iso" onclick="showCompliance(event,'iso','a18')">ISO A.18</span>
+      <span class="cbadge soc2" onclick="showCompliance(event,'soc2','cc7')">SOC2 CC7</span>
+      <button class="section-info-btn" onclick="event.stopPropagation();showDetail('compliance-layer')">ℹ️ About this layer</button>
+    </div>
+    <div class="section-chevron open">▼</div>
+  </div>
+  <div class="section-body open">
+    <div class="compliance-grid">
+      <div class="comp-card" onclick="showDetail('tamper')">
+        <div class="comp-card-title">🔐 Tamper-Evident Log Storage</div>
+        <div class="comp-card-val">WORM storage with cryptographic hash chains. Write-once, read-many enforced. Every log entry is SHA-256 signed and chained to the previous.</div>
+        <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="cbadge pci" onclick="showCompliance(event,'pci','req-10')">PCI-DSS Req 10.5</span>
+          <span class="cbadge rbi" onclick="showCompliance(event,'rbi','audit')">RBI § 7.4</span>
+        </div>
+      </div>
+      <div class="comp-card" onclick="showDetail('rbac')">
+        <div class="comp-card-title">👥 RBAC Access Control</div>
+        <div class="comp-card-val">Role-based dashboard access enforced. SOC Analysts ≠ Dev Engineers ≠ Auditors. Least-privilege principle on all monitoring tools. MFA required for all access.</div>
+        <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="cbadge iso" onclick="showCompliance(event,'iso','a9')">ISO A.9.2</span>
+          <span class="cbadge soc2" onclick="showCompliance(event,'soc2','cc6')">SOC2 CC6.3</span>
+        </div>
+      </div>
+      <div class="comp-card" onclick="showDetail('encrypt')">
+        <div class="comp-card-title">🔑 Encryption Policy</div>
+        <div class="comp-card-val">All telemetry encrypted in transit (TLS 1.3) and at rest (AES-256). Key management via HSM. Key rotation every 90 days. No plaintext secrets in config files.</div>
+        <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="cbadge pci" onclick="showCompliance(event,'pci','req-4')">PCI-DSS Req 4</span>
+          <span class="cbadge iso" onclick="showCompliance(event,'iso','a10')">ISO A.10.1</span>
+        </div>
+      </div>
+      <div class="comp-card" onclick="showDetail('retention')">
+        <div class="comp-card-title">📅 Data Retention Policy</div>
+        <div class="comp-card-val">Three-tier retention with automated lifecycle management.</div>
+        <div class="retention-bar" style="margin-top:8px;">
+          <div class="ret-hot">Hot 90d</div>
+          <div class="ret-warm">Warm 1yr</div>
+          <div class="ret-cold">Cold Archive 7yr</div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="cbadge rbi" onclick="showCompliance(event,'rbi','retention')">RBI § 9.2</span>
+          <span class="cbadge soc2" onclick="showCompliance(event,'soc2','a1')">SOC2 A1.2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 — OBSERVABILITY PLATFORM
+══════════════════════════════════════ -->
+<div class="section s-observability" id="s4" data-roles="engineer">
+  <div class="section-header open" onclick="toggleSection('s4')">
+    <div class="section-num">04</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Observability Platform — Named Tools &amp; Data Flow</div>
+      <div class="section-subtitle">Prometheus · Loki · Tempo · Grafana · Alertmanager — with retention periods</div>
+    </div>
+    <div class="section-badges">
+      <span class="cbadge pci" onclick="showCompliance(event,'pci','req-10')">PCI-DSS 10.6</span>
+    </div>
+    <div class="section-chevron open">▼</div>
+  </div>
+  <div class="section-body open">
+    <div class="nodes-row" style="align-items:stretch;">
+      <div class="node-card" onclick="showDetail('prometheus')" style="flex:1;">
+        <span class="node-icon">📊</span>
+        <div class="node-name">Prometheus</div>
+        <div class="node-sub">Metrics scraping + TSDB storage</div>
+        <div class="node-tools">
+          <span class="tool-tag">PromQL</span><span class="tool-tag">15s scrape</span>
+        </div>
+        <div style="margin-top:8px;font-size:9px;font-family:var(--font-mono);color:var(--text-3);">Retention: 90 days</div>
+      </div>
+      <div class="flow-arrow">+</div>
+      <div class="node-card" onclick="showDetail('loki')" style="flex:1;">
+        <span class="node-icon">📋</span>
+        <div class="node-name">Loki</div>
+        <div class="node-sub">Log aggregation + indexing</div>
+        <div class="node-tools">
+          <span class="tool-tag">LogQL</span><span class="tool-tag">Fluentd</span>
+        </div>
+        <div style="margin-top:8px;font-size:9px;font-family:var(--font-mono);color:var(--text-3);">Retention: 1 year</div>
+      </div>
+      <div class="flow-arrow">+</div>
+      <div class="node-card" onclick="showDetail('tempo')" style="flex:1;">
+        <span class="node-icon">🔗</span>
+        <div class="node-name">Tempo</div>
+        <div class="node-sub">Distributed trace storage</div>
+        <div class="node-tools">
+          <span class="tool-tag">TraceQL</span><span class="tool-tag">OTLP</span>
+        </div>
+        <div style="margin-top:8px;font-size:9px;font-family:var(--font-mono);color:var(--text-3);">Retention: 30 days</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card" onclick="showDetail('grafana')" style="flex:1;border-color:rgba(245,166,35,0.3);">
+        <span class="node-icon">📈</span>
+        <div class="node-name">Grafana</div>
+        <div class="node-sub">Unified dashboards + visualization</div>
+        <div class="node-tools">
+          <span class="tool-tag amber">10+ data sources</span>
+        </div>
+        <div style="margin-top:8px;font-size:9px;font-family:var(--font-mono);color:var(--amber);">RBAC enforced</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node-card" onclick="showDetail('alertmgr')" style="flex:1;border-color:rgba(0,200,117,0.3);">
+        <span class="node-icon">🔔</span>
+        <div class="node-name">Alertmanager</div>
+        <div class="node-sub">Dedup · Group · Route alerts</div>
+        <div class="node-tools">
+          <span class="tool-tag green">Silence rules</span><span class="tool-tag green">Inhibitions</span>
+        </div>
+        <div style="margin-top:8px;font-size:9px;font-family:var(--font-mono);color:var(--green);">→ Incident Pipeline</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 5 — INCIDENT RESPONSE
+══════════════════════════════════════ -->
+<div class="section s-incident" id="s5" data-roles="soc,engineer">
+  <div class="section-header open" onclick="toggleSection('s5')">
+    <div class="section-num">05</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Incident Response Pipeline — Detect · Escalate · Resolve · Review</div>
+      <div class="section-subtitle">Alert Manager → PagerDuty → Runbook → Ticket → L1/L2/L3 → PIR</div>
+    </div>
+    <div class="section-badges">
+      <span class="cbadge pci" onclick="showCompliance(event,'pci','req-12')">PCI-DSS 12.10</span>
+      <span class="cbadge iso" onclick="showCompliance(event,'iso','a16')">ISO A.16</span>
+    </div>
+    <div class="section-chevron open">▼</div>
+  </div>
+  <div class="section-body open">
+    <div class="pipeline">
+      <div class="pipe-node" onclick="showDetail('alertmgr')">
+        <span class="pipe-node-icon">🚨</span>
+        <div class="pipe-node-name">Alert Manager</div>
+        <span class="pipe-node-sla">Dedup + Group</span>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node" onclick="showDetail('pagerduty')">
+        <span class="pipe-node-icon">📟</span>
+        <div class="pipe-node-name">PagerDuty</div>
+        <span class="pipe-node-sla">On-call schedule</span>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node" onclick="showDetail('notif')">
+        <span class="pipe-node-icon">📣</span>
+        <div class="pipe-node-name">Notifications</div>
+        <div>
+          <span class="pipe-node-sla">Email · SMS · PagerDuty</span>
+          <span class="slack-warn">⚠ Slack: internal only — no PII</span>
+        </div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node" onclick="showDetail('runbook')">
+        <span class="pipe-node-icon">📖</span>
+        <div class="pipe-node-name">Runbook Triggered</div>
+        <span class="pipe-node-sla">Auto-linked per alert type</span>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node" onclick="showDetail('ticket')">
+        <span class="pipe-node-icon">🎫</span>
+        <div class="pipe-node-name">Jira / ServiceNow</div>
+        <span class="pipe-node-sla">Auto-ticket with context</span>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node" onclick="showDetail('pir')">
+        <span class="pipe-node-icon">🔁</span>
+        <div class="pipe-node-name">Post-Incident Review</div>
+        <span class="pipe-node-sla">RCA + runbook update</span>
+      </div>
+    </div>
+    <div class="esc-tiers">
+      <div class="esc-tier esc-l1">
+        <div class="esc-title">L1 — SOC Analyst</div>
+        <div class="esc-desc">24×7 monitoring, triage, runbook execution. Escalates to L2 if unresolved.</div>
+        <div class="esc-sla">P3: 4hr · P4: next business day</div>
+      </div>
+      <div class="esc-tier esc-l2">
+        <div class="esc-title">L2 — Senior Engineer</div>
+        <div class="esc-desc">Code-level RCA, cross-service correlation, security forensics.</div>
+        <div class="esc-sla">P2: 1hr response · P1 support</div>
+      </div>
+      <div class="esc-tier esc-l3">
+        <div class="esc-title">L3 — Architect / CISO</div>
+        <div class="esc-desc">P1 critical outages, security breaches, regulatory incidents. Final escalation point.</div>
+        <div class="esc-sla">P1: 15min · Bank-wide authority</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 6 — KPI DASHBOARD
+══════════════════════════════════════ -->
+<div class="section s-kpi" id="s6" data-roles="soc,audit,engineer">
+  <div class="section-header open" onclick="toggleSection('s6')">
+    <div class="section-num">06</div>
+    <div class="section-title-wrap">
+      <div class="section-title">KPI Dashboard — Live Operational Metrics
+        <span class="live-badge"><span class="pulse-dot live"></span>LIVE</span>
+      </div>
+      <div class="section-subtitle">MTTD · MTTR · SLA Breach Rate · False Positive Rate — simulated live feed</div>
+    </div>
+    <div class="section-chevron open">▼</div>
+  </div>
+  <div class="section-body open">
+    <div class="kpi-grid">
+      <div class="kpi-panel blue">
+        <div class="kpi-label">Mean Time to Detect</div>
+        <div class="kpi-value" id="kpi-mttd">4.2<span style="font-size:16px;color:var(--text-3)">min</span></div>
+        <div class="kpi-trend"><span class="good">▼ 12% vs last month</span></div>
+        <div class="kpi-sparkline"><svg id="spark-mttd" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      </div>
+      <div class="kpi-panel green">
+        <div class="kpi-label">Mean Time to Resolve</div>
+        <div class="kpi-value" id="kpi-mttr">23<span style="font-size:16px;color:var(--text-3)">min</span></div>
+        <div class="kpi-trend"><span class="good">▼ 8% vs last month</span></div>
+        <div class="kpi-sparkline"><svg id="spark-mttr" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      </div>
+      <div class="kpi-panel amber">
+        <div class="kpi-label">SLA Breach Rate</div>
+        <div class="kpi-value" id="kpi-sla">1.4<span style="font-size:16px;color:var(--text-3)">%</span></div>
+        <div class="kpi-trend"><span class="warn">▲ 0.2% vs last month</span></div>
+        <div class="kpi-sparkline"><svg id="spark-sla" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      </div>
+      <div class="kpi-panel red">
+        <div class="kpi-label">False Positive Rate</div>
+        <div class="kpi-value" id="kpi-fpr">6.8<span style="font-size:16px;color:var(--text-3)">%</span></div>
+        <div class="kpi-trend"><span class="good">▼ 3.1% vs last month</span></div>
+        <div class="kpi-sparkline"><svg id="spark-fpr" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <span class="footer-title">Regulatory Compliance Certifications:</span>
+      <div class="footer-badges">
+        <span class="cbadge pci" onclick="showCompliance(event,'pci','overview')">✓ PCI-DSS 4.0</span>
+        <span class="cbadge rbi" onclick="showCompliance(event,'rbi','overview')">✓ RBI IT Framework 2021</span>
+        <span class="cbadge iso" onclick="showCompliance(event,'iso','overview')">✓ ISO/IEC 27001:2022</span>
+        <span class="cbadge soc2" onclick="showCompliance(event,'soc2','overview')">✓ SOC 2 Type II</span>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      NorthBridge Bank SOC · Production Architecture Blueprint v2.0 · Classification: CONFIDENTIAL · Internal Use Only · © 2024 NorthBridge Bank
+    </div>
+  </div>
+</footer>
+
+<!-- COMPLIANCE TOOLTIP -->
+<div class="comp-tooltip" id="comp-tooltip"></div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-panel" id="detail-panel">
+    <button class="dp-close" onclick="closeDetailBtn()">✕</button>
+    <span class="dp-icon" id="dp-icon">🔍</span>
+    <div class="dp-name" id="dp-name">Component</div>
+    <div class="dp-layer" id="dp-layer">Layer</div>
+    <div id="dp-content"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════ DETAIL DATA ═══════════════════════ */
+const details = {
+  customer: { icon:'📱', name:'Customer Devices', layer:'Layer 1 — Security Perimeter',
+    beginner:'This is you — the person using the bank\'s website or mobile app on your phone or laptop. When you tap "Check Balance" or "Send Money", your device sends a message to the bank\'s computers. That message has to travel a long way through many checkpoints before the bank responds. Think of it like sending a letter — it starts here, at your doorstep.',
+    analogy:'🏠 Think of it as a customer standing outside a bank branch, about to walk in. They haven\'t been checked or verified yet — they could be a genuine customer or someone up to no good.',
+    why:'💡 Why it matters: Every single transaction, login, and page view begins here. The entire monitoring architecture exists to handle and protect this one starting point.',
+    realExample:'🌍 Real world: HDFC Bank serves over 75 million customers. On any given day, millions of these devices are sending requests simultaneously.',
+    desc:'The origin of every request. Web browsers, mobile banking apps, and API clients send HTTP/S requests that initiate every user session, transaction, and query. All traffic from this source is treated as untrusted by default — it must traverse all security layers before reaching any internal system.',
+    tools:['Web Browser (Chrome/Safari/Firefox)','iOS/Android Mobile App','REST/GraphQL API Client','Third-party integrations'],
+    compliance:['PCI-DSS 6.4 — Protect web-facing applications from known vulnerabilities','RBI § 6.2 — Customer-facing channel security controls'],
+    config:'TLS 1.3 enforced on all client connections. Certificate pinning enforced in mobile apps (prevents MITM). API clients require OAuth 2.0 + JWT with 15-minute expiry. Device fingerprinting for fraud detection.' },
+
+  ddos: { icon:'🛡️', name:'DDoS Protection', layer:'Layer 1 — Security Perimeter (Edge)',
+    beginner:'Imagine thousands of fake customers all trying to rush into the bank at the same moment — so many that real customers can\'t get in. This is called a DDoS attack. Cloudflare or AWS Shield acts like a huge security cordon outside the bank that spots these fake "flash mobs" and stops them before they even reach the bank\'s front door.',
+    analogy:'🚧 Think of it as a massive outer perimeter with crowd control — it can absorb enormous floods of traffic and only let genuine visitors through.',
+    why:'💡 Why it matters: Without DDoS protection, an attacker could take the entire banking website offline in minutes by simply overwhelming it with fake traffic.',
+    realExample:'🌍 Real world: In 2023, banks in India faced DDoS attacks exceeding 100 Gbps. Without this layer, those banks\' mobile apps would have gone completely offline.',
+    desc:'Edge-layer volumetric attack scrubbing using Anycast routing. Absorbs and mitigates DDoS traffic at the network edge — before it reaches bank infrastructure. Uses BGP routing to direct traffic through scrubbing centers globally. Capacity: 100+ Tbps globally. Distinguishes legitimate traffic from attack traffic using behavioural heuristics, rate limiting, and IP reputation databases.',
+    tools:['Cloudflare Magic Transit','AWS Shield Advanced','Anycast BGP routing','IP reputation feeds'],
+    compliance:['PCI-DSS 6.6 — Protect web-facing applications against known attacks','RBI § 7.1 — Network resilience and availability requirements'],
+    config:'Rate limiting: 10,000 req/s per IP. Geo-blocking: configurable per regulatory requirement. Auto-mitigation threshold: 10 Gbps sustained. Challenge pages for suspicious IPs. Bot management rules updated daily.' },
+
+  waf: { icon:'⚔️', name:'Web Application Firewall (WAF)', layer:'Layer 1 — DMZ Zone',
+    beginner:'A WAF is a smart security guard that reads every message coming into the bank\'s website and looks for dangerous patterns. For example, a hacker might try to send a fake request that says "Show me ALL the passwords in the database." The WAF recognises this attack pattern and blocks it before it reaches the bank\'s computers.',
+    analogy:'🔍 Think of it as an X-ray machine at a security checkpoint — it scans every piece of "luggage" (web request) and rejects anything that looks like a weapon (SQL injection, XSS attack code).',
+    why:'💡 Why it matters: Web application attacks are the #1 method hackers use to steal banking data. The WAF is specifically trained to recognise and block all known attack types.',
+    realExample:'🌍 Real world: The OWASP Top 10 are the most common attack types — SQL Injection, Cross-Site Scripting, broken authentication. The WAF\'s ruleset covers all 10 and more.',
+    desc:'Inspects all HTTP/S traffic at Layer 7 (application layer). Blocks OWASP Top 10 attacks including SQL injection, XSS, CSRF, path traversal, and command injection. Applies custom rules tuned for banking-specific attack patterns. Operates in blocking mode (not just detection). Rules are reviewed and updated monthly by the security team.',
+    tools:['ModSecurity with OWASP Core Rule Set v3.3+','AWS WAF with managed rules','Cloudflare WAF'],
+    compliance:['PCI-DSS 6.6 — WAF mandatory for all internet-facing applications processing cardholder data','RBI § 7.3 — Application-layer security controls for banking portals'],
+    config:'OWASP CRS Paranoia Level 2. Blocking mode (not detection-only). Custom rules for: banking API paths, JWT validation, unusual payload sizes. Rules reviewed monthly. False positive review within 24 hours of any block.' },
+
+  ids: { icon:'🔍', name:'IDS / IPS', layer:'Layer 1 — DMZ Zone',
+    beginner:'Even after the WAF checks incoming messages, some clever attacks might slip through in disguise. The IDS (Intrusion Detection System) is like a security camera that watches all network traffic for suspicious behaviour — not just known attacks but anything that "looks wrong." The IPS (Intrusion Prevention System) is the same thing but with a "block" button — it stops the threat automatically without waiting for a human.',
+    analogy:'📡 IDS is a security radar that detects something odd. IPS is the radar with an automatic missile defence — it both detects AND intercepts.',
+    why:'💡 Why it matters: Zero-day attacks (brand new attack types no one has seen before) can\'t be blocked by signature rules alone. IDS/IPS uses behavioural analysis to catch what the WAF misses.',
+    realExample:'🌍 Real world: The famous Bangladesh Bank heist ($81 million stolen via SWIFT) could have been detected much earlier if proper IDS/IPS with behavioural analytics had been deployed.',
+    desc:'IDS (Intrusion Detection System) monitors all network traffic for suspicious patterns and generates alerts. IPS (Intrusion Prevention System) extends this by automatically blocking threats in real time. Uses signature-based detection (known attack patterns) combined with ML-driven anomaly detection for zero-day threats. Feeds all alerts directly into the SIEM for correlation.',
+    tools:['Snort 3.x (signature-based)','Suricata 7.x (multi-threaded high performance)','Zeek (network traffic analysis)'],
+    compliance:['PCI-DSS 11.4 — Deploy IDS/IPS at all critical points in the network','ISO A.13.1.1 — Network security controls at network boundaries'],
+    config:'Signature updates: every 6 hours from Emerging Threats. Anomaly baseline: 30-day rolling window. Alert threshold: 3-sigma deviation from baseline. Auto-block confidence threshold: >95%. All blocks logged and reviewed within 1 business day.' },
+
+  'edge-fw': { icon:'🧱', name:'Edge Firewall', layer:'Layer 1 — Untrusted Zone / Edge',
+    beginner:'This is the very first wall between the entire internet and the bank. Imagine a massive steel gate with a rulebook: only messages coming to specific doors (ports) are allowed in. Everything else is automatically rejected. It works at the network level — like checking if a visitor is even allowed to knock on the right door, before they get to speak to anyone.',
+    analogy:'🚪 It\'s the outer gate of a fort — only specific gates are open, and anyone approaching a closed gate is turned away immediately without question.',
+    why:'💡 Why it matters: Without this gate, attackers could try to reach any part of the bank\'s internal network through any port. This layer ensures only legitimate web traffic (HTTPS on port 443) can even attempt to enter.',
+    realExample:'🌍 Real world: In most breaches, attackers first scan thousands of open ports looking for weak spots. A properly configured edge firewall eliminates 99% of these scanning attempts instantly.',
+    desc:'First stateful packet-filtering firewall at the network edge. Enforces strict IP allowlists/blocklists, port restrictions, and protocol validation. Uses stateful inspection — tracking the state of all active connections to distinguish legitimate response traffic from attack traffic. Default deny-all policy: everything is blocked unless explicitly permitted.',
+    tools:['Palo Alto Networks NGFW (Next Generation Firewall)','pfSense (open source)','Cisco ASA'],
+    compliance:['PCI-DSS 1.3 — Install and configure firewall to restrict inbound and outbound traffic to CDE','RBI § 6.3 — Multi-layer network security architecture mandatory for banks'],
+    config:'Default: deny all inbound and outbound. Permitted inbound: TCP 443 (HTTPS), TCP 80 (redirect to HTTPS only). BGP peering with upstream ISPs for route integrity. All firewall logs forwarded to SIEM within 60 seconds. Config changes require CAB approval and dual sign-off.' },
+
+  'internal-fw': { icon:'🔒', name:'Internal Firewall', layer:'Layer 1 — DMZ Zone',
+    beginner:'Even inside the bank\'s own network, not every computer should be able to talk to every other computer. This firewall is a second wall that sits between the "inspection zone" (DMZ) and the actual banking computers inside. Even if an attacker somehow got past the outer gate, they\'d hit this second wall and couldn\'t go further. This is called defence in depth — multiple layers of protection.',
+    analogy:'🏦 Think of it as the second security door inside a bank vault area — just because you\'re inside the building doesn\'t mean you can walk into the vault room.',
+    why:'💡 Why it matters: Many attacks come from inside the network — compromised employee machines, infected laptops, or attackers who broke through the outer perimeter. This firewall stops them from reaching the core systems.',
+    realExample:'🌍 Real world: The 2013 Target breach — attackers got in through an HVAC vendor. An internal firewall with proper segmentation would have stopped them from reaching payment card systems.',
+    desc:'Second firewall providing micro-segmentation between the DMZ and trusted internal network. Implements zero-trust principles — no implicit trust between zones even within the bank\'s own infrastructure. Every connection from DMZ to internal must be explicitly permitted by a named rule. East-west traffic (between internal servers) is also filtered to prevent lateral movement.',
+    tools:['Cisco ASA (dedicated appliance)','Fortinet FortiGate','HashiCorp Consul (service mesh for containers)'],
+    compliance:['PCI-DSS 1.3.2 — Prohibit direct routes from internet to cardholder data environment','ISO A.13.1.3 — Network segregation between business zones'],
+    config:'Zone-based firewall policy. DMZ→Internal: only specific service ports permitted per named application. Internal→Internal: east-west filtered via service mesh. Micro-segmentation enforced at VLAN + container network policy level. Quarterly rule review to remove stale permits.' },
+
+  lb: { icon:'⚖️', name:'Load Balancer', layer:'Layer 1 — Trusted Internal Network',
+    beginner:'If thousands of customers all try to use the bank\'s website at the same time, one server would crash. The load balancer is like a traffic controller at a busy roundabout — it watches how busy each server is and sends each new customer to whichever server has the most free capacity. If one server breaks down, the load balancer automatically stops sending customers to it.',
+    analogy:'🚦 Think of it as a bank manager directing customers to different teller windows — "Go to window 3, it\'s free!" — ensuring no single teller is overwhelmed while others are idle.',
+    why:'💡 Why it matters: High availability is a regulatory requirement for banks. If the website goes down during peak hours, customers can\'t make payments. The load balancer is the key component that prevents this.',
+    realExample:'🌍 Real world: During festive seasons (Diwali, Dussehra), Indian bank websites see 5-10x normal traffic. Without load balancing, they\'d crash every festival season.',
+    desc:'Distributes incoming HTTP/S requests across multiple web/app server instances using least-connection algorithm (most fair under varying request sizes). Performs HTTP health checks every 5 seconds — automatically removes unhealthy instances from rotation and re-adds them once healthy. Handles SSL/TLS termination and re-encrypts to backend servers. Provides session persistence via secure cookies.',
+    tools:['HAProxy 2.x (high-performance open source)','NGINX Plus (commercial)','AWS Application Load Balancer (cloud)'],
+    compliance:['PCI-DSS 6.4 — Protect web-facing applications','RBI § 8.1 — High availability requirements for banking systems — 99.9% uptime minimum'],
+    config:'Algorithm: least-connections. Health check: HTTP GET /health, expect 200 every 5s, 2 failures = remove from pool. SSL termination at LB, re-encrypt to backend (no plaintext internal). Session persistence: secure HttpOnly cookie. Max connections per backend: 5,000. Slow-start: 30s for new instances.' },
+
+  app: { icon:'🖥️', name:'Web + App Servers', layer:'Layer 1 — Trusted Internal Network',
+    beginner:'These are the computers that actually do the banking work. When you ask to see your account balance, these servers receive your request, check who you are, look up your account in the database, and send the answer back. They\'re like the bank staff behind the counter. They\'re also the busiest part of the system — every login, every transaction, every page view happens here, and they generate enormous amounts of monitoring data.',
+    analogy:'👩‍💼 Think of them as the bank tellers — they receive your request, verify your identity, process your transaction, and give you the result.',
+    why:'💡 Why it matters: This is where most security vulnerabilities exist (code bugs, insecure APIs, authentication flaws). It\'s also where the most telemetry is generated — giving engineers the richest source of data for monitoring.',
+    realExample:'🌍 Real world: A single app server bug in ICICI Bank\'s mobile app in 2023 exposed other customers\' account details. Proper monitoring of this tier detected and contained the issue within hours.',
+    desc:'Handle all HTTP/S requests and execute banking business logic: authentication, authorisation, account queries, fund transfers, transaction processing, and regulatory reporting. Deployed as containerised microservices. This tier generates the most telemetry — every user action produces logs, metrics, and distributed traces. All inter-service communication is authenticated and encrypted.',
+    tools:['Apache HTTP Server (web tier)','Node.js / Express (API services)','Spring Boot (core services)','Docker + Kubernetes (orchestration)'],
+    compliance:['PCI-DSS 6.2 — Protect system components from known vulnerabilities — patch within 30 days','PCI-DSS 6.3 — Develop and maintain secure applications (SSDLC)'],
+    config:'TLS 1.3 enforced end-to-end (no plaintext internal traffic). JWT token validation on every request (15-min expiry, RS256 signed). Rate limiting: 100 req/min per authenticated user. Containers run as non-root uid 1000. Image vulnerability scanning in CI/CD — block deployment if critical CVE found.' },
+
+  db: { icon:'🗄️', name:'Database Cluster', layer:'Layer 1 — Trusted Internal Network',
+    beginner:'The database is the bank\'s filing cabinet — it stores everything: your account balance, your transaction history, your personal details. It\'s the most valuable and most protected part of the system. Only the app servers are allowed to talk to it — no developer can connect to it directly. Everything stored in it is scrambled (encrypted) so even if someone stole the hard drive, they couldn\'t read any of the data.',
+    analogy:'🏦 Think of it as the bank\'s physical vault — the most secure room in the entire building, accessible only to authorised staff, storing the most valuable records.',
+    why:'💡 Why it matters: The database contains the "crown jewels" — all customer financial data. A breach here is a catastrophic regulatory and financial event. Multiple protection layers are non-negotiable.',
+    realExample:'🌍 Real world: In 2021, a database of 7.5 million Bank of America customers was exposed. PCI-DSS encryption requirements at the database layer are specifically designed to prevent this being useful to attackers.',
+    desc:'Innermost persistence layer storing all account balances, transaction history, customer PII, and immutable audit records. Runs as primary + 2 replica cluster for high availability and read scaling. All data encrypted at rest with AES-256 Transparent Data Encryption (TDE). No direct developer access — only application service accounts permitted. Continuous replication monitoring with alert if lag exceeds 5 seconds.',
+    tools:['PostgreSQL 15 (primary + 2 replicas)','Oracle Database (core banking)','MySQL (auxiliary services)'],
+    compliance:['PCI-DSS 3.5 — Protect stored cardholder data with strong cryptography','PCI-DSS 10.3 — Protect audit log integrity — logs stored separately from operational DB','RBI § 9 — Data security and encryption standards for banks'],
+    config:'Encryption: AES-256-GCM at rest, TDE enabled. Connections: TLS 1.3 only, no plaintext connections accepted. Access: named application service accounts only, no shared credentials, no direct developer login. Backups: encrypted daily, tested monthly. Replication lag alert threshold: 5 seconds.' },
+
+  core: { icon:'💳', name:'Core Banking System', layer:'Layer 1 — Trusted Internal Network',
+    beginner:'This is the heart of the bank — the main engine that runs everything. It manages the official records of every account and every transaction in the general ledger. It also connects to external systems: the RBI (Reserve Bank of India), SWIFT (for international transfers), UPI (for mobile payments), and card networks like Visa and Mastercard. It\'s the most critical system in the entire bank and has the highest security classification.',
+    analogy:'⚙️ Think of it as the main engine of the bank — everything else supports it and depends on it. If this stops working, the bank stops working.',
+    why:'💡 Why it matters: Core banking outages directly affect customers\' ability to pay, withdraw, and transfer money. RBI mandates 99.9%+ uptime for core banking systems. Any breach here is a bank-level emergency.',
+    realExample:'🌍 Real world: In 2012, RBS (Royal Bank of Scotland) had a core banking failure that locked 6.5 million customers out of their accounts for weeks — costing £175 million in fines and compensation.',
+    desc:'Central banking engine managing the general ledger, account lifecycle management, transaction processing, interest calculation, and regulatory reporting. Interfaces with RBI payment systems, SWIFT for international wires, NPCI/UPI for instant payments, and Visa/Mastercard for card transactions. Highest security and availability classification in the entire architecture. All access is privileged and fully session-recorded.',
+    tools:['Temenos T24 / Transact (global CBS)','Infosys Finacle (popular in India)','IBM Z Mainframe (high-volume processing)'],
+    compliance:['RBI § 4 — Core banking solution technical and security guidelines','PCI-DSS 3.2 — Storage of sensitive authentication data prohibited — strict controls on what core banking stores'],
+    config:'Highest security tier (SC-5). All access: privileged accounts only, session recording mandatory, dual approval for configuration changes. All transactions written to immutable audit store within 100ms. SOD (Segregation of Duties) enforced at application level — no single user can both approve and execute transactions. RBI reporting APIs health-monitored every 5 minutes.' },
+
+  metrics: { icon:'📈', name:'Metrics', layer:'Layer 2 — Telemetry (Observability Stream)',
+    beginner:'Metrics are numbers that tell engineers how the system is performing right now. Things like: "The server is using 73% of its memory" or "The website is getting 5,000 requests per second" or "3 out of every 100 login attempts are failing." These numbers are collected every few seconds and compared against normal ranges. If a number goes outside the normal range — say CPU usage suddenly hits 99% — an alarm fires automatically.',
+    analogy:'🚗 Think of metrics like your car\'s dashboard — the speedometer, fuel gauge, engine temperature, oil pressure. Each gauge shows a current reading and you know immediately if something is in the red zone.',
+    why:'💡 Why it matters: Metrics are the fastest signal available. They\'re sampled every 15 seconds and can trigger an alert in under a minute — much faster than a human would notice a problem.',
+    realExample:'🌍 Real world: A sudden spike in "failed login attempts per second" metric is often the first sign of a credential stuffing attack — where hackers try thousands of stolen passwords automatically.',
+    desc:'Numerical time-series measurements sampled at regular intervals across all infrastructure. Key metric categories: infrastructure (CPU%, memory, disk I/O, network throughput), application (request rate, error rate, response time), business (transactions per second, payment success rate), and security (failed login rate, WAF block rate). Stored in time-series database optimised for high-cardinality data.',
+    tools:['Prometheus 2.x (scraping + TSDB)','Thanos (long-term storage + global view)','StatsD (application metrics)','Node Exporter (host metrics)','cAdvisor (container metrics)'],
+    compliance:['PCI-DSS 10.6.1 — Review logs and security events for all system components at least daily — automated metrics alerts satisfy this'],
+    config:'Scrape interval: 15 seconds. Local retention: 90 days. Long-term via Thanos: 1 year. Alert evaluation: every 30s. Key SLIs with alert thresholds: error rate >1% (P2), p99 latency >500ms for 5min (P2), CPU >85% sustained 5min (P3), disk >90% (P2), replication lag >5s (P1).' },
+
+  logs: { icon:'📋', name:'Application + System Logs', layer:'Layer 2 — Telemetry (Observability Stream)',
+    beginner:'Logs are like a detailed diary that every computer keeps. Every time something happens — someone logs in, a payment is processed, an error occurs — a line is written to the log: "At 14:32:07, user ID 8821 logged in from IP 203.x.x.x. Result: SUCCESS." These diaries from hundreds of servers are all collected into one central place. When something goes wrong, engineers can read through the diary to understand exactly what happened and in what order.',
+    analogy:'✈️ Think of logs as an aircraft\'s flight data recorder (black box). It records every event in sequence with precise timestamps. After a crash (system failure), it\'s how investigators reconstruct exactly what happened.',
+    why:'💡 Why it matters: When a security breach or system failure happens, logs are the primary forensic evidence. Without logs, engineers and investigators are completely blind.',
+    realExample:'🌍 Real world: After every major bank breach, forensic investigators spend weeks analysing log files to understand what the attackers did, what data they accessed, and how they got in. Logs literally reconstruct the crime.',
+    desc:'Structured text records of every application and system event: HTTP requests and responses, authentication events, business transactions, errors with full stack traces, configuration changes, and security-relevant actions. Collected from all services via Fluentd agents, centralised in Loki, indexed for fast search. JSON-structured for machine parsing. Sensitive fields (passwords, card numbers) automatically redacted at collection time.',
+    tools:['Grafana Loki 2.x (aggregation + storage)','Fluentd / Fluent Bit (collection agents)','LogQL (query language)','Elasticsearch (optional full-text search)'],
+    compliance:['PCI-DSS 10.2 — Implement audit logs to reconstruct specific events','ISO A.12.4.1 — Event logging — all access and actions must be recorded'],
+    config:'Format: structured JSON. Required fields per log entry: timestamp (ISO 8601), service_name, log_level, trace_id, user_id (SHA-256 hashed — not plaintext), action, result, source_ip. Automatic PII redaction: card numbers (PAN masked), passwords, national IDs. Retention: 1 year hot storage (searchable <1s), 7 years cold archive.' },
+
+  traces: { icon:'🔗', name:'Distributed Traces', layer:'Layer 2 — Telemetry (Observability Stream)',
+    beginner:'Modern banking systems are made of dozens of small programs (microservices) that each do one job and pass requests to each other. When something is slow or broken, it\'s hard to know WHICH of the 15 programs in the chain caused the problem. A trace follows one single customer request all the way through — from login → authentication service → account service → database → response — with the exact time spent at each step. Engineers can instantly see "the database call at step 4 took 3 seconds — that\'s the problem."',
+    analogy:'🗺️ Think of traces like a GPS breadcrumb trail — you can replay the exact route your request took, see where it went, and pinpoint exactly where it got stuck or slowed down.',
+    why:'💡 Why it matters: Without traces, finding the slow or broken component in a chain of 15 microservices would take hours of guesswork. With traces, engineers find it in seconds.',
+    realExample:'🌍 Real world: When a UPI payment hangs for 8 seconds, a trace shows it was waiting 7.8 seconds for a response from the fraud detection service — and that service was waiting for a slow database query. Problem found, fixed in minutes.',
+    desc:'End-to-end request traces following a single user transaction across all microservices in the call chain. Each trace is a directed tree of "spans" — one span per service hop — recording start time, duration, tags (HTTP status, DB query), logs, and any errors. Trace IDs are propagated across all service calls via HTTP headers, allowing complete reconstruction of any request\'s journey. Enables trace-to-metrics and trace-to-log correlation in Grafana.',
+    tools:['Grafana Tempo 2.x (trace storage)','Jaeger (open source alternative)','OpenTelemetry Collector (vendor-neutral pipeline)','Zipkin (legacy support)'],
+    compliance:['PCI-DSS 10.3 — Protect audit log integrity — traces serve as tamper-evident audit evidence for transaction processing paths'],
+    config:'Sampling strategy: 100% capture for error traces and slow traces (>2s), 10% for successful fast traces. Protocol: OpenTelemetry Protocol (OTLP) over gRPC. W3C Trace Context headers for cross-service propagation. Retention: 30 days full fidelity, 1 year for error traces only. Trace-to-log linking enabled via shared trace_id field.' },
+
+  'sec-events': { icon:'🎥', name:'Security Events', layer:'Layer 2 — Telemetry (Security Stream)',
+    beginner:'While the engineering team watches how fast and reliable the system is, the security team watches for suspicious behaviour. Security events are records of things that might indicate an attack or a breach: someone trying the wrong password 50 times in a row, a user account suddenly accessing files it never accessed before, or an admin-level change being made at 3am. All these events are collected and analysed in real time to catch attacks as they happen.',
+    analogy:'🎥 Think of security events as security camera footage — recording who accessed what, from where, and when. When something bad happens, the footage tells the full story.',
+    why:'💡 Why it matters: Attacks often have early warning signs in security events — patterns that individually look innocent but together signal an attack in progress. Catching these patterns early can stop a breach before data is stolen.',
+    realExample:'🌍 Real world: The average time for a bank to detect a breach is 197 days. Real-time security event monitoring aims to reduce this to minutes. The Cosmos Bank SWIFT hack was caught partly through unusual transaction patterns visible in security event logs.',
+    desc:'Security-specific telemetry distinct from operational logs. Captures: authentication events (all logins, failures, lockouts), privilege escalation attempts, configuration and policy changes, unusual data access patterns (accessing more records than normal), firewall denials, IDS/IPS alerts, and compliance-relevant user actions. All events forwarded to SIEM within 60 seconds. High-severity events trigger immediate SOC paging.',
+    tools:['Splunk Enterprise Security (SIEM + analytics)','IBM QRadar (enterprise SIEM)','Wazuh HIDS (host intrusion detection)'],
+    compliance:['PCI-DSS 10.2.1 — Log all individual user access to cardholder data','PCI-DSS 10.2.4 — Log all invalid logical access attempts'],
+    config:'Event sources: OS audit daemon (auditd), application auth service, WAF logs, IDS/IPS alerts, Active Directory/LDAP. SIEM forwarding: within 60 seconds. Real-time correlation rules: 200+ active rules. High-severity events: SOC paged within 2 minutes. All events retained 1 year online, 7 years archived.' },
+
+  'audit-logs': { icon:'📜', name:'Audit Logs — Tamper-Evident', layer:'Layer 2 — Telemetry (Security Stream)',
+    beginner:'Regular logs can be deleted or modified — an attacker who breaks in might try to erase their tracks. Audit logs are different: they\'re specially protected so that NOBODY — not even system administrators — can change or delete them. Every log entry is mathematically "chained" to the previous one using cryptography. If anyone tampers with even one entry, the chain breaks and an alarm fires. These logs are the legal record of everything that happened in the bank.',
+    analogy:'⛓️ Think of audit logs as a sealed, tamper-evident evidence bag. Once something is recorded in it, the seal makes any tampering instantly obvious — like those security stickers that say VOID if peeled.',
+    why:'💡 Why it matters: In a court case or regulatory investigation, audit logs are legal evidence. If they can be modified, they\'re worthless. Tamper-evidence is what makes them legally admissible.',
+    realExample:'🌍 Real world: RBI inspectors regularly ask banks to produce audit logs during compliance examinations. Logs that cannot be proven tamper-evident are considered non-compliant and result in penalties.',
+    desc:'Cryptographically signed, append-only audit records of every privileged action: administrative logins, configuration changes, data exports, access to sensitive customer records, transaction approvals, and system command executions. Each entry is signed with SHA-256 and hash-chained to the previous entry — making any modification to any historical record immediately detectable. Stored separately from operational logs in WORM storage.',
+    tools:['Splunk (SIEM ingestion + alerting)','AWS CloudTrail (cloud API audit)','HashiCorp Vault Audit Log (secrets access)','Custom audit microservice (application-level)'],
+    compliance:['PCI-DSS 10.5 — Secure audit trails against destruction and unauthorised modifications','RBI § 7.4 — Tamper-proof audit trails are a mandatory requirement for all banks in India'],
+    config:'Signing: SHA-256 HMAC per entry. Hash chaining: each entry includes SHA-256 of previous entry. Chain integrity verified: every 6 hours automated + on-demand. WORM storage: S3 Object Lock with 7-year compliance mode. Access to audit logs itself generates an audit log entry. Chain break alert: P1 immediate escalation.' },
+
+  threat: { icon:'🚨', name:'Threat Detection + IDS/IPS Feeds', layer:'Layer 2 — Telemetry (Security Stream)',
+    beginner:'Security threats evolve constantly — new attack techniques emerge every day. Threat detection combines two things: a database of known attack signatures (like a "most wanted" list for attack patterns) and smart analysis that spots unusual behaviour even if it\'s a brand new attack type. When the IDS/IPS detects something suspicious, that information is tagged with its threat category from the MITRE ATT&CK framework — a globally recognised map of all known hacker tactics — so the SOC team knows exactly what kind of attack they\'re dealing with.',
+    analogy:'🕵️ Think of it as a detective who knows all the classic crime patterns AND can spot new crimes by noticing "this doesn\'t look right" even without a matching record in the files.',
+    why:'💡 Why it matters: Attackers constantly change their methods to avoid detection. Combining signature-based detection (known attacks) with behavioural analysis (unknown attacks) provides defence against both.',
+    realExample:'🌍 Real world: MITRE ATT&CK is used by security teams worldwide to classify and share threat intelligence. When a new attack hits one bank, the tactic is documented in ATT&CK so all banks can add detection for it within hours.',
+    desc:'Real-time threat intelligence platform combining IDS/IPS network alerts with commercial and open-source threat intelligence feeds. All detected threats are automatically mapped to MITRE ATT&CK framework TTPs (Tactics, Techniques, Procedures) for standardised classification. New Indicators of Compromise (IOCs — malicious IP addresses, domain names, file hashes) are automatically pushed to the WAF blocklist within 5 minutes of confirmation.',
+    tools:['Wazuh HIDS/NIDS (host + network IDS)','Suricata 7.x (high-performance network IDS)','MITRE ATT&CK Navigator (threat mapping)','VirusTotal API (IOC enrichment)','Recorded Future (commercial threat intel)'],
+    compliance:['PCI-DSS 11.4 — Deploy intrusion detection/prevention systems at all critical points','ISO A.12.6 — Technical vulnerability management — proactive threat intelligence'],
+    config:'Signature DB updates: every 6 hours (Emerging Threats Pro). Threat intel feeds: Recorded Future (commercial) + AlienVault OTX + ISAC feeds (FS-ISAC for financial sector). MITRE ATT&CK mapping: automated for all Medium/High/Critical alerts. IOC auto-block: confirmed IOCs pushed to WAF and firewall within 5 minutes. False positive review SLA: 1 business day.' },
+
+  grafana: { icon:'📈', name:'Grafana', layer:'Layer 4 — Observability Platform',
+    beginner:'Grafana is the "mission control screen" that engineers look at to understand the health of the entire system at a glance. It turns all the raw numbers (metrics, logs, traces) into beautiful charts, graphs, and gauges. Think of it like the displays in an air traffic control tower — dozens of real-time screens showing exactly what\'s happening, with immediate visual alerts when something goes wrong.',
+    analogy:'🖥️ Think of Grafana as the cockpit instruments of an aeroplane — dozens of gauges, all updating in real time, giving the pilot (engineer) a complete picture of the plane\'s (system\'s) health.',
+    why:'💡 Why it matters: Raw data is unreadable. Grafana converts thousands of numbers per second into visual patterns that humans can understand instantly. The difference between a 5-minute and 5-hour incident response time is often whether engineers can see the problem clearly.',
+    realExample:'🌍 Real world: During Flipkart\'s Big Billion Days sale, their engineering team watches Grafana dashboards continuously. The moment a metric goes red, engineers are already investigating before customers even notice a slowdown.',
+    desc:'Unified visualisation platform connecting all telemetry sources — Prometheus (metrics), Loki (logs), and Tempo (traces) — in a single interface. Provides real-time dashboards, alerting rules, cross-datasource correlation, and on-call notification management. Role-based access control enforced — SOC analysts see security dashboards, engineers see infrastructure dashboards, management see business KPI dashboards.',
+    tools:['Grafana 10.x (open source)','Grafana Enterprise (RBAC + audit)','10+ connected data sources','LDAP/SSO authentication'],
+    compliance:['PCI-DSS 10.6 — Implement a process to review logs and security events for all system components at least daily — Grafana dashboards with auto-refresh satisfy this','ISO A.12.1 — Documented operating procedures for monitoring'],
+    config:'RBAC roles: Viewer (SOC, read-only), Editor (Engineering), Admin (Platform team only). Dashboard snapshots exported weekly for audit trail. Alerting: Grafana unified alerting connected to Alertmanager. MFA enforced for all logins. Session timeout: 8 hours. All dashboard changes version-controlled via Grafana provisioning (GitOps).' },
+
+  prometheus: { icon:'📊', name:'Prometheus', layer:'Layer 4 — Observability Platform',
+    beginner:'Prometheus is a dedicated collector and keeper of numbers. Every 15 seconds, it visits every server and service in the bank and asks "give me your current health numbers" — memory, CPU, request counts, error counts. It stores all these numbers in a special time-series database (organised by time), and engineers can query it: "Show me the error rate for the payments service over the last 6 hours" — and get an instant answer.',
+    analogy:'📊 Think of Prometheus as a highly diligent health monitor that visits every patient (server) every 15 seconds, takes their vital signs, writes them in a time-stamped logbook, and raises an alarm if any reading goes outside safe bounds.',
+    why:'💡 Why it matters: Prometheus is the industry standard for cloud-native monitoring. Its query language (PromQL) is specifically designed for the kind of questions engineers ask during incidents — "when did the error rate exceed 1%?" answered instantly across millions of data points.',
+    realExample:'🌍 Real world: Prometheus is used by Netflix, Uber, Airbnb, and most major banks globally. It was originally developed at SoundCloud and donated to the Cloud Native Computing Foundation (CNCF) in 2016.',
+    desc:'Pull-based metrics collection system. Prometheus actively scrapes (visits) all registered targets every 15 seconds and collects their exported metrics. Stores data in a local time-series database (TSDB) optimised for high-cardinality, high-throughput data. PromQL (Prometheus Query Language) enables powerful mathematical operations and time-range analysis. Long-term storage via Thanos enables global view across multiple Prometheus instances.',
+    tools:['Prometheus 2.x (scraping + local TSDB)','Thanos (long-term storage + global query)','Node Exporter (Linux host metrics)','cAdvisor (container metrics)','Blackbox Exporter (endpoint probing)'],
+    compliance:['PCI-DSS 10.6.1 — Automated audit log review — Prometheus alert rules provide automated anomaly detection satisfying daily review requirements'],
+    config:'Scrape interval: 15s globally, 5s for critical services. Local retention: 90 days (15-second resolution). Thanos retention: 1 year (5-minute downsampled) + 3 years (1-hour downsampled). Remote write to Thanos Receive. Alert evaluation interval: 30s. Recording rules pre-compute expensive queries for dashboard performance.' },
+
+  loki: { icon:'📋', name:'Loki', layer:'Layer 4 — Observability Platform',
+    beginner:'Loki is a log storage system that collects all the diary entries (logs) from every server and puts them in one searchable place. What makes Loki clever is that it only indexes the labels attached to logs (like "which service did this come from?") — not the actual content of each log line. This makes it much faster and cheaper than traditional log systems. Engineers can ask: "Show me all ERROR logs from the payments service in the last 30 minutes" — instantly.',
+    analogy:'📚 Think of Loki as a vast, perfectly organised library. It doesn\'t read every word of every book — it just knows exactly which shelf each book is on (label indexing), so it can retrieve relevant books instantly without scanning everything.',
+    why:'💡 Why it matters: Banks generate terabytes of logs per day. Loki\'s label-based indexing approach is 10x more cost-efficient than full-text index solutions while still providing fast search for all practical incident investigation queries.',
+    realExample:'🌍 Real world: Grafana Labs (creators of Loki) report that Loki can reduce log storage costs by 80% compared to Elasticsearch while maintaining sub-second query performance for common incident investigation queries.',
+    desc:'Log aggregation system built for cloud-native, high-volume environments. Indexes only metadata labels (service, namespace, pod, environment, log level) rather than full log content — making it 10x more storage-efficient than Elasticsearch. Log streams are compressed and stored in object storage (S3). LogQL query language enables filtering, parsing, and metric extraction from log streams. Integrates natively with Grafana for unified log+metric+trace investigation.',
+    tools:['Grafana Loki 2.x (storage + query engine)','Fluentd (collection + routing agent)','Promtail (Kubernetes-native log collector)','LogQL (query language, similar to PromQL)'],
+    compliance:['PCI-DSS 10.2 — Implement audit logs — Loki provides centralised, searchable audit log storage','ISO A.12.4.1 — Event logging — centralised log collection satisfies multi-system logging requirements'],
+    config:'Retention: 1 year hot (object storage, immediate retrieval). Compression: LZ4 (fast), Snappy (balanced). Chunk size: 256KB. Label cardinality limit: 30 unique labels per stream. Log streams labeled by: service, namespace, pod, environment, log_level. Hash chain tamper detection on chunks. Ingestion rate limit: 50MB/s per tenant.' },
+
+  tempo: { icon:'🔗', name:'Tempo', layer:'Layer 4 — Observability Platform',
+    beginner:'While Prometheus tracks numbers and Loki stores log diary entries, Tempo stores the "journey maps" — the distributed traces that show how one customer request travelled through dozens of services. Tempo is specifically built to store enormous volumes of these journeys cheaply and retrieve any specific one instantly when an engineer is investigating a slow transaction.',
+    analogy:'🗂️ Think of Tempo as a massive archive of GPS journey recordings. For every delivery made, it stores the complete route taken. When a delivery was slow, you can pull up that exact delivery\'s GPS track and see where the delay happened.',
+    why:'💡 Why it matters: Traces are the only way to do "request-level debugging" across multiple services. Tempo makes this possible at scale — storing millions of traces per day and retrieving any one in milliseconds.',
+    realExample:'🌍 Real world: When Google introduced distributed tracing internally (they called it Dapper), they reported finding the root cause of performance problems 10x faster than before. Tempo brings this capability to any organisation.',
+    desc:'Distributed tracing backend optimised for high volume and cost-efficiency. Stores full trace data in object storage (S3) with no sampling loss on ingest. Supports multiple trace protocols: OpenTelemetry (OTLP), Jaeger, Zipkin. TraceQL query language enables searching traces by service name, duration, error status, and custom attributes. Natively integrated with Grafana for trace-to-metrics and trace-to-log correlation — engineers jump from a dashboard metric spike directly to the specific traces causing it.',
+    tools:['Grafana Tempo 2.x (trace storage + query)','OpenTelemetry Collector (vendor-neutral pipeline)','TraceQL (trace query language)','Jaeger (alternative/migration source)'],
+    compliance:['PCI-DSS 10.3 — Protect audit log integrity — traces stored in object storage with integrity checksums serve as audit evidence for transaction processing paths'],
+    config:'Ingest: OTLP over gRPC port 4317. Storage backend: S3 (Parquet format). Retention: 30 days full fidelity, 1 year for error traces only. Sampling at collector: 100% errors and slow (>2s), 10% success. TraceQL search index: 7-day sliding window for attribute search. Grafana datasource configured for trace-to-log and trace-to-metric linking.' },
+
+  alertmgr: { icon:'🔔', name:'Alertmanager', layer:'Layer 4 — Observability / Layer 5 — Incident Response',
+    beginner:'When the monitoring system detects a problem, it doesn\'t just shout one alarm — it might trigger hundreds of alarms at once (one for each affected server). Without Alertmanager, the on-call engineer would get 500 phone calls in 2 minutes and have no idea which to answer first. Alertmanager\'s job is to group all related alarms into one sensible notification: "Hey, 47 servers are down — here\'s what\'s happening." It also knows not to send the same alarm repeatedly, and respects "silence" periods during planned maintenance.',
+    analogy:'📞 Think of Alertmanager as a skilled call centre supervisor. Instead of connecting all 500 callers directly to one overwhelmed engineer, it filters, groups, and prioritises — forwarding just the essential summary to the right person.',
+    why:'💡 Why it matters: "Alert fatigue" — being bombarded with too many alarms — causes engineers to start ignoring alerts. Alertmanager prevents this by being intelligent about what it sends, when, and to whom.',
+    realExample:'🌍 Real world: During a major AWS outage in 2021, companies with poor alert management had engineers receive thousands of individual alerts. Companies with proper Alertmanager configuration received one grouped alert per affected service — making the response 10x faster.',
+    desc:'Alert deduplication, grouping, silencing, and routing engine sitting between the monitoring platform and the engineers. Receives alert notifications from Prometheus/Grafana when threshold conditions are breached. Groups related alerts (e.g., all alerts from the same failing server) into single actionable notifications. Applies inhibition rules (suppress child alerts when parent is already firing). Manages maintenance silences. Routes different alert types to different teams based on labels.',
+    tools:['Prometheus Alertmanager 0.26','Grafana Alerting (unified alerting layer)'],
+    compliance:['PCI-DSS 10.8 — Detect and report failures of critical security controls — Alertmanager\'s routing ensures security alerts reach SOC within SLA'],
+    config:'Group wait: 30s (collect related alerts before sending). Group interval: 5min (send updates on ongoing alert groups). Repeat interval: 4hr (re-notify if alert still active). Inhibition: suppress DB alerts when entire host is down. Silence: maintenance window silences applied via API with expiry. Routes: security labels → SOC PagerDuty, infrastructure labels → Engineering PagerDuty.' },
+
+  pagerduty: { icon:'📟', name:'PagerDuty', layer:'Layer 5 — Incident Response',
+    beginner:'PagerDuty is the on-call management system. When an alert fires at 3am, PagerDuty knows which engineer is "on duty" that week and phones/texts/emails/app-notifies them. If that engineer doesn\'t respond within 15 minutes, PagerDuty automatically escalates to the next person on the list, then the next. It tracks SLAs (response time promises) and records everything so management can see how quickly incidents were handled.',
+    analogy:'📟 Think of PagerDuty as the emergency dispatch system for engineers — like 911 for the bank\'s systems. It knows who\'s on call, how to reach them, and what to do if they don\'t answer.',
+    why:'💡 Why it matters: Without PagerDuty, a critical 3am alert might sit unnoticed until morning. With PagerDuty, the right engineer is woken up and responding within minutes — regardless of the time.',
+    realExample:'🌍 Real world: PagerDuty reports that the average response time for P1 incidents drops from 56 minutes to under 10 minutes when teams move from manual on-call processes to PagerDuty\'s automated escalation.',
+    desc:'On-call management and incident coordination platform. Manages rotating on-call schedules, multi-tier escalation policies, and SLA tracking across L1/L2/L3 teams. Integrates with Alertmanager (receives alerts), Slack (team communication), and Jira/ServiceNow (ticket creation). Provides mobile app for on-call engineers. Records incident timelines, response times, and MTTD/MTTR metrics for management reporting.',
+    tools:['PagerDuty AIOps (intelligent alert grouping)','PagerDuty Schedules (on-call rotation management)','Mobile app (iOS + Android)','Slack integration (internal coordination only)'],
+    compliance:['PCI-DSS 12.10 — Implement an incident response plan — PagerDuty\'s documented escalation policies satisfy this requirement','ISO A.16.1 — Management of information security incidents — PagerDuty provides the operational infrastructure'],
+    config:'Escalation policy: L1 → 15min no-ack → L2 → 15min no-ack → L3. On-call rotation: weekly handover every Monday 09:00. SLA timer alerts: P1=15min, P2=1hr, P3=4hr, P4=next business day. Auto-resolve: 24hr with no activity. All incidents logged with full timeline for post-incident review.' },
+
+  runbook: { icon:'📖', name:'Runbook System', layer:'Layer 5 — Incident Response',
+    beginner:'A runbook is a step-by-step recipe for fixing a specific problem. For every type of alert that can fire, there\'s a linked runbook that says exactly what to do: "Step 1: Check X. Step 2: If you see Y, do Z. Step 3: If the problem persists, escalate to L2." This means that even a new, junior engineer on their first week of on-call can handle common incidents correctly, without having to figure it out from scratch at 3am.',
+    analogy:'📋 Think of a runbook as a pilot\'s emergency checklist. Pilots don\'t improvise emergencies — they follow a prepared, tested procedure. This removes panic and ensures nothing is missed.',
+    why:'💡 Why it matters: Studies show runbooks reduce MTTR (Mean Time to Resolve) by up to 60%. They ensure consistent, correct responses regardless of which engineer is on call and at what time of day.',
+    realExample:'🌍 Real world: Google\'s SRE book (Site Reliability Engineering) dedicates entire chapters to runbooks as a critical operational practice. Every major tech company with high reliability requirements maintains runbook libraries.',
+    desc:'Documented step-by-step diagnosis and remediation procedures for every defined alert type. Runbooks are automatically linked to PagerDuty incidents when an alert fires — the on-call engineer sees the relevant runbook immediately without searching. Includes: initial diagnosis steps (what to check first), decision trees (if X then Y), rollback procedures, escalation criteria (when to call L2), and stakeholder communication templates. Reviewed and updated quarterly + after every P1/P2 incident.',
+    tools:['Confluence (runbook authoring + version history)','Jira (action item tracking from runbook updates)','PagerDuty Runbooks (in-alert linking)'],
+    compliance:['PCI-DSS 12.10.1 — Implement and test an incident response plan — runbooks are the operational implementation of the incident response plan','ISO A.16.1.5 — Response to information security incidents — documented response procedures required'],
+    config:'Runbook template sections: Alert context, Initial diagnosis (5-min checklist), Decision tree, Rollback steps, Escalation criteria with explicit triggers, Communication template (what to say to stakeholders), Post-incident actions. Review schedule: quarterly for all runbooks, immediate update after any P1/P2. Ownership: each runbook has a named owner responsible for accuracy.' },
+
+  ticket: { icon:'🎫', name:'Jira / ServiceNow', layer:'Layer 5 — Incident Response',
+    beginner:'Every time there\'s a significant problem (incident), a ticket is automatically created in Jira or ServiceNow. Think of it as an incident report form that gets filled in automatically. It records what happened, when, which systems were affected, who responded, what they did, and when the problem was resolved. This creates an official record that management and auditors can review, and allows tracking whether SLAs (promised response times) were met.',
+    analogy:'📝 Think of it as the official incident report that police officers file after every call. It creates a permanent, auditable record that can be reviewed, audited, and used to improve future responses.',
+    why:'💡 Why it matters: Without tickets, incidents go undocumented. The same problem recurs because nobody learns from it. Regulators (RBI, PCI auditors) require evidence that incidents were properly tracked and resolved.',
+    realExample:'🌍 Real world: RBI\'s IT examination specifically asks banks to show incident tickets from the past year. Banks without proper incident ticketing face compliance findings and potential penalties.',
+    desc:'Incident tracking system that auto-creates tickets when P1/P2 alerts fire in PagerDuty. Tickets are pre-populated with alert context, affected services, initial hypothesis, SLA deadline, and assigned owner. Integrates with runbooks (linked in ticket), Confluence (for documentation), and Slack/email (for status updates). Provides management dashboards showing SLA compliance, incident trends, and MTTD/MTTR KPIs over time.',
+    tools:['Jira Service Management (primary ITSM)','ServiceNow ITSM (enterprise alternative)','Confluence (incident documentation + post-mortems)'],
+    compliance:['PCI-DSS 12.10 — Track and document incidents — ticket records serve as audit evidence of incident handling','ISO A.16.1.6 — Learning from information security incidents — ticket data feeds post-incident learning process'],
+    config:'Auto-ticket trigger: P1 and P2 PagerDuty alerts (immediate), P3 after 15min unresolved. Required ticket fields: severity, affected_services (list), customer_impact (Y/N), RBI_reportable (Y/N), PCI_reportable (Y/N). SLA timers tracked in ticket. All closed tickets archived 7 years. Monthly SLA compliance report auto-generated for management.' },
+
+  pir: { icon:'🔁', name:'Post-Incident Review', layer:'Layer 5 — Incident Response',
+    beginner:'After every significant incident is resolved, the team holds a meeting called a Post-Incident Review (PIR) — sometimes called a "postmortem." The goal is NOT to blame anyone but to understand: What exactly happened? Why did it happen? Could we have detected it faster? Could we have fixed it faster? What changes do we make to prevent it happening again? The findings are documented, action items are assigned, and runbooks are updated. This is how the system gets smarter after every incident.',
+    analogy:'✈️ Think of a PIR like an aircraft accident investigation. The goal isn\'t to punish the pilot — it\'s to understand every contributing factor and change procedures, training, or equipment so it never happens again.',
+    why:'💡 Why it matters: Systems that don\'t learn from incidents keep repeating the same incidents. PIRs are what turn a painful outage into lasting improvement — reducing MTTD and MTTR over time.',
+    realExample:'🌍 Real world: Google\'s SRE practice mandates blameless postmortems for every significant incident. Google publishes many of these publicly (in anonymised form) — and the entire industry learns from them.',
+    desc:'Mandatory structured review conducted within 5 business days of every P1/P2 incident. Documents the full incident timeline (minute-by-minute reconstruction), root cause analysis (5-whys methodology), contributing factors, detection method (how was it found?), response effectiveness, and specific action items with owners and due dates. The output drives immediate runbook updates, alert threshold adjustments, and architectural improvements.',
+    tools:['Confluence (PIR template + version history)','Jira (action item tracking)','Internal PIR template (standardised across all teams)'],
+    compliance:['ISO A.16.1.6 — Learning from information security incidents — PIRs are the formal mechanism','PCI-DSS 12.10.2 — Review and update the incident response plan at least annually — PIRs feed into this review'],
+    config:'PIR mandatory for: all P1 incidents (always), all P2 incidents (always), recurring P3 incidents (3+ in 30 days). PIR template sections: (1) Executive Summary, (2) Incident Timeline, (3) Root Cause Analysis (5-whys), (4) Contributing Factors, (5) Detection Effectiveness, (6) Response Effectiveness, (7) Action Items with owner + due date. Action item SLA: P1 PIR actions due within 2 weeks.' },
+
+  tamper: { icon:'🔐', name:'Tamper-Evident Log Storage', layer:'Layer 3 — Compliance & Audit',
+    beginner:'Imagine you\'re writing down everything that happens in a notebook, but anyone could rip out pages or change what was written. Tamper-evident log storage solves this by making the log entries mathematically linked to each other — like a chain where each link is welded to the next. If someone removes or changes even one entry, the chain breaks and an alarm fires immediately. On top of this, the storage itself is "WORM" — Write Once Read Many — meaning once something is written, it physically cannot be overwritten.',
+    analogy:'⛓️ Think of it as a blockchain for bank records — each entry is cryptographically chained to the previous one. Change any entry and the chain breaks — detectable immediately and irrefutable in court.',
+    why:'💡 Why it matters: If an attacker breaches the bank and tries to erase evidence of what they did, tamper-evident storage ensures those log entries cannot be deleted or modified — preserving the evidence needed for investigation and prosecution.',
+    realExample:'🌍 Real world: RBI inspectors can request audit logs from any point in the last 7 years. If a bank cannot produce these — or if the logs show signs of tampering — it is a serious compliance violation with significant penalties.',
+    desc:'WORM (Write Once Read Many) storage with SHA-256 cryptographic hash chains for all audit and security logs. Each log entry includes the SHA-256 hash of the previous entry, creating an unbreakable chain — any modification to any historical record breaks the chain at that point, which is detected automatically every 6 hours. Stored in S3 Object Lock (compliance mode) with 7-year lock period — no user, including root/admin, can delete or modify during this period.',
+    tools:['AWS S3 Object Lock (compliance mode)','HashiCorp Vault (secrets and audit)','Immutable S3 buckets (write protection)','Custom hash chain service'],
+    compliance:['PCI-DSS 10.5 — Secure audit trails so they cannot be altered — WORM + hash chains satisfy this requirement completely','RBI § 7.4 — Banks must maintain tamper-proof audit trails for all critical operations — explicit regulatory requirement'],
+    config:'Hash algorithm: SHA-256. Hash chain: each entry contains hash of previous entry + timestamp + entry content. Chain verification: automated every 6 hours, alert on break. WORM lock: S3 Object Lock compliance mode, 7-year retention. S3 versioning: enabled (prevents overwrite). Access to audit logs: logged separately in another tamper-evident store. Chain break alert: P1 immediate escalation.' },
+
+  rbac: { icon:'👥', name:'RBAC Access Control', layer:'Layer 3 — Compliance & Audit',
+    beginner:'RBAC stands for Role-Based Access Control. The idea is simple: different people should only be able to see and do the things relevant to their job. A SOC analyst should be able to see security dashboards but not change system configurations. A developer should be able to see their application\'s performance but not read other customers\' account details. Without RBAC, everyone has access to everything — which means one compromised account could expose the entire system.',
+    analogy:'🏥 Think of RBAC like a hospital access card system. A nurse can enter patient wards. A radiologist can enter the X-ray room. Neither can enter the pharmacy dispensary. Each role has exactly the access needed — no more.',
+    why:'💡 Why it matters: The "principle of least privilege" is a fundamental security concept — every person and system should have the minimum access needed to do their job. RBAC enforces this systematically across all tools.',
+    realExample:'🌍 Real world: The 2020 Twitter hack involved attackers gaining access to internal admin tools through social engineering. Proper RBAC would have limited what those tools could do — the blast radius of the breach would have been far smaller.',
+    desc:'Role-based access control enforced across all monitoring and observability tools. Four primary roles with explicit permission sets: SOC Analyst (read-only security dashboards + alerts), Engineer (read + edit infrastructure dashboards + metrics), Architect (full observability platform access), Auditor (read-only audit logs + compliance reports, no operational access). All access requires MFA. Session timeout: 30 minutes idle. All access events logged.',
+    tools:['LDAP / Microsoft Active Directory (identity source)','Grafana Teams + RBAC (dashboard access)','HashiCorp Vault Policies (secrets access control)','PAM (Privileged Access Management) for admin accounts'],
+    compliance:['ISO A.9.2 — User access management — formal provisioning and de-provisioning process required','SOC2 CC6.3 — The entity implements logical access security measures to protect against threats from sources outside the system'],
+    config:'MFA: mandatory for all roles, no exceptions. Session timeout: 30min idle, 8hr absolute. Access review: quarterly (all roles), immediate review on role change or departure. Privileged accounts: PAM solution with session recording, dual approval for use. Service accounts: no interactive login, key rotation every 90 days, no shared credentials between services.' },
+
+  encrypt: { icon:'🔑', name:'Encryption Policy', layer:'Layer 3 — Compliance & Audit',
+    beginner:'Encryption is like putting your data in a locked box that can only be opened with the right key. Even if a thief steals the box (the hard drive or the network packet), they can\'t read what\'s inside without the key. NorthBridge Bank encrypts data in two situations: when it\'s being sent over the network (in transit) and when it\'s sitting on a hard drive (at rest). The keys that lock and unlock the boxes are themselves stored in special hardware (HSM) that\'s physically tamper-resistant.',
+    analogy:'🔒 Think of it as two types of protection: a sealed envelope for data travelling between places (transit encryption), and a locked safe for data sitting somewhere (at-rest encryption). The keys to both are kept in a bank-grade physical lockbox (HSM).',
+    why:'💡 Why it matters: If attackers steal network traffic or physically steal hard drives, encryption ensures the data is completely unreadable without the keys. It\'s the last line of defence if all other security layers fail.',
+    realExample:'🌍 Real world: In 2014, Home Depot had 56 million card records stolen. The data was stored unencrypted. If PCI-DSS encryption requirements had been followed, the stolen data would have been useless to the attackers.',
+    desc:'Comprehensive encryption policy covering all data states and all transmission channels. In-transit: all network communication (internal and external) uses TLS 1.3 minimum. TLS 1.0, 1.1, and 1.2 are deprecated and blocked. At-rest: all databases, log storage, and backup media use AES-256-GCM encryption. Key management via dedicated HSM (Hardware Security Module) — keys never exist in software in plaintext. Key rotation automated every 90 days.',
+    tools:['AWS KMS / HashiCorp Vault (key management)','HSM — FIPS 140-2 Level 3 certified hardware','Let\'s Encrypt / DigiCert (public TLS certificates)','Certificate Manager (lifecycle automation)'],
+    compliance:['PCI-DSS 4.2.1 — Use strong cryptography to safeguard cardholder data during transmission over open networks','PCI-DSS 3.5 — Use strong cryptography to render stored cardholder data unreadable','ISO A.10.1 — Policy on the use of cryptographic controls'],
+    config:'TLS: 1.3 only (1.0/1.1/1.2 blocked at load balancer and internal services). Cipher suites: AEAD only (ChaCha20-Poly1305, AES-256-GCM). Certificate: 2048-bit RSA minimum, 90-day rotation via automation. At-rest: AES-256-GCM, TDE for databases. HSM: FIPS 140-2 Level 3, dual control for key ceremonies. Key rotation: 90-day automated rotation, zero-downtime via key versioning. No plaintext secrets in code, config files, environment variables, or CI/CD logs.' },
+
+  retention: { icon:'📅', name:'Data Retention Policy', layer:'Layer 3 — Compliance & Audit',
+    beginner:'Different types of data need to be kept for different lengths of time, and after that time they must be deleted (or they become a liability). NorthBridge Bank uses a three-tier system: "hot" storage for data needed quickly right now (last 90 days), "warm" storage for data that might be needed for compliance this year, and "cold" archive for data that must be kept for up to 7 years because regulations require it. Moving data between tiers happens automatically.',
+    analogy:'📁 Think of it as three types of storage for your own files: your desktop (hot — instant access), an external drive (warm — access in minutes), and a storage unit across town (cold — takes hours to retrieve, but it\'s there if you ever need it for a legal matter).',
+    why:'💡 Why it matters: Keeping data too long is a privacy risk (more data = bigger breach impact). Deleting data too early is a compliance violation (regulators may ask for 7-year-old records). Automated lifecycle management gets this exactly right without manual effort.',
+    realExample:'🌍 Real world: RBI requires transaction records kept for 10 years. PCI-DSS requires audit logs kept for 1 year (3 months immediately accessible). Getting this wrong — too short or too long — results in regulatory findings during examinations.',
+    desc:'Three-tier automated data lifecycle management with clearly defined retention periods per data category. Hot tier (0–90 days): SSD-backed, sub-second query response, immediately accessible by engineers and SOC. Warm tier (90 days–1 year): HDD-backed, 30-second query response, compliance access. Cold archive (1–7 years): AWS Glacier, 3–5 hour retrieval, regulatory access only. Automated lifecycle transitions via S3 Intelligent-Tiering policies. Manual deletion requires dual authorisation.',
+    tools:['AWS S3 Intelligent-Tiering (automatic hot/warm)','AWS Glacier Deep Archive (cold — 7yr)','Apache Parquet (efficient columnar format for cold)','AWS Lifecycle Policies (automated transitions)'],
+    compliance:['RBI § 9.2 — Transaction records: 10 years. Security logs: 5 years minimum. Audit trails: 7 years. All records retrievable within 24 hours upon regulatory request','SOC2 A1.2 — Availability — documented recovery time objectives per data tier'],
+    config:'Hot→Warm transition: 90 days after creation (automated). Warm→Cold: 1 year after creation (automated). Cold deletion: 7 years (requires dual-person authorisation + regulatory hold check). Regulatory hold: flag overrides all automated deletion — no expiry until hold lifted. Deletion log: every deletion recorded in separate tamper-evident audit trail. Monthly lifecycle report for compliance review.' },
+
+  correlation: { icon:'⚡', name:'Unified Correlation Layer', layer:'Layer 2 — Telemetry',
+    beginner:'Separately, a spike in failed logins looks like maybe someone forgot their password. Separately, a sudden increase in database queries looks like normal traffic. But together — at the same time — they\'re a sign of a credential stuffing attack where hackers are trying thousands of stolen passwords automatically. The correlation layer\'s job is to look at events from BOTH the engineering monitoring stream and the security stream simultaneously, find connections that neither would spot alone, and raise a combined, context-rich alert.',
+    analogy:'🧩 Think of it as a detective who doesn\'t just look at one clue in isolation — they look at ALL the clues together and spot the pattern that proves a crime is in progress.',
+    why:'💡 Why it matters: Modern attacks are multi-vector — they touch multiple systems in ways that individually look harmless. Only by correlating across both streams can you detect sophisticated attacks in real time rather than hours later.',
+    realExample:'🌍 Real world: The 2016 Bangladesh Bank SWIFT hack involved attackers who spent months moving slowly through the network, making small changes that individually triggered no alerts but together constituted the biggest bank heist in history. Correlation across streams could have caught the pattern.',
+    desc:'Real-time cross-stream correlation engine joining observability metrics (latency spikes, error rates, throughput anomalies) with security events (failed logins, privilege changes, config modifications, IDS alerts) to detect complex multi-vector attack patterns. Uses rule-based correlation (predefined attack patterns), statistical correlation (anomaly detection), and sequence-based correlation (events in a specific order within a time window). All correlated findings enriched with full context before alerting.',
+    tools:['IBM QRadar Correlation Rules (enterprise SIEM correlation)','Splunk ES Correlation Searches (statistical + rule-based)','Custom UEBA rules (User Entity Behaviour Analytics)'],
+    compliance:['PCI-DSS 10.6.2 — Review logs of all system components to identify anomalies or suspicious activity — automated correlation satisfies this','ISO A.12.4 — Logging and monitoring — cross-system event correlation is a best-practice implementation'],
+    config:'Correlation window: 5 minutes (events within this window are eligible for correlation). Rule categories: threshold (login failures >10 in 60s), sequence (login failure → privilege escalation within 5min), statistical (3-sigma deviation from 30-day baseline). Example rule: "error_rate >5% AND simultaneous failed_logins >50 AND config_change in last 10min = potential credential stuffing + evasion." Correlated alert includes: all contributing events, MITRE ATT&CK mapping, recommended response action.' },
+
+  notif: { icon:'📣', name:'Notification Channels', layer:'Layer 5 — Incident Response',
+    beginner:'When an alert fires, the right engineer needs to know about it immediately — whatever time it is, wherever they are. That\'s why multiple notification channels are used simultaneously. PagerDuty calls the on-call engineer\'s phone. An email is sent for formal record-keeping. SMS arrives as backup if the phone call goes unanswered. Slack messages appear for team coordination. Using multiple channels in parallel ensures the message gets through even if one channel fails.',
+    analogy:'🚨 Think of it like a fire alarm system — not just one alarm bell, but also flashing lights, PA announcements, and door alerts. Multiple parallel channels ensure no one misses the alert.',
+    why:'💡 Why it matters: If only one notification channel is used and it fails, a P1 incident might go unnoticed for hours. Redundant channels with different delivery mechanisms ensure 100% alert delivery reliability.',
+    realExample:'🌍 Real world: In 2019, a major bank\'s on-call engineer missed a P1 alert because their phone was on silent and they only had email notification. Customers were unable to make payments for 3 hours. Redundant channels (PagerDuty phone call + SMS + Slack) would have prevented this.',
+    desc:'Multi-channel parallel notification system ensuring on-call engineers are reached through at least two independent channels simultaneously. PagerDuty is the primary channel for P1/P2 (phone call + app push notification). Email provides a formal record-keeping trail for all severity levels. SMS serves as a backup channel when smartphone app delivery is uncertain. Slack is permitted for internal team coordination only — strictly no PII, customer data, or sensitive incident details in Slack messages.',
+    tools:['PagerDuty (primary — phone call + app push)','AWS SNS (SMS + Email delivery)','Slack (internal coordination — compliance restrictions apply)'],
+    compliance:['PCI-DSS 12.10.4 — Define communication and notification procedures as part of the incident response plan'],
+    config:'P1 channels: PagerDuty (phone call) + SMS simultaneously. P2: PagerDuty (app push) + email. P3/P4: email only. Slack: approved for internal team coordination only. ⚠️ COMPLIANCE RULE: NO PII, account numbers, card numbers, transaction amounts, or customer names in Slack messages. Slack logs retained 90 days. All notification delivery confirmed and logged. Failed delivery triggers backup channel within 2 minutes.' },
+
+  'dual-telemetry': { icon:'📡', name:'Dual Telemetry Streams', layer:'Layer 2 — Observability + Security Pipelines',
+    beginner:'The bank\'s infrastructure generates two fundamentally different types of signals, and they need to be handled by two different teams for two different purposes. The Engineering team cares about performance: "Is the website fast? Are there errors? Is the database healthy?" The SOC (Security Operations Centre) team cares about threats: "Is someone trying to break in? Is there unusual access? Are our systems being misused?" These two streams run in parallel — like two separate rivers flowing to the same sea — and meet at the correlation layer where connections between them can be spotted.',
+    analogy:'🚂 Think of it as two parallel railway tracks — one carrying cargo for the engineering team (performance data), one carrying cargo for the security team (threat data). They run side by side, and at key junctions, cargo from both tracks is combined to reveal patterns neither could show alone.',
+    why:'💡 Why it matters: Keeping the streams separate ensures each team gets exactly the data they need without noise from the other. Bringing them together at the correlation layer enables detection of attacks that span both operational and security dimensions.',
+    realExample:'🌍 Real world: A sophisticated attack often causes both a performance anomaly (the engineering stream notices: latency spikes) and a security event (the SOC stream notices: unusual data access). Neither alone is conclusive. Together they confirm an active breach.',
+    desc:'Two parallel telemetry collection and processing pipelines serving distinct audiences. The Observability Stream (Engineering) collects Metrics, Logs, and Traces from all infrastructure components — feeding the Prometheus/Loki/Tempo/Grafana stack used by engineers for performance monitoring, debugging, and capacity planning. The Security Stream (SOC) collects Security Events, Audit Logs, and Threat Intelligence feeds — feeding the Splunk/QRadar SIEM stack used by SOC analysts for threat detection, incident investigation, and compliance reporting. Both streams converge at the Unified Correlation Layer.',
+    tools:['Prometheus + Loki + Tempo (observability stack)','Splunk Enterprise Security + IBM QRadar (security stack)','OpenTelemetry Collector (vendor-neutral collection)','Fluentd (log routing)'],
+    compliance:['PCI-DSS 10.2 — Implement audit logs — both streams contribute to comprehensive audit coverage','ISO A.12.4 — Logging and monitoring — dual-stream architecture satisfies requirements for both operational and security monitoring'],
+    config:'Observability stream: scrape interval 15s (metrics), near-real-time streaming (logs), 100% sampling for traces. Security stream: event forwarding within 60s to SIEM, real-time correlation rule evaluation. Streams are logically separated at the collector level — no cross-contamination. Correlation layer reads from both streams simultaneously with a 5-minute correlation window.' },
+
+  'compliance-layer': { icon:'⚖️', name:'Compliance & Audit Layer', layer:'Layer 3 — Regulatory Controls',
+    beginner:'Banks are heavily regulated — they must follow strict rules set by the RBI (Reserve Bank of India), international card standards (PCI-DSS), and global security frameworks (ISO 27001, SOC 2). The Compliance & Audit Layer is a dedicated set of controls that exist specifically to meet these rules. It covers four key areas: (1) making sure logs can\'t be tampered with, (2) making sure only the right people can access the right systems, (3) making sure all data is encrypted, and (4) making sure data is kept for exactly as long as regulations require — no more, no less.',
+    analogy:'🏛️ Think of this layer as the bank\'s legal and compliance department, but automated. Just as a physical compliance department keeps records, controls access, and ensures regulations are met — this layer does the same thing for the digital systems, automatically and continuously.',
+    why:'💡 Why it matters: Non-compliance with RBI, PCI-DSS, or ISO 27001 results in fines, loss of operating licence, public disclosure of failures, and loss of customer trust. These controls are what keep the bank legally and operationally safe.',
+    realExample:'🌍 Real world: In 2020, RBI imposed a ₹1 crore fine on a major Indian bank for non-compliance with IT security guidelines. In 2023, multiple banks received notices for deficient audit trail maintenance. Each card in this layer directly maps to a specific regulatory requirement that could otherwise result in a fine.',
+    desc:'Dedicated layer of technical controls implementing the bank\'s regulatory obligations across four domains. (1) Tamper-Evident Log Storage: WORM + cryptographic hash chains ensuring audit logs cannot be modified. (2) RBAC Access Control: role-based permissions with MFA and least-privilege enforcement across all monitoring tools. (3) Encryption Policy: AES-256 at rest + TLS 1.3 in transit + HSM key management. (4) Data Retention Policy: automated three-tier lifecycle (90-day hot, 1-year warm, 7-year cold) matching regulatory requirements. All four domains are mapped to specific PCI-DSS, RBI, ISO 27001, and SOC 2 controls.',
+    tools:['AWS S3 Object Lock (WORM storage)','HashiCorp Vault (secrets + audit)','Active Directory + RBAC (access control)','HSM (Hardware Security Module — key management)','AWS Lifecycle Policies (retention automation)'],
+    compliance:['PCI-DSS 10 (logging), 3.5 (encryption), 1.3 (network controls) — multiple requirements across all four domains','RBI IT Framework §§ 6, 7, 9 — network security, audit trails, and data retention','ISO 27001 Annexes A.9 (access), A.10 (crypto), A.12.4 (logging), A.18 (compliance)','SOC 2 CC6.3 (access controls), CC7 (monitoring), A1.2 (availability)'],
+    config:'This layer has no single configuration — it is the policy layer that governs configuration of all other layers. Controls are reviewed quarterly by the CISO and annually by external auditors. Compliance dashboard provides real-time view of control status. Any control falling below threshold triggers immediate CISO notification and remediation SLA.' }
+};
+
+/* ═══════════════════════ COMPLIANCE DATA ═══════════════════════ */
+const complianceData = {
+  pci: {
+    'req-1':  { control:'PCI-DSS Req 1.3', desc:'Restrict inbound and outbound traffic to only that which is necessary for the cardholder data environment.' },
+    'req-4':  { control:'PCI-DSS Req 4.2', desc:'All transmission of cardholder data over open, public networks must be encrypted with strong cryptography (TLS 1.3 minimum).' },
+    'req-10': { control:'PCI-DSS Req 10.2', desc:'Implement audit logs to reconstruct events: all individual user access, actions taken by root/admin, access to audit trails, invalid login attempts, use of auth mechanisms.' },
+    'req-12': { control:'PCI-DSS Req 12.10', desc:'Implement an incident response plan to be prepared immediately upon system breach. Plan must include roles, communication, recovery procedures.' },
+    'overview': { control:'PCI-DSS 4.0 Overview', desc:'Payment Card Industry Data Security Standard v4.0. Mandatory for all entities that store, process, or transmit cardholder data. 12 requirements covering network security, access control, monitoring, and incident response.' },
+    'req-10-5': { control:'PCI-DSS Req 10.5', desc:'Retain audit log history for at least 12 months, with at least the most recent 3 months immediately available for analysis.' },
+    'net-sec': { control:'PCI-DSS Req 1', desc:'Install and maintain network security controls.' }
+  },
+  rbi: {
+    'net-sec':   { control:'RBI IT Framework § 6.3 — Network Security', desc:'Banks must implement multi-layer network security including firewall, IDS/IPS, and DMZ architecture. All network changes require change management approval.' },
+    'audit':     { control:'RBI IT Framework § 7.4 — Audit Trails', desc:'Banks must maintain complete, tamper-proof audit trails for all critical operations. Audit logs must be protected from unauthorized modification and retained as per data retention policy.' },
+    'retention': { control:'RBI IT Framework § 9.2 — Data Retention', desc:'Transaction records must be retained for 10 years. Security logs must be retained for 5 years minimum. Audit trails must be retained for 7 years. All records must be retrievable within 24 hours.' },
+    'overview':  { control:'RBI IT Framework 2021 Overview', desc:'Reserve Bank of India Information Technology Framework for Banks (2021). Covers governance, IS policy, IS audit, IS lifecycle, IT operations, IS incident management, business continuity, and customer awareness.' }
+  },
+  iso: {
+    'a9':   { control:'ISO 27001 Annex A.9 — Access Control', desc:'Access control policy must be established. User access rights reviewed at regular intervals. All access to systems must be authenticated, authorized, and audited.' },
+    'a10':  { control:'ISO 27001 Annex A.10 — Cryptography', desc:'Cryptographic controls policy must be implemented for protection of information. Key management procedures covering key generation, storage, distribution, and destruction.' },
+    'a12-4': { control:'ISO 27001 A.12.4 — Logging & Monitoring', desc:'Event logs recording user activities, exceptions, faults, and information security events must be produced, kept, and regularly reviewed.' },
+    'a16':  { control:'ISO 27001 Annex A.16 — Incident Management', desc:'Management responsibilities and procedures must be established to ensure quick, effective response to information security incidents.' },
+    'a18':  { control:'ISO 27001 Annex A.18 — Compliance', desc:'All relevant legal, statutory, regulatory, and contractual requirements must be explicitly identified and documented. Regular compliance reviews required.' },
+    'overview': { control:'ISO/IEC 27001:2022 Overview', desc:'International standard for Information Security Management Systems (ISMS). Provides a systematic approach to managing sensitive information. Certification requires independent audit every 3 years with annual surveillance audits.' }
+  },
+  soc2: {
+    'cc6':  { control:'SOC 2 CC6.3 — Logical Access Controls', desc:'The entity implements logical access security measures to protect against unauthorized access including: registration, authorization, authentication, removal of access, and restriction of privileged users.' },
+    'cc7':  { control:'SOC 2 CC7 — System Operations', desc:'The entity monitors system components and the operation of controls to detect anomalies. Anomalies are evaluated to determine whether they represent security events.' },
+    'a1':   { control:'SOC 2 A1.2 — Availability', desc:'The entity authorizes, designs, develops or acquires, implements, operates, approves, maintains, and monitors environmental protections, software, data back-up processes, and recovery infrastructure.' },
+    'overview': { control:'SOC 2 Type II Overview', desc:'System and Organization Controls report covering security, availability, processing integrity, confidentiality, and privacy over a 12-month audit period. Type II (vs Type I) means controls were tested for operational effectiveness, not just designed correctly.' }
+  }
+};
+
+/* ═══════════════════════ THEME SWITCHER ═══════════════════════ */
+function setTheme(theme, btn) {
+  document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+/* ═══════════════════════ SECTION TOGGLE ═══════════════════════ */
+function toggleSection(id) {
+  const section = document.getElementById(id);
+  const body = section.querySelector('.section-body');
+  const chevron = section.querySelector('.section-chevron');
+  const header = section.querySelector('.section-header');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+}
+
+/* ═══════════════════════ ROLE FILTER ═══════════════════════ */
+function setRole(role) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.role-btn[onclick*="${role}"]`);
+  if (btn) btn.classList.add('active');
+
+  const roleMap = {
+    engineer: ['s1','s2','s4','s5','s6'],
+    soc:      ['s1','s2','s3','s5','s6'],
+    audit:    ['s3','s6'],
+    all:      ['s1','s2','s3','s4','s5','s6']
+  };
+
+  const visible = roleMap[role] || roleMap.all;
+  document.querySelectorAll('.section').forEach(s => {
+    const inRole = visible.includes(s.id);
+    s.classList.toggle('dimmed', !inRole);
+    if (inRole) {
+      s.classList.remove('dimmed');
+      const hl = { engineer:'highlighted', soc:'soc-highlight highlighted', audit:'audit-highlight highlighted' };
+      if (role !== 'all') {
+        s.classList.add(...(hl[role]||'').split(' ').filter(Boolean));
+      } else {
+        s.classList.remove('highlighted','soc-highlight','audit-highlight');
+      }
+    } else {
+      s.classList.remove('highlighted','soc-highlight','audit-highlight');
+    }
+  });
+
+  // Open visible sections, collapse dimmed
+  document.querySelectorAll('.section').forEach(s => {
+    if (!s.classList.contains('dimmed')) {
+      const body = s.querySelector('.section-body');
+      const chevron = s.querySelector('.section-chevron');
+      const header = s.querySelector('.section-header');
+      body.classList.add('open');
+      chevron.classList.add('open');
+      header.classList.add('open');
+    }
+  });
+}
+
+/* ═══════════════════════ DETAIL PANEL ═══════════════════════ */
+function showDetail(key) {
+  const d = details[key];
+  if (!d) return;
+  document.getElementById('dp-icon').textContent = d.icon;
+  document.getElementById('dp-name').textContent = d.name;
+  document.getElementById('dp-layer').textContent = d.layer;
+
+  // Build beginner view
+  let beginnerHtml = '';
+  if (d.beginner) {
+    beginnerHtml += `<div class="dp-section"><div class="dp-section-title">💡 Simple Explanation</div><div class="dp-content" style="font-size:13px;line-height:1.8;">${d.beginner}</div></div>`;
+  }
+  if (d.analogy) {
+    beginnerHtml += `<div class="dp-analogy"><div class="dp-analogy-label">Analogy</div>${d.analogy}</div>`;
+  }
+  if (d.why) {
+    beginnerHtml += `<div class="dp-why"><div class="dp-why-label">Why It Matters</div>${d.why}</div>`;
+  }
+  if (d.realExample) {
+    beginnerHtml += `<div class="dp-example"><div class="dp-example-label">Real World Example</div>${d.realExample}</div>`;
+  }
+
+  // Build professional view
+  let proHtml = `
+    <div class="dp-section">
+      <div class="dp-section-title">Technical Description</div>
+      <div class="dp-content">${d.desc}</div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Tools &amp; Technologies</div>
+      <div class="dp-tools">${d.tools.map(t=>`<span class="tool-tag">${t}</span>`).join('')}</div>
+    </div>`;
+  if (d.config) {
+    proHtml += `<div class="dp-section">
+      <div class="dp-section-title">Configuration &amp; Specifications</div>
+      <div class="dp-content" style="font-family:var(--font-mono);font-size:11px;line-height:1.9;color:var(--text-3);">${d.config}</div>
+    </div>`;
+  }
+  if (d.compliance && d.compliance.length) {
+    proHtml += `<div class="dp-section">
+      <div class="dp-section-title">Compliance Mapping</div>
+      <div class="dp-content">${d.compliance.map(c=>`<div style="margin-bottom:5px;padding:5px 8px;background:rgba(245,166,35,0.05);border-left:2px solid var(--amber);border-radius:0 4px 4px 0;font-size:11px;">${c}</div>`).join('')}</div>
+    </div>`;
+  }
+
+  const hasBeginnerContent = beginnerHtml.length > 0;
+  const toggleHtml = hasBeginnerContent ? `
+    <div class="view-toggle">
+      <button class="vt-btn beginner-btn active" id="vt-beginner" onclick="switchView('beginner')">🟢 Beginner View</button>
+      <button class="vt-btn" id="vt-pro" onclick="switchView('pro')">🔵 Professional View</button>
+    </div>` : '';
+
+  document.getElementById('dp-content').innerHTML = `
+    ${toggleHtml}
+    <div class="dp-view ${hasBeginnerContent ? 'active' : ''}" id="view-beginner">${beginnerHtml}</div>
+    <div class="dp-view ${hasBeginnerContent ? '' : 'active'}" id="view-pro">${proHtml}</div>
+  `;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function switchView(which) {
+  document.getElementById('view-beginner').classList.toggle('active', which === 'beginner');
+  document.getElementById('view-pro').classList.toggle('active', which === 'pro');
+  document.getElementById('vt-beginner').classList.toggle('active', which === 'beginner');
+  document.getElementById('vt-pro').classList.toggle('active', which === 'pro');
+}
+
+function closeDetail(e) {
+  if (e.target === document.getElementById('detail-overlay')) closeDetailBtn();
+}
+function closeDetailBtn() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+/* ═══════════════════════ COMPLIANCE TOOLTIP ═══════════════════════ */
+function showCompliance(e, framework, reqKey) {
+  e.stopPropagation();
+  const data = complianceData[framework]?.[reqKey];
+  if (!data) return;
+  const tooltip = document.getElementById('comp-tooltip');
+  const colors = { pci:'var(--green)', rbi:'#93c5fd', iso:'#c4b5fd', soc2:'var(--amber)' };
+  const labels = { pci:'PCI-DSS 4.0', rbi:'RBI IT Framework', iso:'ISO 27001:2022', soc2:'SOC 2 Type II' };
+  tooltip.innerHTML = `
+    <div class="ct-badge" style="color:${colors[framework]}">${labels[framework]}</div>
+    <div class="ct-control">${data.control}</div>
+    <div class="ct-desc">${data.desc}</div>
+  `;
+  const rect = e.target.getBoundingClientRect();
+  tooltip.style.left = Math.min(rect.left, window.innerWidth - 320) + 'px';
+  tooltip.style.top  = (rect.bottom + 8) + 'px';
+  tooltip.classList.add('visible');
+  e.target.addEventListener('mouseleave', hideCompliance, { once:true });
+}
+function hideCompliance() {
+  document.getElementById('comp-tooltip').classList.remove('visible');
+}
+document.addEventListener('click', hideCompliance);
+
+/* ═══════════════════════ KPI SPARKLINES ═══════════════════════ */
+function makeSparkline(svgId, data, color) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const w = 100, h = 40;
+  const min = Math.min(...data), max = Math.max(...data);
+  const pts = data.map((v,i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / (max - min || 1)) * (h - 4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="g-${svgId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polygon points="${pts} ${w},${h} 0,${h}" fill="url(#g-${svgId})"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  `;
+}
+
+const sparkData = {
+  mttd: [6.1,5.8,5.2,5.5,4.9,4.7,4.5,4.8,4.3,4.2],
+  mttr: [31,29,28,26,25,24,26,23,24,23],
+  sla:  [1.1,1.2,1.0,1.3,1.5,1.2,1.4,1.3,1.5,1.4],
+  fpr:  [9.9,9.2,8.8,8.1,7.9,7.5,7.2,7.0,6.9,6.8]
+};
+
+function initSparklines() {
+  makeSparkline('spark-mttd', sparkData.mttd, '#00c8e0');
+  makeSparkline('spark-mttr', sparkData.mttr, '#00c875');
+  makeSparkline('spark-sla',  sparkData.sla,  '#f5a623');
+  makeSparkline('spark-fpr',  sparkData.fpr,  '#ff4757');
+}
+
+/* Animate KPI values slightly to simulate live feed */
+function animateKPIs() {
+  const configs = [
+    { id:'kpi-mttd', base:4.2, range:0.3, decimals:1, suffix:'min', el:null },
+    { id:'kpi-mttr', base:23,  range:2,   decimals:0, suffix:'min', el:null },
+    { id:'kpi-sla',  base:1.4, range:0.2, decimals:1, suffix:'%',   el:null },
+    { id:'kpi-fpr',  base:6.8, range:0.4, decimals:1, suffix:'%',   el:null }
+  ];
+  configs.forEach(c => { c.el = document.getElementById(c.id); });
+  setInterval(() => {
+    configs.forEach(c => {
+      if (!c.el) return;
+      const v = (c.base + (Math.random() - 0.5) * c.range).toFixed(c.decimals);
+      c.el.innerHTML = v + `<span style="font-size:16px;color:var(--text-3)">${c.suffix}</span>`;
+    });
+  }, 3000);
+}
+
+/* ═══════════════════════ INIT ═══════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initSparklines();
+  animateKPIs();
+});
+initSparklines();
+animateKPIs();
+</script>
+</body>
+</html>
