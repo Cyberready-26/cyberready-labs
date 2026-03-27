@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Lab 12 — Identify Security Controls | CyberReady India</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:      #0a0e1a;
+    --surface: #111827;
+    --panel:   #1a2236;
+    --border:  #2a3a52;
+    --accent:  #3b82f6;
+    --accent2: #06b6d4;
+    --green:   #10b981;
+    --amber:   #f59e0b;
+    --red:     #ef4444;
+    --orange:  #f97316;
+    --purple:  #8b5cf6;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --mono:    'JetBrains Mono', monospace;
+    --sans:    'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.65; min-height: 100vh; }
+
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .topbar-brand { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+  .topbar-label { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .wrapper { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .lab-header { margin-bottom: 36px; }
+  .lab-badge { display: inline-block; background: rgba(249,115,22,.12); border: 1px solid rgba(249,115,22,.35); color: var(--orange); font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 12px; border-radius: 4px; margin-bottom: 16px; }
+  .lab-title { font-size: 28px; font-weight: 700; color: #f8fafc; margin-bottom: 10px; }
+  .lab-subtitle { color: var(--muted); font-size: 14px; }
+
+  .story-block { background: var(--panel); border-left: 3px solid var(--orange); border-radius: 0 8px 8px 0; padding: 18px 22px; margin-bottom: 24px; font-style: italic; color: #cbd5e1; font-size: 14.5px; }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 26px 30px; margin-bottom: 24px; }
+  .section-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 14px; }
+  .section p { color: var(--text); margin-bottom: 10px; }
+  .section p:last-child { margin-bottom: 0; }
+
+  .tip { background: rgba(249,115,22,.07); border: 1px solid rgba(249,115,22,.2); border-radius: 8px; padding: 12px 16px; font-size: 13.5px; color: #fed7aa; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; }
+  .tip-icon { flex-shrink: 0; }
+
+  /* PROGRESS */
+  .progress-bar-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
+  .progress-label { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--amber)); border-radius: 99px; transition: width .4s ease; width: 0%; }
+  .progress-pct { font-family: var(--mono); font-size: 12px; color: var(--orange); white-space: nowrap; }
+
+  /* ARCHITECTURE WITH CONTROLS */
+  .arch-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 24px; margin-bottom: 24px; }
+  .arch-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 20px; text-align: center; }
+
+  /* ZONE BANDS */
+  .zone { border-radius: 10px; padding: 18px 16px; margin-bottom: 14px; border: 1px solid; }
+  .zone-external { border-color: rgba(59,130,246,.25); background: rgba(59,130,246,.04); }
+  .zone-dmz      { border-color: rgba(249,115,22,.3);  background: rgba(249,115,22,.05); }
+  .zone-internal { border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.04); }
+  .zone-monitor  { border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.04); }
+
+  .zone-label { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; font-weight: 700; }
+  .zone-external .zone-label { color: #93c5fd; }
+  .zone-dmz      .zone-label { color: #fdba74; }
+  .zone-internal .zone-label { color: #6ee7b7; }
+  .zone-monitor  .zone-label { color: #fde68a; }
+
+  /* COMPONENT ROW */
+  .comp-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+  .arch-comp { display: flex; flex-direction: column; align-items: center; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg); width: 100px; }
+  .arch-comp-icon { font-size: 20px; margin-bottom: 4px; }
+  .arch-comp-name { font-size: 11px; font-weight: 600; text-align: center; color: #f1f5f9; line-height: 1.3; }
+  .arch-arrow { color: var(--muted); font-size: 16px; padding: 0 2px; }
+
+  /* CONTROL SLOTS inside zones */
+  .control-slots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .control-slot {
+    border: 2px dashed var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 7px;
+    cursor: default; transition: all .2s; min-width: 160px;
+    font-family: var(--mono); background: rgba(255,255,255,.02);
+  }
+  .control-slot.filled-correct { border-color: var(--green); background: rgba(16,185,129,.1); color: #a7f3d0; border-style: solid; }
+  .control-slot.filled-wrong   { border-color: var(--red);   background: rgba(239,68,68,.1);  color: #fca5a5; border-style: solid; }
+  .control-slot-icon { font-size: 15px; }
+
+  /* CONTROL CARDS (clickable) */
+  .controls-bank { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .controls-bank-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--orange); margin-bottom: 16px; }
+  .controls-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .controls-grid { grid-template-columns: 1fr 1fr; } }
+
+  .ctrl-card {
+    background: var(--panel); border: 2px solid var(--border); border-radius: 9px;
+    padding: 14px 14px 12px; cursor: pointer; transition: all .2s; text-align: center;
+  }
+  .ctrl-card:hover:not(.used):not(.disabled) { border-color: var(--orange); background: rgba(249,115,22,.08); }
+  .ctrl-card.selected { border-color: var(--amber); background: rgba(245,158,11,.12); box-shadow: 0 0 14px rgba(245,158,11,.2); }
+  .ctrl-card.used     { opacity: .4; cursor: default; }
+  .ctrl-card.disabled { cursor: default; }
+  .ctrl-icon { font-size: 24px; margin-bottom: 6px; }
+  .ctrl-name { font-size: 12.5px; font-weight: 700; color: #f1f5f9; margin-bottom: 3px; }
+  .ctrl-hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* ZONE CLICK */
+  .zone-click-area {
+    margin-top: 10px; border: 2px dashed var(--border); border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; color: var(--muted);
+    cursor: pointer; transition: all .2s; text-align: center;
+    font-family: var(--mono); letter-spacing: .05em;
+  }
+  .zone-click-area:hover { border-color: var(--amber); color: var(--amber); background: rgba(245,158,11,.05); }
+  .zone-click-area.highlight { border-color: var(--amber); color: var(--amber); background: rgba(245,158,11,.05); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+  .zone-click-area.done { display: none; }
+
+  /* FEEDBACK PANEL */
+  .feedback-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; display: none; }
+  .feedback-panel.show { display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+  .fp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .fp-icon { font-size: 22px; }
+  .fp-title { font-size: 16px; font-weight: 700; color: #f8fafc; }
+  .fp-result { font-family: var(--mono); font-size: 11px; }
+  .fp-result.ok  { color: var(--green); }
+  .fp-result.err { color: var(--red); }
+  .fp-body { font-size: 14px; color: #cbd5e1; line-height: 1.6; }
+  .fp-body strong { color: #f8fafc; }
+  .fp-next { margin-top: 14px; }
+  .fp-next-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 22px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .fp-next-btn:hover { background: #2563eb; }
+
+  /* QUIZ */
+  .quiz-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-bottom: 24px; display: none; }
+  .quiz-section.show { display: block; }
+  .quiz-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .quiz-title { font-size: 18px; font-weight: 700; color: #f8fafc; }
+  .quiz-counter { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .question-block { display: none; }
+  .question-block.show { display: block; }
+  .question-text { font-size: 15.5px; font-weight: 500; color: #f1f5f9; margin-bottom: 20px; line-height: 1.55; }
+  .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .option-btn { background: var(--panel); border: 2px solid var(--border); border-radius: 8px; padding: 13px 18px; text-align: left; color: var(--text); font-family: var(--sans); font-size: 14.5px; cursor: pointer; transition: all .18s; display: flex; align-items: center; gap: 12px; }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(59,130,246,.08); }
+  .option-btn.correct { border-color: var(--green); background: rgba(16,185,129,.12); color: #a7f3d0; }
+  .option-btn.wrong   { border-color: var(--red);   background: rgba(239,68,68,.1);    color: #fca5a5; }
+  .option-btn:disabled { cursor: default; }
+  .option-letter { width: 26px; height: 26px; border-radius: 6px; background: var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .correct .option-letter { background: var(--green); color: #fff; }
+  .wrong   .option-letter { background: var(--red);   color: #fff; }
+  .feedback-box { border-radius: 8px; padding: 14px 18px; font-size: 14px; margin-bottom: 18px; display: none; }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #a7f3d0; }
+  .feedback-box.wrong-fb   { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.3);  color: #fca5a5; }
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; }
+  .next-q-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .next-q-btn:hover { background: #2563eb; }
+  .next-q-btn:disabled { background: var(--muted); cursor: default; }
+
+  .result-section { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 48px 32px; text-align: center; margin-bottom: 24px; }
+  .result-section.show { display: block; }
+  .result-icon { font-size: 56px; margin-bottom: 16px; }
+  .result-score { font-size: 52px; font-weight: 800; color: #f8fafc; font-family: var(--mono); margin-bottom: 6px; }
+  .result-label { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  .result-msg { font-size: 16px; max-width: 500px; margin: 0 auto 28px; color: #cbd5e1; line-height: 1.6; }
+  .retry-btn { background: transparent; color: var(--accent); border: 2px solid var(--accent); border-radius: 8px; padding: 10px 28px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .retry-btn:hover { background: var(--accent); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">CyberReady India</div>
+  <div class="topbar-label">Module 1 · Concept Lab 12</div>
+</div>
+
+<div class="wrapper">
+
+  <div class="lab-header">
+    <div class="lab-badge">Concept Lab</div>
+    <h1 class="lab-title">Identify Security Controls in NorthBridge Architecture</h1>
+    <div class="lab-subtitle">Module 1 — Systems Thinking &amp; Digital Infrastructure &nbsp;|&nbsp; 6 controls · 5-question quiz</div>
+  </div>
+
+  <div class="story-block">
+    "The NorthBridge Chief Security Officer has asked the team to produce a security layer map — showing exactly where each security control sits in the architecture and what it is protecting. You have been given the architecture diagram and a list of six security controls. Your job is to place each control in the correct zone."
+  </div>
+
+  <div class="section">
+    <div class="section-title">Your Mission</div>
+    <p>Six security controls are listed below the architecture diagram. Select a control by clicking it, then click the zone in the architecture where it belongs. You will get immediate feedback on each placement. When all six are placed, the quiz unlocks.</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap">
+    <div class="progress-label">Controls placed</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0 / 6</div>
+  </div>
+
+  <!-- ARCHITECTURE DIAGRAM -->
+  <div class="arch-wrapper">
+    <div class="arch-title">NorthBridge Banking Architecture — Security Control Placement</div>
+
+    <div class="tip"><div class="tip-icon">🔒</div><div>Select a control from the panel below, then click the zone in the architecture where it belongs.</div></div>
+
+    <!-- ZONE 1: EXTERNAL -->
+    <div class="zone zone-external">
+      <div class="zone-label">🔵 External Zone — Internet &amp; Customer Devices</div>
+      <div class="comp-row">
+        <div class="arch-comp"><div class="arch-comp-icon">📱</div><div class="arch-comp-name">Customer Devices</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">🌐</div><div class="arch-comp-name">Internet</div></div>
+      </div>
+      <div class="control-slots" id="slots-external"></div>
+      <div class="zone-click-area" id="click-external" onclick="placeControl('external')">+ Place a control here</div>
+    </div>
+
+    <!-- ZONE 2: DMZ -->
+    <div class="zone zone-dmz">
+      <div class="zone-label">🟠 DMZ — Public-Facing Security Layer</div>
+      <div class="comp-row">
+        <div class="arch-comp"><div class="arch-comp-icon">🧱</div><div class="arch-comp-name">Edge Firewall</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">⚖️</div><div class="arch-comp-name">Load Balancer</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">🔍</div><div class="arch-comp-name">IDS / IPS</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">🛡️</div><div class="arch-comp-name">WAF</div></div>
+      </div>
+      <div class="control-slots" id="slots-dmz"></div>
+      <div class="zone-click-area" id="click-dmz" onclick="placeControl('dmz')">+ Place a control here</div>
+    </div>
+
+    <!-- ZONE 3: INTERNAL -->
+    <div class="zone zone-internal">
+      <div class="zone-label">🟢 Internal Secure Network — Application &amp; Data Layer</div>
+      <div class="comp-row">
+        <div class="arch-comp"><div class="arch-comp-icon">🖥️</div><div class="arch-comp-name">App Servers</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">🗄️</div><div class="arch-comp-name">Database</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">💳</div><div class="arch-comp-name">Core Banking</div></div>
+      </div>
+      <div class="control-slots" id="slots-internal"></div>
+      <div class="zone-click-area" id="click-internal" onclick="placeControl('internal')">+ Place a control here</div>
+    </div>
+
+    <!-- ZONE 4: MONITORING -->
+    <div class="zone zone-monitor">
+      <div class="zone-label">🟡 Monitoring &amp; Management Layer</div>
+      <div class="comp-row">
+        <div class="arch-comp"><div class="arch-comp-icon">📊</div><div class="arch-comp-name">SIEM</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">🔔</div><div class="arch-comp-name">Alert Manager</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-comp"><div class="arch-comp-icon">👁️</div><div class="arch-comp-name">SOC Dashboard</div></div>
+      </div>
+      <div class="control-slots" id="slots-monitor"></div>
+      <div class="zone-click-area" id="click-monitor" onclick="placeControl('monitor')">+ Place a control here</div>
+    </div>
+
+  </div><!-- /arch-wrapper -->
+
+  <!-- CONTROLS BANK -->
+  <div class="controls-bank">
+    <div class="controls-bank-title">Security Controls — Select one, then click a zone above</div>
+    <div class="controls-grid" id="controlsGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- FEEDBACK PANEL -->
+  <div class="feedback-panel" id="feedbackPanel">
+    <div class="fp-header">
+      <div class="fp-icon" id="fpIcon"></div>
+      <div>
+        <div class="fp-title" id="fpTitle"></div>
+        <div class="fp-result" id="fpResult"></div>
+      </div>
+    </div>
+    <div class="fp-body" id="fpBody"></div>
+    <div class="fp-next" id="fpNext"></div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section" id="quizSection">
+    <div class="quiz-header-row">
+      <div class="quiz-title">Quiz — Security Controls in NorthBridge Architecture</div>
+      <div class="quiz-counter" id="quizCounter">Question 1 of 5</div>
+    </div>
+
+    <div class="question-block show" id="q1">
+      <div class="question-text">1. A Web Application Firewall (WAF) is placed in the DMZ. What does it protect against that a standard network firewall cannot?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(1,'A')"><span class="option-letter">A</span>Physical theft of server hardware</button>
+        <button class="option-btn" onclick="answer(1,'B')"><span class="option-letter">B</span>Application-layer attacks such as SQL injection and cross-site scripting targeting the web application</button>
+        <button class="option-btn" onclick="answer(1,'C')"><span class="option-letter">C</span>Network-level port scanning from the internet</button>
+        <button class="option-btn" onclick="answer(1,'D')"><span class="option-letter">D</span>Unauthorised access to the database by internal users</button>
+      </div>
+      <div class="feedback-box" id="fb1"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt1" onclick="nextQ(2)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q2">
+      <div class="question-text">2. Encryption at rest is applied to the database. What does this protect against?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(2,'A')"><span class="option-letter">A</span>Attackers intercepting data as it travels across the network</button>
+        <button class="option-btn" onclick="answer(2,'B')"><span class="option-letter">B</span>An attacker who physically steals the database storage — the data is unreadable without the encryption key</button>
+        <button class="option-btn" onclick="answer(2,'C')"><span class="option-letter">C</span>SQL injection attacks against the database</button>
+        <button class="option-btn" onclick="answer(2,'D')"><span class="option-letter">D</span>Unauthorised login attempts to the database server</button>
+      </div>
+      <div class="feedback-box" id="fb2"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt2" onclick="nextQ(3)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q3">
+      <div class="question-text">3. Why is the SIEM placed in the monitoring layer rather than in the DMZ or internal network?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(3,'A')"><span class="option-letter">A</span>Because the SIEM needs direct access to the internet to collect threat intelligence</button>
+        <button class="option-btn" onclick="answer(3,'B')"><span class="option-letter">B</span>Because the SIEM must be isolated from the systems it monitors so its logs cannot be tampered with if those systems are compromised</button>
+        <button class="option-btn" onclick="answer(3,'C')"><span class="option-letter">C</span>Because the SIEM is too large to run alongside application servers</button>
+        <button class="option-btn" onclick="answer(3,'D')"><span class="option-letter">D</span>Because the SIEM only monitors the monitoring layer components</button>
+      </div>
+      <div class="feedback-box" id="fb3"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt3" onclick="nextQ(4)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q4">
+      <div class="question-text">4. TLS encryption is applied at the External Zone for customer connections. What does TLS protect?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(4,'A')"><span class="option-letter">A</span>It protects customer devices from being hacked while they use the banking app</button>
+        <button class="option-btn" onclick="answer(4,'B')"><span class="option-letter">B</span>It encrypts data as it travels between the customer's device and NorthBridge's servers — preventing interception in transit</button>
+        <button class="option-btn" onclick="answer(4,'C')"><span class="option-letter">C</span>It prevents unauthorised access to the database</button>
+        <button class="option-btn" onclick="answer(4,'D')"><span class="option-letter">D</span>It stops attackers from performing SQL injection on the banking application</button>
+      </div>
+      <div class="feedback-box" id="fb4"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt4" onclick="nextQ(5)" disabled>Next →</button></div>
+    </div>
+
+    <div class="question-block" id="q5">
+      <div class="question-text">5. Why does a bank like NorthBridge need multiple security controls layered across different zones — rather than one very strong control at the perimeter?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(5,'A')"><span class="option-letter">A</span>Because regulations require a minimum number of controls regardless of effectiveness</button>
+        <button class="option-btn" onclick="answer(5,'B')"><span class="option-letter">B</span>Because different attack types occur at different layers — no single control protects against all threats, so each layer addresses the specific risks at that point in the architecture</button>
+        <button class="option-btn" onclick="answer(5,'C')"><span class="option-letter">C</span>Because multiple controls are cheaper than one powerful control</button>
+        <button class="option-btn" onclick="answer(5,'D')"><span class="option-letter">D</span>Because the perimeter firewall cannot handle the volume of traffic on its own</button>
+      </div>
+      <div class="feedback-box" id="fb5"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt5" onclick="showResult()" disabled>See My Result →</button></div>
+    </div>
+  </div>
+
+  <div class="result-section" id="resultSection">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-label">out of 5 questions</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="retry-btn" onclick="retryQuiz()">Retry Quiz</button>
+  </div>
+
+</div>
+
+<script>
+// ── SECURITY CONTROLS DATA ────────────────────────────────────────────────────
+const controls = [
+  {
+    id: 'tls',
+    icon: '🔐',
+    name: 'TLS Encryption',
+    hint: 'Encrypts data in transit between customer and bank',
+    correctZone: 'external',
+    explanation: {
+      correct: '<strong>TLS (Transport Layer Security)</strong> sits at the External Zone — it encrypts all data travelling between the customer\'s device and NorthBridge\'s servers across the public internet. Without TLS, anyone on the network path between Rahul\'s phone and the bank could read his account details and transactions in plain text. The padlock icon in a browser and "https://" indicate TLS is active.',
+      wrong: 'TLS belongs in the <strong>External Zone</strong>. TLS encrypts data travelling between the customer\'s device and the bank across the public internet — it is the control that protects data in transit. It must sit at the point where customer traffic first enters the architecture.'
+    }
+  },
+  {
+    id: 'waf',
+    icon: '🛡️',
+    name: 'Web Application Firewall',
+    hint: 'Blocks SQL injection, XSS, and web attacks',
+    correctZone: 'dmz',
+    explanation: {
+      correct: '<strong>The WAF (Web Application Firewall)</strong> belongs in the DMZ — the public-facing security layer. The DMZ sits between the internet and internal systems. The WAF inspects every HTTP/S request for application-layer attacks: SQL injection attempts, cross-site scripting, malformed requests. It filters attacks before they reach the app servers, where the actual banking logic runs.',
+      wrong: 'The WAF belongs in the <strong>DMZ</strong>. The Web Application Firewall filters HTTP/S traffic for application-layer attacks before they reach internal systems. It must sit in the public-facing layer — between internet traffic and the internal network.'
+    }
+  },
+  {
+    id: 'ids',
+    icon: '📡',
+    name: 'IDS / IPS',
+    hint: 'Detects and blocks suspicious network behaviour',
+    correctZone: 'dmz',
+    explanation: {
+      correct: '<strong>IDS/IPS (Intrusion Detection/Prevention System)</strong> sits in the DMZ, monitoring all network traffic entering and leaving the bank\'s systems. It uses two methods: signature-based detection (known attack patterns) and anomaly detection (anything that deviates from normal behaviour). IPS can automatically block threats in real time. Placing it in the DMZ means it inspects all inbound and outbound traffic before it reaches the internal network.',
+      wrong: 'IDS/IPS belongs in the <strong>DMZ</strong>. It monitors network traffic for suspicious patterns and can block threats automatically. It must be positioned at the network boundary — in the DMZ — to inspect all traffic flowing between the internet and internal systems.'
+    }
+  },
+  {
+    id: 'encrypt',
+    icon: '🔒',
+    name: 'Encryption at Rest',
+    hint: 'Protects stored data on disk — AES-256',
+    correctZone: 'internal',
+    explanation: {
+      correct: '<strong>Encryption at rest</strong> belongs in the Internal Network — specifically protecting the database. All customer account data, transaction history, and personal details stored in the database are encrypted with AES-256. This means that even if an attacker physically stole the hard drives from the data centre, the data would be completely unreadable without the encryption keys, which are stored separately in a Hardware Security Module (HSM).',
+      wrong: 'Encryption at rest belongs in the <strong>Internal Network</strong> — protecting the database. This control encrypts data stored on disk. It specifically protects the database layer, where all customer account data and transaction history lives.'
+    }
+  },
+  {
+    id: 'rbac',
+    icon: '👥',
+    name: 'Access Control (RBAC)',
+    hint: 'Limits who can access which systems and data',
+    correctZone: 'internal',
+    explanation: {
+      correct: '<strong>RBAC (Role-Based Access Control)</strong> belongs in the Internal Network — governing who can access the application servers, database, and core banking system. Principle of least privilege: each engineer, analyst, and operator gets only the access they need to do their specific job. A SOC analyst can view security dashboards but cannot modify database records. A developer can access their application logs but not another customer\'s account data.',
+      wrong: 'RBAC belongs in the <strong>Internal Network</strong>. Access control governs who can access the application servers, databases, and core banking systems. It must be enforced at the internal layer where the sensitive systems and data live.'
+    }
+  },
+  {
+    id: 'siem',
+    icon: '📊',
+    name: 'SIEM / Security Monitoring',
+    hint: 'Collects and correlates security events across all systems',
+    correctZone: 'monitor',
+    explanation: {
+      correct: '<strong>SIEM (Security Information and Event Management)</strong> belongs in the Monitoring Layer. The SIEM collects security events, logs, and alerts from every other zone — the DMZ, the internal network, the database, and the app servers — and correlates them to detect attack patterns that no single system could see alone. Placing it in a dedicated monitoring layer ensures its own logs cannot be tampered with if internal systems are compromised.',
+      wrong: 'The SIEM belongs in the <strong>Monitoring Layer</strong>. The SIEM collects and correlates security events from across all other zones. It must sit in a separate, protected monitoring layer — both to have visibility across all zones and to ensure its own audit logs remain tamper-proof.'
+    }
+  }
+];
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────────
+const correct = { 1:'B', 2:'B', 3:'B', 4:'B', 5:'B' };
+const feedbacks = {
+  1: { B: '✓ Correct. A WAF inspects the content of HTTP/S requests — looking for malicious payloads like SQL injection strings or scripting attacks. A network firewall only looks at IP addresses and ports, not the content of web requests.', wrong: 'Not quite. A WAF (Web Application Firewall) operates at the application layer — it reads the content of web requests and blocks attacks like SQL injection and XSS. A standard firewall only controls which ports and IPs are allowed, not what is inside the web request.' },
+  2: { B: '✓ Correct. Encryption at rest protects data stored on disk. If an attacker physically steals the storage hardware, the data is unreadable without the decryption key — which is stored separately in an HSM.', wrong: 'Not quite. Encryption at rest protects data stored on disk — it is the defence against physical theft of storage media. It does not protect data in transit (that\'s TLS), and it does not prevent SQL injection or login attempts.' },
+  3: { B: '✓ Correct. The SIEM must be isolated from the systems it monitors so that if those systems are compromised, an attacker cannot erase or modify the security event logs. A SIEM with tampered logs is useless for investigation.', wrong: 'Not quite. The SIEM is in the monitoring layer to maintain independence from the systems it monitors. If the SIEM ran on the same infrastructure as the app servers, an attacker who compromised those servers could delete or modify the SIEM logs — destroying the evidence trail.' },
+  4: { B: '✓ Correct. TLS encrypts the communication channel between the customer\'s device and the bank\'s servers. It prevents anyone on the network path — at a café WiFi, at an ISP — from reading the data in transit.', wrong: 'Not quite. TLS protects data in transit — as it travels between the customer\'s device and the bank across the internet. It is the encryption layer for the communication channel, not a protection for stored data or application logic.' },
+  5: { B: '✓ Correct. Defence in depth — layering multiple controls — ensures that if one control is bypassed or fails, the next layer provides protection. Different attacks target different layers: a network attack requires a different control than an application attack or a physical theft.', wrong: 'Not quite. Multiple layered controls — "defence in depth" — exist because different attacks occur at different layers. A SQL injection attack against a web application requires a WAF. Physical hard drive theft requires encryption at rest. No single perimeter control addresses all these different threat types.' }
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let selectedControl = null;
+let placed = {};
+let quizScores = {};
+
+// ── BUILD CONTROLS GRID ───────────────────────────────────────────────────────
+function buildGrid() {
+  const grid = document.getElementById('controlsGrid');
+  grid.innerHTML = controls.map(c => `
+    <div class="ctrl-card" id="ctrl-${c.id}" onclick="selectControl('${c.id}')">
+      <div class="ctrl-icon">${c.icon}</div>
+      <div class="ctrl-name">${c.name}</div>
+      <div class="ctrl-hint">${c.hint}</div>
+    </div>
+  `).join('');
+}
+
+function selectControl(id) {
+  if (placed[id]) return;
+  // deselect previous
+  if (selectedControl) {
+    document.getElementById('ctrl-' + selectedControl)?.classList.remove('selected');
+  }
+  selectedControl = id;
+  document.getElementById('ctrl-' + id).classList.add('selected');
+
+  // highlight all zone click areas
+  ['external','dmz','internal','monitor'].forEach(z => {
+    const el = document.getElementById('click-' + z);
+    if (el && !el.classList.contains('done')) el.classList.add('highlight');
+  });
+}
+
+function placeControl(zone) {
+  if (!selectedControl) return;
+  const ctrl = controls.find(c => c.id === selectedControl);
+  const isCorrect = ctrl.correctZone === zone;
+
+  // add to slot
+  const slotsEl = document.getElementById('slots-' + zone);
+  const slotDiv = document.createElement('div');
+  slotDiv.className = 'control-slot ' + (isCorrect ? 'filled-correct' : 'filled-wrong');
+  slotDiv.innerHTML = `<span class="control-slot-icon">${ctrl.icon}</span>${ctrl.name} ${isCorrect ? '✓' : '✗'}`;
+  slotsEl.appendChild(slotDiv);
+
+  // if wrong, remove from wrong zone after showing feedback and allow retry
+  placed[selectedControl] = isCorrect;
+
+  // mark card
+  const card = document.getElementById('ctrl-' + selectedControl);
+  if (isCorrect) {
+    card.classList.remove('selected');
+    card.classList.add('used');
+  } else {
+    card.classList.remove('selected');
+    // remove the wrong slot after delay
+    setTimeout(() => { slotsEl.removeChild(slotDiv); }, 2500);
+  }
+
+  // remove highlights
+  ['external','dmz','internal','monitor'].forEach(z => {
+    document.getElementById('click-' + z)?.classList.remove('highlight');
+  });
+
+  // show feedback
+  showFeedback(ctrl, isCorrect, zone);
+
+  if (isCorrect) {
+    // hide zone click area if it already has correct controls placed (keep available for more)
+    updateProgress();
+  }
+
+  selectedControl = null;
+}
+
+function showFeedback(ctrl, isCorrect, zone) {
+  const panel = document.getElementById('feedbackPanel');
+  document.getElementById('fpIcon').textContent = ctrl.icon;
+  document.getElementById('fpTitle').textContent = ctrl.name;
+  document.getElementById('fpResult').textContent = isCorrect ? '✓ Correct placement' : '✗ Wrong zone — try again';
+  document.getElementById('fpResult').className = 'fp-result ' + (isCorrect ? 'ok' : 'err');
+  document.getElementById('fpBody').innerHTML = isCorrect ? ctrl.explanation.correct : ctrl.explanation.wrong;
+
+  const nextEl = document.getElementById('fpNext');
+  const allDone = Object.values(placed).filter(v => v === true).length === controls.length;
+  if (allDone) {
+    nextEl.innerHTML = '<button class="fp-next-btn" onclick="unlockQuiz()">All controls placed — Start Quiz ✓</button>';
+  } else {
+    nextEl.innerHTML = isCorrect
+      ? '<button class="fp-next-btn" onclick="dismissFeedback()">Continue →</button>'
+      : '<button class="fp-next-btn" onclick="dismissFeedback()">Try again →</button>';
+  }
+
+  panel.classList.remove('show');
+  void panel.offsetWidth;
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function dismissFeedback() {
+  document.getElementById('feedbackPanel').classList.remove('show');
+}
+
+function updateProgress() {
+  const n = Object.values(placed).filter(v => v === true).length;
+  document.getElementById('progressFill').style.width = (n / 6 * 100) + '%';
+  document.getElementById('progressPct').textContent = n + ' / 6';
+}
+
+function unlockQuiz() {
+  document.getElementById('feedbackPanel').classList.remove('show');
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────────
+function answer(q, opt) {
+  if (quizScores[q] !== undefined) return;
+  const btns = document.querySelectorAll(`#q${q} .option-btn`);
+  btns.forEach(b => {
+    b.disabled = true;
+    const letter = b.querySelector('.option-letter').textContent;
+    if (letter === correct[q]) b.classList.add('correct');
+    if (letter === opt && opt !== correct[q]) b.classList.add('wrong');
+  });
+  const isRight = opt === correct[q];
+  quizScores[q] = isRight ? 1 : 0;
+  const fb = document.getElementById('fb' + q);
+  fb.textContent = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
+  fb.className = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
+  document.getElementById('nxt' + q).disabled = false;
+}
+
+function nextQ(n) {
+  document.getElementById('q' + (n-1)).classList.remove('show');
+  document.getElementById('q' + n).classList.add('show');
+  document.getElementById('quizCounter').textContent = `Question ${n} of 5`;
+}
+
+function showResult() {
+  document.getElementById('q5').classList.remove('show');
+  document.getElementById('quizSection').classList.remove('show');
+  const total = Object.values(quizScores).reduce((a,b) => a+b, 0);
+  const rs = document.getElementById('resultSection');
+  rs.classList.add('show');
+  document.getElementById('resultScore').textContent = `${total} / 5`;
+  let icon, msg;
+  if (total === 5) {
+    icon = '🏆'; msg = 'Perfect score. You can identify where security controls sit in the architecture and explain what each one protects against. You are ready for Lesson 13.';
+  } else if (total >= 3) {
+    icon = '✅'; msg = 'Good work. You understand the layered security model. Review the questions you missed, then move on to Lesson 13.';
+  } else {
+    icon = '📖'; msg = 'Work back through the six control placements above — re-read the explanation for each one. The key is understanding what threat each control addresses and at which layer.';
+  }
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultMsg').textContent = msg;
+  rs.scrollIntoView({ behavior: 'smooth' });
+}
+
+function retryQuiz() {
+  quizScores = {};
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('fb' + i).className = 'feedback-box';
+    document.getElementById('fb' + i).textContent = '';
+    document.getElementById('nxt' + i).disabled = true;
+    document.querySelectorAll(`#q${i} .option-btn`).forEach(b => { b.disabled = false; b.classList.remove('correct','wrong'); });
+  }
+  document.getElementById('q1').classList.add('show');
+  for (let i = 2; i <= 5; i++) document.getElementById('q'+i).classList.remove('show');
+  document.getElementById('quizCounter').textContent = 'Question 1 of 5';
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+buildGrid();
+</script>
+</body>
+</html>
