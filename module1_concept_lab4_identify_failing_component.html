@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Lab 4 — Identify the Failing Component | CyberReady India</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:      #0a0e1a;
+    --surface: #111827;
+    --panel:   #1a2236;
+    --border:  #2a3a52;
+    --accent:  #3b82f6;
+    --accent2: #06b6d4;
+    --green:   #10b981;
+    --amber:   #f59e0b;
+    --red:     #ef4444;
+    --orange:  #f97316;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --mono:    'JetBrains Mono', monospace;
+    --sans:    'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+  .topbar-label { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; }
+
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .lab-header { margin-bottom: 40px; }
+  .lab-badge {
+    display: inline-block;
+    background: rgba(59,130,246,.15);
+    border: 1px solid rgba(59,130,246,.35);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .lab-title { font-size: 28px; font-weight: 700; line-height: 1.2; color: #f8fafc; margin-bottom: 10px; }
+  .lab-subtitle { color: var(--muted); font-size: 14px; }
+
+  .story-block {
+    background: var(--panel);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-style: italic;
+    color: #cbd5e1;
+    font-size: 14.5px;
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .section-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 14px; }
+  .section p { color: var(--text); margin-bottom: 10px; }
+  .section p:last-child { margin-bottom: 0; }
+
+  /* SCENARIO CARDS */
+  .scenarios-wrapper { margin-bottom: 24px; }
+
+  .scenario-progress {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .scenario-progress-label { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--amber), var(--orange)); border-radius: 99px; transition: width .4s ease; width: 0%; }
+  .progress-pct { font-family: var(--mono); font-size: 12px; color: var(--amber); white-space: nowrap; }
+
+  /* SCENARIO PANEL */
+  .scenario-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .scenario-header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .scenario-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .scenario-nav-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .nav-dot.active { background: var(--amber); }
+  .nav-dot.done   { background: var(--green); }
+
+  .scenario-body { padding: 28px 32px; }
+
+  .scenario-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 6px;
+  }
+  .scenario-time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    letter-spacing: .06em;
+  }
+
+  /* SYMPTOM LOG */
+  .symptom-log {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+    font-family: var(--mono);
+  }
+  .log-header {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  .log-line {
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .log-line:last-child { margin-bottom: 0; }
+  .log-time { color: var(--muted); flex-shrink: 0; }
+  .log-msg  { color: #a5f3fc; }
+  .log-msg.warn  { color: #fde68a; }
+  .log-msg.error { color: #fca5a5; }
+
+  /* ARCHITECTURE MINI DIAGRAM */
+  .arch-mini {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 10px;
+    margin-bottom: 22px;
+    padding: 20px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .mini-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    width: 110px;
+    cursor: pointer;
+    transition: all .18s;
+    position: relative;
+    user-select: none;
+  }
+  .mini-node:hover { border-color: var(--accent); }
+  .mini-node.selected {
+    border-color: var(--amber);
+    background: rgba(245,158,11,.12);
+    box-shadow: 0 0 14px rgba(245,158,11,.25);
+  }
+  .mini-node.correct-answer {
+    border-color: var(--green);
+    background: rgba(16,185,129,.12);
+  }
+  .mini-node.wrong-answer {
+    border-color: var(--red);
+    background: rgba(239,68,68,.1);
+  }
+  .mini-node.revealed {
+    border-color: var(--green);
+    background: rgba(16,185,129,.12);
+  }
+  .mini-icon { font-size: 22px; margin-bottom: 5px; }
+  .mini-name { font-size: 11px; font-weight: 600; text-align: center; color: #f1f5f9; line-height: 1.3; }
+  .mini-arrow { color: var(--muted); font-size: 18px; padding: 0 4px; flex-shrink: 0; }
+
+  .fail-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 14px;
+    display: none;
+  }
+  .mini-node.correct-answer .fail-badge,
+  .mini-node.revealed .fail-badge { display: block; }
+
+  /* SUBMIT BUTTON */
+  .submit-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .submit-btn {
+    background: var(--amber);
+    color: #0a0e1a;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 28px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .submit-btn:hover:not(:disabled) { background: #d97706; }
+  .submit-btn:disabled { background: var(--muted); cursor: default; color: #fff; }
+  .selection-hint { font-size: 13px; color: var(--muted); }
+
+  /* FEEDBACK */
+  .scenario-feedback {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: none;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .scenario-feedback.show { display: block; }
+  .scenario-feedback.correct-fb {
+    background: rgba(16,185,129,.1);
+    border: 1px solid rgba(16,185,129,.3);
+    color: #a7f3d0;
+  }
+  .scenario-feedback.wrong-fb {
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.25);
+    color: #fca5a5;
+  }
+  .fb-label { font-weight: 700; margin-bottom: 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; font-family: var(--mono); }
+
+  .next-scenario-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .next-scenario-btn:hover { background: #2563eb; }
+
+  /* QUIZ */
+  .quiz-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: none;
+  }
+  .quiz-section.show { display: block; }
+
+  .quiz-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .quiz-title { font-size: 18px; font-weight: 700; color: #f8fafc; }
+  .quiz-counter { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .question-block { display: none; }
+  .question-block.show { display: block; }
+
+  .question-text { font-size: 15.5px; font-weight: 500; color: #f1f5f9; margin-bottom: 20px; line-height: 1.55; }
+
+  .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .option-btn {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 18px;
+    text-align: left;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    cursor: pointer;
+    transition: all .18s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(59,130,246,.08); }
+  .option-btn.correct { border-color: var(--green); background: rgba(16,185,129,.12); color: #a7f3d0; }
+  .option-btn.wrong   { border-color: var(--red);   background: rgba(239,68,68,.1);    color: #fca5a5; }
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .correct .option-letter { background: var(--green); color: #fff; }
+  .wrong   .option-letter { background: var(--red);   color: #fff; }
+
+  .feedback-box { border-radius: 8px; padding: 14px 18px; font-size: 14px; margin-bottom: 18px; display: none; }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #a7f3d0; }
+  .feedback-box.wrong-fb   { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.3);  color: #fca5a5; }
+
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; }
+  .next-q-btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 24px; font-family: var(--sans); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background .2s;
+  }
+  .next-q-btn:hover { background: #2563eb; }
+  .next-q-btn:disabled { background: var(--muted); cursor: default; }
+
+  /* RESULT */
+  .result-section {
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 48px 32px; text-align: center; margin-bottom: 24px;
+  }
+  .result-section.show { display: block; }
+  .result-icon { font-size: 56px; margin-bottom: 16px; }
+  .result-score { font-size: 52px; font-weight: 800; color: #f8fafc; font-family: var(--mono); margin-bottom: 6px; }
+  .result-label { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  .result-msg { font-size: 16px; max-width: 500px; margin: 0 auto 28px; color: #cbd5e1; line-height: 1.6; }
+  .retry-btn {
+    background: transparent; color: var(--accent); border: 2px solid var(--accent);
+    border-radius: 8px; padding: 10px 28px; font-family: var(--sans); font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: all .2s;
+  }
+  .retry-btn:hover { background: var(--accent); color: #fff; }
+
+  .tip {
+    background: rgba(6,182,212,.07); border: 1px solid rgba(6,182,212,.2);
+    border-radius: 8px; padding: 12px 16px; font-size: 13.5px; color: #a5f3fc;
+    margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 16px; }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .scenario-body { animation: fadeSlide .25s ease; }
+
+  @media (max-width: 640px) {
+    .mini-node { width: 90px; padding: 8px; }
+    .mini-name { font-size: 10px; }
+    .mini-arrow { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">CyberReady India</div>
+  <div class="topbar-label">Module 1 · Concept Lab 4</div>
+</div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="lab-header">
+    <div class="lab-badge">Concept Lab</div>
+    <h1 class="lab-title">Identify the Failing Component</h1>
+    <div class="lab-subtitle">Module 1 — Systems Thinking &amp; Digital Infrastructure &nbsp;|&nbsp; 5 scenarios · 5-question quiz</div>
+  </div>
+
+  <!-- STORY -->
+  <div class="story-block">
+    "The NorthBridge operations desk is receiving customer complaints. Something is wrong — but the team needs to figure out <strong>what</strong> before they can fix it. Your job is to read each set of symptoms reported by customers and engineers, and identify which component in the architecture has failed."
+  </div>
+
+  <!-- INTRO -->
+  <div class="section">
+    <div class="section-title">Your Mission</div>
+    <p>You will work through <strong>5 failure scenarios</strong>. Each scenario shows you a symptom log — what customers are reporting and what the monitoring system is detecting. Read the symptoms carefully, then click the component in the architecture diagram that you believe has failed.</p>
+    <p>After each scenario you will see an explanation of why that component was responsible. When all 5 scenarios are complete, the quiz unlocks.</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="scenario-progress">
+    <div class="scenario-progress-label">Scenario progress</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0 / 5</div>
+  </div>
+
+  <!-- SCENARIO PANEL -->
+  <div class="scenario-panel" id="scenarioPanel">
+    <div class="scenario-header">
+      <div class="scenario-num" id="scenarioNum">Scenario 1 of 5</div>
+      <div class="scenario-nav-dots" id="navDots">
+        <div class="nav-dot active" id="dot-0"></div>
+        <div class="nav-dot" id="dot-1"></div>
+        <div class="nav-dot" id="dot-2"></div>
+        <div class="nav-dot" id="dot-3"></div>
+        <div class="nav-dot" id="dot-4"></div>
+      </div>
+    </div>
+    <div class="scenario-body" id="scenarioBody">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section" id="quizSection">
+    <div class="quiz-header-row">
+      <div class="quiz-title">Quiz — Identify the Failing Component</div>
+      <div class="quiz-counter" id="quizCounter">Question 1 of 5</div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="question-block show" id="q1">
+      <div class="question-text">1. Customers can reach the NorthBridge homepage but cannot log in. The homepage loads correctly. Which component is the most likely cause?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(1,'A')"><span class="option-letter">A</span>Firewall — it is blocking all internet traffic</button>
+        <button class="option-btn" onclick="answer(1,'B')"><span class="option-letter">B</span>Load Balancer — it has stopped distributing requests</button>
+        <button class="option-btn" onclick="answer(1,'C')"><span class="option-letter">C</span>App Server — the business logic processing login requests has failed</button>
+        <button class="option-btn" onclick="answer(1,'D')"><span class="option-letter">D</span>Database — it cannot store new customer sessions</button>
+      </div>
+      <div class="feedback-box" id="fb1"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt1" onclick="nextQ(2)" disabled>Next Question →</button></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <div class="question-text">2. No customers can reach the NorthBridge website at all. The bank's internal systems are running normally. What has most likely failed?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(2,'A')"><span class="option-letter">A</span>Database — customer records are unavailable</button>
+        <button class="option-btn" onclick="answer(2,'B')"><span class="option-letter">B</span>Firewall — it is blocking all inbound internet traffic</button>
+        <button class="option-btn" onclick="answer(2,'C')"><span class="option-letter">C</span>App Server — it has crashed and stopped responding</button>
+        <button class="option-btn" onclick="answer(2,'D')"><span class="option-letter">D</span>Load Balancer — it has stopped routing traffic to servers</button>
+      </div>
+      <div class="feedback-box" id="fb2"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt2" onclick="nextQ(3)" disabled>Next Question →</button></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <div class="question-text">3. Customers can log in but their account balances show as zero or display an error. Transactions from yesterday are missing. What has most likely failed?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(3,'A')"><span class="option-letter">A</span>Firewall — it is corrupting data passing through it</button>
+        <button class="option-btn" onclick="answer(3,'B')"><span class="option-letter">B</span>Load Balancer — it is sending requests to the wrong servers</button>
+        <button class="option-btn" onclick="answer(3,'C')"><span class="option-letter">C</span>App Server — it is processing requests incorrectly</button>
+        <button class="option-btn" onclick="answer(3,'D')"><span class="option-letter">D</span>Database — it is unavailable or returning incorrect data</button>
+      </div>
+      <div class="feedback-box" id="fb3"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt3" onclick="nextQ(4)" disabled>Next Question →</button></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <div class="question-text">4. Some customers can log in and use the app normally. Other customers get timeout errors when trying to connect. The pattern is intermittent — it affects roughly half of all users. What has most likely failed?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(4,'A')"><span class="option-letter">A</span>One of the App Servers — the load balancer is routing some users to a server that has failed</button>
+        <button class="option-btn" onclick="answer(4,'B')"><span class="option-letter">B</span>The Database — half the customer records are missing</button>
+        <button class="option-btn" onclick="answer(4,'C')"><span class="option-letter">C</span>The Firewall — it is randomly blocking some users</button>
+        <button class="option-btn" onclick="answer(4,'D')"><span class="option-letter">D</span>The Internet connection — some customers have no internet access</button>
+      </div>
+      <div class="feedback-box" id="fb4"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt4" onclick="nextQ(5)" disabled>Next Question →</button></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <div class="question-text">5. Why is it useful to identify symptoms before naming a failed component?</div>
+      <div class="options-list">
+        <button class="option-btn" onclick="answer(5,'A')"><span class="option-letter">A</span>Because symptoms tell you which team to blame for the failure</button>
+        <button class="option-btn" onclick="answer(5,'B')"><span class="option-letter">B</span>Because symptoms describe what customers experience, which points to where in the system the failure is — not just that something is wrong</button>
+        <button class="option-btn" onclick="answer(5,'C')"><span class="option-letter">C</span>Because symptoms are always reported in the monitoring system before a failure occurs</button>
+        <button class="option-btn" onclick="answer(5,'D')"><span class="option-letter">D</span>Because identifying symptoms is faster than looking at system logs</button>
+      </div>
+      <div class="feedback-box" id="fb5"></div>
+      <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt5" onclick="showResult()" disabled>See My Result →</button></div>
+    </div>
+
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-section" id="resultSection">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-label">out of 5 questions</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="retry-btn" onclick="retryQuiz()">Retry Quiz</button>
+  </div>
+
+</div>
+
+<script>
+// ── SCENARIO DATA ─────────────────────────────────────────────────────────────
+const scenarios = [
+  {
+    num: 1,
+    title: 'Scenario 1 — "I can see the website but I cannot log in"',
+    time: '09:14 AM · Thursday · NorthBridge Operations Desk',
+    logs: [
+      { time: '09:11', msg: 'Customer report: Homepage loads correctly. Login button produces error: "Service temporarily unavailable"', cls: 'error' },
+      { time: '09:12', msg: 'Customer report: Balance check returns no data after login attempt', cls: 'error' },
+      { time: '09:13', msg: 'Internal check: NorthBridge homepage — REACHABLE', cls: '' },
+      { time: '09:13', msg: 'Internal check: Login endpoint — NOT RESPONDING', cls: 'error' },
+      { time: '09:14', msg: 'Internal check: Database cluster — REACHABLE from internal network', cls: '' },
+    ],
+    answer: 'app',
+    explanation: {
+      correct: '✓ Correct. The homepage is served by the web/app server tier — and it loads fine. But the login endpoint is not responding. Login requires business logic processing (authentication, session creation) that only the app server performs. Since the homepage loads but login fails, the component handling business logic — the app server — has failed or is unresponsive. The database being reachable internally confirms the problem is not at the storage layer.',
+      wrong: 'Not quite. The key clue here is that the homepage loads correctly but login fails. The homepage and the login function are both handled by the app server tier. Since the homepage works, the firewall and load balancer are passing traffic correctly. Since login fails but the database is reachable, the problem is in the middle layer — the app server — which processes authentication and business logic.'
+    }
+  },
+  {
+    num: 2,
+    title: 'Scenario 2 — "Nobody can reach the bank at all"',
+    time: '14:32 PM · Monday · NorthBridge Operations Desk',
+    logs: [
+      { time: '14:29', msg: 'Customer report: Cannot load NorthBridge website — browser shows "Connection refused"', cls: 'error' },
+      { time: '14:30', msg: 'Customer report: Mobile app shows "Unable to connect to server"', cls: 'error' },
+      { time: '14:31', msg: 'Internal check: All app servers — RUNNING NORMALLY', cls: '' },
+      { time: '14:31', msg: 'Internal check: Database cluster — RUNNING NORMALLY', cls: '' },
+      { time: '14:32', msg: 'Internal check: Inbound internet traffic — NOT REACHING internal network', cls: 'error' },
+    ],
+    answer: 'firewall',
+    explanation: {
+      correct: '✓ Correct. No customer can reach anything — not the homepage, not the app, not the API. Yet internally, all servers are running normally. The only component that sits between the internet and the internal systems is the firewall. If the firewall has a misconfiguration or has failed in a way that blocks all inbound traffic, customers experience a complete inability to connect — while everything behind it appears healthy.',
+      wrong: 'Not quite. The critical clue is that all internal systems are running normally — the app servers and database are healthy. Yet no customer can connect at all. This means the failure is at the boundary between the internet and the internal network. That boundary is the firewall. A database failure would let customers connect but show missing data. An app server failure would let customers reach the homepage.'
+    }
+  },
+  {
+    num: 3,
+    title: 'Scenario 3 — "My balance shows zero and my transactions are missing"',
+    time: '11:05 AM · Friday · NorthBridge Operations Desk',
+    logs: [
+      { time: '11:01', msg: 'Customer report: Logged in successfully. Account balance displays as ₹0.00', cls: 'error' },
+      { time: '11:02', msg: 'Customer report: Transaction history shows blank — last 48 hours of transactions missing', cls: 'error' },
+      { time: '11:03', msg: 'Customer report: Fund transfer attempted — returns error: "Unable to process transaction"', cls: 'error' },
+      { time: '11:04', msg: 'Internal check: App servers — RUNNING, processing requests', cls: '' },
+      { time: '11:05', msg: 'Internal check: Database cluster — PRIMARY NODE NOT RESPONDING', cls: 'error' },
+    ],
+    answer: 'db',
+    explanation: {
+      correct: '✓ Correct. Customers can log in — which means the firewall, load balancer, and app server are all working. But once logged in, they cannot see their balance or transactions, and cannot perform transfers. All of this data lives in the database. The monitoring log confirms it: the database primary node is not responding. The app server is running and processing requests, but it cannot retrieve data because the database has failed.',
+      wrong: 'Not quite. The key clues are: (1) login works — so the firewall, load balancer, and app server are functioning; (2) data is missing or showing zero — which means the system that stores the data has a problem; (3) the monitoring log directly shows the database primary node is not responding. Data storage and retrieval is exclusively the database\'s responsibility.'
+    }
+  },
+  {
+    num: 4,
+    title: 'Scenario 4 — "Some customers are fine, others cannot connect at all"',
+    time: '16:20 PM · Wednesday · NorthBridge Operations Desk',
+    logs: [
+      { time: '16:15', msg: 'Customer report: Cannot load app — timeout error', cls: 'error' },
+      { time: '16:16', msg: 'Customer report (different customer): App working normally, no issues', cls: '' },
+      { time: '16:17', msg: 'Customer report: Intermittent — sometimes works, mostly fails', cls: 'warn' },
+      { time: '16:18', msg: 'Internal check: App Server 1 — RUNNING NORMALLY', cls: '' },
+      { time: '16:19', msg: 'Internal check: App Server 2 — NOT RESPONDING (health check failed)', cls: 'error' },
+      { time: '16:20', msg: 'Internal check: Load balancer continuing to route traffic to both servers', cls: 'warn' },
+    ],
+    answer: 'lb',
+    explanation: {
+      correct: '✓ Correct. When failures are intermittent and affect only some users, the pattern points to a partial failure — not a complete outage. Here, App Server 2 has failed but App Server 1 is healthy. The load balancer is still routing traffic to both servers. Customers whose requests land on App Server 1 get a normal experience. Customers whose requests land on App Server 2 get a timeout. The load balancer should have detected App Server 2\'s failure via health checks and stopped sending traffic to it — its failure to do so is the root cause of the intermittent outage.',
+      wrong: 'Not quite. The intermittent pattern — some customers fine, others failing — is the key clue. Complete failures (firewall down, database down) affect everyone. Intermittent failures affecting roughly half of users point to a partial failure. Here, one of two app servers has failed, and the load balancer has not detected this and removed it from rotation. The load balancer\'s failure to respond correctly to the health check failure is what is causing users to be routed to a broken server.'
+    }
+  },
+  {
+    num: 5,
+    title: 'Scenario 5 — "Customers are being disconnected mid-session"',
+    time: '10:45 AM · Tuesday · NorthBridge Operations Desk',
+    logs: [
+      { time: '10:40', msg: 'Customer report: Logged in, started a transfer — disconnected halfway through', cls: 'error' },
+      { time: '10:41', msg: 'Customer report: App keeps logging me out automatically after 1-2 minutes', cls: 'warn' },
+      { time: '10:42', msg: 'Customer report: Transfer shows as pending — neither completed nor cancelled', cls: 'warn' },
+      { time: '10:43', msg: 'Internal check: App servers — RUNNING but showing high memory usage (94%)', cls: 'warn' },
+      { time: '10:44', msg: 'Internal check: Session timeout errors appearing in app server logs', cls: 'error' },
+      { time: '10:45', msg: 'Internal check: Database and firewall — NORMAL', cls: '' },
+    ],
+    answer: 'app',
+    explanation: {
+      correct: '✓ Correct. Customers are being disconnected mid-session, and the monitoring confirms high memory usage on the app servers along with session timeout errors in the app server logs. The app server manages active user sessions — it holds session state, processes ongoing transactions, and maintains connection continuity. When app servers become memory-constrained, they start dropping sessions to free resources. The database and firewall are both healthy, confirming the problem is in the business logic and session management layer — the app server.',
+      wrong: 'Not quite. The clues point to the app server: (1) customers are being disconnected mid-session — sessions are managed by the app server; (2) the monitoring shows 94% memory usage on the app servers; (3) session timeout errors are appearing in the app server logs specifically. The database is healthy (so data is fine) and the firewall is healthy (so traffic is reaching the system). The problem is in the component that manages active sessions — the app server.'
+    }
+  }
+];
+
+const nodeConfig = [
+  { id: 'firewall', icon: '🛡️', name: 'Firewall' },
+  { id: 'lb',       icon: '⚖️', name: 'Load Balancer' },
+  { id: 'app',      icon: '🖥️', name: 'App Server' },
+  { id: 'db',       icon: '🗄️', name: 'Database' },
+];
+
+// ── QUIZ ANSWERS ──────────────────────────────────────────────────────────────
+const correct = { 1:'C', 2:'B', 3:'D', 4:'A', 5:'B' };
+const feedbacks = {
+  1: { C: '✓ Correct. The homepage loads — so the firewall and load balancer are passing traffic. Login fails — that requires app server processing. The app server handling authentication has failed.', wrong: 'Not quite. The homepage loads, which means the firewall and load balancer are working. Login failure points to the component handling authentication and business logic — the app server.' },
+  2: { B: '✓ Correct. All internal systems are healthy. Nothing is reaching them from outside. The firewall — the only component between the internet and internal systems — has failed or misconfigured.', wrong: 'Not quite. Internal systems are healthy. The failure is at the boundary between the internet and the internal network — the firewall.' },
+  3: { D: '✓ Correct. Login works (firewall, load balancer, app server all fine). Data is missing or incorrect. Data lives in the database. The database has failed.', wrong: 'Not quite. Login succeeds — so everything except the data storage layer is working. Missing balances and transaction history points directly to a database failure.' },
+  4: { A: '✓ Correct. Intermittent failures affecting roughly half of users = one of multiple app servers has failed. The load balancer is still routing to it instead of removing it from rotation.', wrong: 'Not quite. The intermittent pattern — some users fine, others failing — means partial failure. One app server is down; the load balancer is still sending traffic to it.' },
+  5: { B: '✓ Correct. Symptoms describe the customer\'s experience, which maps to a specific point in the system architecture. The pattern of symptoms tells engineers where in the chain the failure is.', wrong: 'Not quite. Symptoms are valuable because they describe what the customer experiences, and that experience is determined by which component has failed. The pattern of symptoms guides engineers to the right component.' }
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentScenario = 0;
+let completedScenarios = [];
+let selectedNode = null;
+let scenarioSubmitted = false;
+let quizScores = {};
+
+// ── RENDER SCENARIO ───────────────────────────────────────────────────────────
+function renderScenario(idx) {
+  const s = scenarios[idx];
+  selectedNode = null;
+  scenarioSubmitted = false;
+
+  const logsHTML = s.logs.map(l =>
+    `<div class="log-line"><span class="log-time">${l.time}</span><span class="log-msg ${l.cls}">${l.msg}</span></div>`
+  ).join('');
+
+  const nodesHTML = nodeConfig.map(n =>
+    `<div class="mini-node" id="mn-${n.id}" onclick="selectNode('${n.id}')">
+       <div class="fail-badge">❌</div>
+       <div class="mini-icon">${n.icon}</div>
+       <div class="mini-name">${n.name}</div>
+     </div>`
+  ).join('<div class="mini-arrow">→</div>');
+
+  const isDone = completedScenarios.includes(idx);
+  const isLast = idx === 4;
+
+  document.getElementById('scenarioBody').innerHTML = `
+    <div class="scenario-title">${s.title}</div>
+    <div class="scenario-time">${s.time}</div>
+
+    <div class="symptom-log">
+      <div class="log-header">⚡ Symptom Log — Operations Desk</div>
+      ${logsHTML}
+    </div>
+
+    <div class="tip"><div class="tip-icon">🔍</div><div>Read the symptoms above, then click the component in the diagram below that you believe has failed.</div></div>
+
+    <div class="arch-mini" id="archMini">${nodesHTML}</div>
+
+    <div class="submit-row">
+      <button class="submit-btn" id="submitBtn" onclick="submitAnswer()" disabled>Identify the Failing Component</button>
+      <div class="selection-hint" id="selHint">Select a component first</div>
+    </div>
+
+    <div class="scenario-feedback" id="scenFeedback"></div>
+
+    <div id="nextRow" style="display:none;">
+      <button class="next-scenario-btn" onclick="${isLast ? 'unlockQuiz()' : 'goNextScenario()'}">${isLast ? 'All scenarios complete — Start Quiz ✓' : 'Next Scenario →'}</button>
+    </div>
+  `;
+
+  // If already done, restore state
+  if (isDone) {
+    restoreScenarioState(idx);
+  }
+
+  document.getElementById('scenarioNum').textContent = `Scenario ${idx + 1} of 5`;
+  updateDots(idx);
+}
+
+function selectNode(id) {
+  if (scenarioSubmitted) return;
+  selectedNode = id;
+
+  nodeConfig.forEach(n => {
+    const el = document.getElementById('mn-' + n.id);
+    if (el) el.classList.remove('selected');
+  });
+  const sel = document.getElementById('mn-' + id);
+  if (sel) sel.classList.add('selected');
+
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('selHint').textContent = 'Click "Identify" to confirm your answer';
+}
+
+function submitAnswer() {
+  if (!selectedNode || scenarioSubmitted) return;
+  scenarioSubmitted = true;
+
+  const s = scenarios[currentScenario];
+  const isCorrect = selectedNode === s.answer;
+
+  // style nodes
+  nodeConfig.forEach(n => {
+    const el = document.getElementById('mn-' + n.id);
+    el.classList.remove('selected');
+    if (n.id === s.answer) el.classList.add('correct-answer');
+    else if (n.id === selectedNode && !isCorrect) el.classList.add('wrong-answer');
+  });
+
+  // feedback
+  const fb = document.getElementById('scenFeedback');
+  fb.className = 'scenario-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = `<div class="fb-label">${isCorrect ? '✓ Correct' : '✗ Not quite'}</div>${isCorrect ? s.explanation.correct : s.explanation.wrong}`;
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('selHint').textContent = '';
+  document.getElementById('nextRow').style.display = 'block';
+
+  if (!completedScenarios.includes(currentScenario)) {
+    completedScenarios.push(currentScenario);
+  }
+  updateProgress();
+  updateDots(currentScenario);
+}
+
+function restoreScenarioState(idx) {
+  scenarioSubmitted = true;
+  const s = scenarios[idx];
+  nodeConfig.forEach(n => {
+    const el = document.getElementById('mn-' + n.id);
+    if (n.id === s.answer) el.classList.add('revealed');
+  });
+  document.getElementById('submitBtn').disabled = true;
+  const isLast = idx === 4;
+  document.getElementById('nextRow').style.display = 'block';
+  const fb = document.getElementById('scenFeedback');
+  fb.className = 'scenario-feedback show correct-fb';
+  fb.innerHTML = `<div class="fb-label">Completed</div>${s.explanation.correct}`;
+}
+
+function goNextScenario() {
+  currentScenario++;
+  renderScenario(currentScenario);
+  document.getElementById('scenarioPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+function unlockQuiz() {
+  document.getElementById('scenarioPanel').style.display = 'none';
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateProgress() {
+  const pct = (completedScenarios.length / 5) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = completedScenarios.length + ' / 5';
+}
+
+function updateDots(active) {
+  for (let i = 0; i < 5; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.className = 'nav-dot';
+    if (completedScenarios.includes(i)) dot.classList.add('done');
+    else if (i === active) dot.classList.add('active');
+  }
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────────
+function answer(q, opt) {
+  if (quizScores[q] !== undefined) return;
+  const btns = document.querySelectorAll(`[onclick="answer(${q},'A')"], [onclick="answer(${q},'B')"], [onclick="answer(${q},'C')"], [onclick="answer(${q},'D')"]`);
+  btns.forEach(b => {
+    b.disabled = true;
+    const letter = b.querySelector('.option-letter').textContent;
+    if (letter === correct[q]) b.classList.add('correct');
+    if (letter === opt && opt !== correct[q]) b.classList.add('wrong');
+  });
+  const isRight = opt === correct[q];
+  quizScores[q] = isRight ? 1 : 0;
+  const fb = document.getElementById('fb' + q);
+  fb.textContent = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
+  fb.className = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
+  document.getElementById('nxt' + q).disabled = false;
+}
+
+function nextQ(n) {
+  document.getElementById('q' + (n-1)).classList.remove('show');
+  document.getElementById('q' + n).classList.add('show');
+  document.getElementById('quizCounter').textContent = `Question ${n} of 5`;
+}
+
+function showResult() {
+  document.getElementById('q5').classList.remove('show');
+  document.getElementById('quizSection').classList.remove('show');
+  const total = Object.values(quizScores).reduce((a,b) => a+b, 0);
+  const rs = document.getElementById('resultSection');
+  rs.classList.add('show');
+  document.getElementById('resultScore').textContent = `${total} / 5`;
+  let icon, msg;
+  if (total === 5) {
+    icon = '🏆'; msg = 'Perfect score. You can read a symptom pattern and trace it directly to the failing component. You are ready for Lesson 5.';
+  } else if (total >= 3) {
+    icon = '✅'; msg = 'Good work. You are developing the right instinct for reading failure patterns. Review the questions you missed and move on to Lesson 5.';
+  } else {
+    icon = '📖'; msg = 'A few gaps to close. Go back through the 5 scenarios and re-read the explanations — pay close attention to what each symptom tells you about where in the architecture the failure sits.';
+  }
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultMsg').textContent = msg;
+  rs.scrollIntoView({ behavior: 'smooth' });
+}
+
+function retryQuiz() {
+  quizScores = {};
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('fb' + i).className = 'feedback-box';
+    document.getElementById('fb' + i).textContent = '';
+    document.getElementById('nxt' + i).disabled = true;
+    document.querySelectorAll(`[onclick="answer(${i},'A')"], [onclick="answer(${i},'B')"], [onclick="answer(${i},'C')"], [onclick="answer(${i},'D')"]`).forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct', 'wrong');
+    });
+  }
+  document.getElementById('q1').classList.add('show');
+  for (let i = 2; i <= 5; i++) document.getElementById('q' + i).classList.remove('show');
+  document.getElementById('quizCounter').textContent = 'Question 1 of 5';
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('quizSection').classList.add('show');
+  document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderScenario(0);
+</script>
+</body>
+</html>
