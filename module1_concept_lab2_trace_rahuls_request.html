@@ -596,19 +596,19 @@
 
       <div class="arch-arrow" id="arrow-1">→</div>
 
-      <div class="arch-node locked" id="node-firewall" onclick="openNode('firewall')">
+      <div class="arch-node locked" id="node-internet" onclick="openNode('internet')">
         <div class="visited-check">✓</div>
-        <div class="node-icon">🛡️</div>
-        <div class="node-name">Firewall</div>
+        <div class="node-icon">🌐</div>
+        <div class="node-name">Internet</div>
         <div class="node-sub">Step 2</div>
       </div>
 
       <div class="arch-arrow" id="arrow-2">→</div>
 
-      <div class="arch-node locked" id="node-lb" onclick="openNode('lb')">
+      <div class="arch-node locked" id="node-websvr" onclick="openNode('websvr')">
         <div class="visited-check">✓</div>
-        <div class="node-icon">⚖️</div>
-        <div class="node-name">Load Balancer</div>
+        <div class="node-icon">🖥️</div>
+        <div class="node-name">Web Server</div>
         <div class="node-sub">Step 3</div>
       </div>
 
@@ -616,8 +616,8 @@
 
       <div class="arch-node locked" id="node-app" onclick="openNode('app')">
         <div class="visited-check">✓</div>
-        <div class="node-icon">🖥️</div>
-        <div class="node-name">App Server</div>
+        <div class="node-icon">⚙️</div>
+        <div class="node-name">Application Server</div>
         <div class="node-sub">Step 4</div>
       </div>
 
@@ -626,7 +626,7 @@
       <div class="arch-node locked" id="node-db" onclick="openNode('db')">
         <div class="visited-check">✓</div>
         <div class="node-icon">🗄️</div>
-        <div class="node-name">Database</div>
+        <div class="node-name">Customer Database</div>
         <div class="node-sub">Step 5</div>
       </div>
 
@@ -658,23 +658,23 @@
 
     <!-- Q1 -->
     <div class="question-block show" id="q1">
-      <div class="question-text">1. Rahul taps "Check Balance" in his banking app. What does his device do first?</div>
+      <div class="question-text">1. Rahul taps "Check Balance" in his banking app. What does his device do?</div>
       <div class="options-list">
         <button class="option-btn" onclick="answer(1,'A')" data-q="1" data-opt="A">
           <span class="option-letter">A</span>
-          It stores the balance request in the database directly.
+          It looks up the balance from a file stored locally on the phone.
         </button>
         <button class="option-btn" onclick="answer(1,'B')" data-q="1" data-opt="B">
           <span class="option-letter">B</span>
-          It sends a request message across the internet toward the bank's systems.
+          It packages the action into an encrypted request and sends it across the internet toward the bank's systems.
         </button>
         <button class="option-btn" onclick="answer(1,'C')" data-q="1" data-opt="C">
           <span class="option-letter">C</span>
-          It checks the balance from a local file saved on the phone.
+          It contacts the customer database directly to retrieve the balance.
         </button>
         <button class="option-btn" onclick="answer(1,'D')" data-q="1" data-opt="D">
           <span class="option-letter">D</span>
-          It contacts the load balancer directly, bypassing all security systems.
+          It sends the request to the application server without passing through the internet.
         </button>
       </div>
       <div class="feedback-box" id="fb1"></div>
@@ -686,23 +686,23 @@
 
     <!-- Q2 -->
     <div class="question-block" id="q2">
-      <div class="question-text">2. The request arrives at NorthBridge's network boundary. What is the firewall's job at this point?</div>
+      <div class="question-text">2. Rahul's request travels across the internet to reach the bank. Why is the internet described as "untrusted"?</div>
       <div class="options-list">
         <button class="option-btn" onclick="answer(2,'A')" data-q="2" data-opt="A">
           <span class="option-letter">A</span>
-          To speed up the request by sending it directly to the database.
+          Because the internet is too slow for banking traffic.
         </button>
         <button class="option-btn" onclick="answer(2,'B')" data-q="2" data-opt="B">
           <span class="option-letter">B</span>
-          To inspect the request and decide whether it is allowed to pass into the bank's systems.
+          Because nobody owns or controls the internet — traffic passes through infrastructure the bank cannot secure, making interception possible without encryption.
         </button>
         <button class="option-btn" onclick="answer(2,'C')" data-q="2" data-opt="C">
           <span class="option-letter">C</span>
-          To send a copy of the request to the monitoring system.
+          Because the internet only works for public websites, not for banking applications.
         </button>
         <button class="option-btn" onclick="answer(2,'D')" data-q="2" data-opt="D">
           <span class="option-letter">D</span>
-          To verify Rahul's account balance before forwarding the request.
+          Because the government monitors all internet traffic.
         </button>
       </div>
       <div class="feedback-box" id="fb2"></div>
@@ -714,23 +714,23 @@
 
     <!-- Q3 -->
     <div class="question-block" id="q3">
-      <div class="question-text">3. NorthBridge runs multiple app servers. Why does the load balancer exist in the architecture?</div>
+      <div class="question-text">3. Rahul's encrypted request arrives at the web server. What is the web server's job?</div>
       <div class="options-list">
         <button class="option-btn" onclick="answer(3,'A')" data-q="3" data-opt="A">
           <span class="option-letter">A</span>
-          To store customer account data so the database does not have to.
+          To store Rahul's account balance and return it immediately.
         </button>
         <button class="option-btn" onclick="answer(3,'B')" data-q="3" data-opt="B">
           <span class="option-letter">B</span>
-          To block suspicious requests before they reach the app servers.
+          To verify Rahul's Customer ID and password against the database.
         </button>
         <button class="option-btn" onclick="answer(3,'C')" data-q="3" data-opt="C">
           <span class="option-letter">C</span>
-          To distribute incoming requests across multiple app servers so no single server is overwhelmed.
+          To receive the incoming request, open the encryption, and route it to the correct system inside the bank.
         </button>
         <button class="option-btn" onclick="answer(3,'D')" data-q="3" data-opt="D">
           <span class="option-letter">D</span>
-          To encrypt Rahul's request before it enters the internal network.
+          To block suspicious traffic and only allow valid requests through.
         </button>
       </div>
       <div class="feedback-box" id="fb3"></div>
@@ -742,23 +742,23 @@
 
     <!-- Q4 -->
     <div class="question-block" id="q4">
-      <div class="question-text">4. The app server receives Rahul's balance request. What does the app server do that the other components cannot do?</div>
+      <div class="question-text">4. The application server receives Rahul's request. Which two checks does it perform before fetching the data?</div>
       <div class="options-list">
         <button class="option-btn" onclick="answer(4,'A')" data-q="4" data-opt="A">
           <span class="option-letter">A</span>
-          It blocks the request if it looks suspicious.
+          Speed check and memory check.
         </button>
         <button class="option-btn" onclick="answer(4,'B')" data-q="4" data-opt="B">
           <span class="option-letter">B</span>
-          It runs the banking business logic — verifying Rahul's identity and deciding what data to retrieve.
+          Authentication — is this really Rahul? — and authorisation — is he allowed to see this account?
         </button>
         <button class="option-btn" onclick="answer(4,'C')" data-q="4" data-opt="C">
           <span class="option-letter">C</span>
-          It permanently stores the balance result for future use.
+          Encryption check and firewall check.
         </button>
         <button class="option-btn" onclick="answer(4,'D')" data-q="4" data-opt="D">
           <span class="option-letter">D</span>
-          It distributes the request to multiple databases in parallel.
+          Internet connectivity check and database backup check.
         </button>
       </div>
       <div class="feedback-box" id="fb4"></div>
@@ -770,39 +770,37 @@
 
     <!-- Q5 -->
     <div class="question-block" id="q5">
-      <div class="question-text">5. The app server queries the database. Why is the database the most protected component in the entire architecture?</div>
+      <div class="question-text">5. The customer database returns Rahul's balance to the application server. Why can Rahul not contact the database directly from his phone?</div>
       <div class="options-list">
         <button class="option-btn" onclick="answer(5,'A')" data-q="5" data-opt="A">
           <span class="option-letter">A</span>
-          Because it is the fastest component and must never slow down.
+          Because the database only speaks a language Rahul's phone does not understand.
         </button>
         <button class="option-btn" onclick="answer(5,'B')" data-q="5" data-opt="B">
           <span class="option-letter">B</span>
-          Because it is directly connected to the internet and exposed to attacks.
+          Because the database is too slow to respond to direct requests.
         </button>
         <button class="option-btn" onclick="answer(5,'C')" data-q="5" data-opt="C">
           <span class="option-letter">C</span>
-          Because it stores all customer account balances, transaction history, and personal data — a breach here is catastrophic.
+          Because the database is isolated inside the bank's internal network — only the application server is authorised to query it, protecting all customer data from direct outside access.
         </button>
         <button class="option-btn" onclick="answer(5,'D')" data-q="5" data-opt="D">
           <span class="option-letter">D</span>
-          Because it runs the business logic that processes all transactions.
+          Because the web server would block any direct connection attempt.
         </button>
       </div>
       <div class="feedback-box" id="fb5"></div>
       <div class="quiz-nav">
         <div></div>
-        <button class="next-q-btn" id="nxt5" onclick="showResult()" disabled>See My Result →</button>
+        <button class="next-q-btn" id="nxt5" onclick="showResult()" disabled>See Results →</button>
       </div>
     </div>
+  </div>
 
-  </div><!-- /quiz-section -->
-
-  <!-- RESULT -->
+  <!-- RESULT SECTION -->
   <div class="result-section" id="resultSection">
     <div class="result-icon" id="resultIcon"></div>
     <div class="result-score" id="resultScore"></div>
-    <div class="result-label">out of 5 questions</div>
     <div class="result-msg" id="resultMsg"></div>
     <button class="retry-btn" onclick="retryQuiz()">Retry Quiz</button>
   </div>
@@ -810,98 +808,103 @@
 </div><!-- /wrapper -->
 
 <script>
-// ── NODE DATA ──────────────────────────────────────────────────────────────────
 const nodes = {
   device: {
     icon: '📱',
     name: "Rahul's Device",
     layer: 'Step 1 — Origin of the Request',
-    body: `<p>Rahul is using the <strong>NorthBridge mobile banking app</strong> on his smartphone. When he taps <em>Check Balance</em>, his device packages that action into a <strong>request message</strong> and sends it out over the internet toward NorthBridge's systems.</p>
-           <p>The device does not know his balance — it cannot. It only knows how to <strong>ask</strong>. The answer will come back from systems deep inside the bank.</p>
-           <p>Every customer action — checking a balance, transferring funds, viewing a statement — starts exactly this way. A device sends a request. Systems respond.</p>`,
-    analogy: `🏦 Analogy: Think of Rahul's phone as a customer standing outside the bank, sliding a note through a slot that says "I'd like to know my balance." The bank's internal systems will process that note and slide an answer back.`
+    body: `<p>Rahul opens the <strong>NorthBridge mobile banking app</strong> on his phone. Before his request can leave the device, two things happen.</p>
+           <p>First, the app checks that this is really Rahul — through his fingerprint, face recognition, or PIN. This check happens <strong>entirely on the phone</strong>. Nothing leaves the device yet.</p>
+           <p>Then Rahul types his Customer ID and password and taps <em>Check Balance</em>. The app wraps his credentials and request in <strong>encryption</strong> — a locked box that only NorthBridge can open — and sends it out across the internet.</p>
+           <p>The device does not know the balance. It only knows how to ask. The answer will travel back through the same chain.</p>`,
+    analogy: `🔒 Analogy: Think of Rahul's phone as a customer writing a request, sealing it inside a locked box, and sending it by courier. Only the bank has the key. Anyone who intercepts the box on the way cannot read what is inside.`
   },
-  firewall: {
-    icon: '🛡️',
-    name: 'Firewall',
-    layer: 'Step 2 — Security Checkpoint at the Network Boundary',
-    body: `<p>Before Rahul's request can enter the bank's internal network, it must pass through the <strong>firewall</strong>. The firewall sits at the boundary between the open internet and the bank's protected systems.</p>
-           <p>It inspects every packet of data arriving from the internet and applies a set of <strong>rules</strong>: Is this request coming from an allowed source? Is it the right type of traffic? Does it look like an attack?</p>
-           <p>Legitimate requests — like Rahul's balance check — are allowed through. Suspicious or malformed traffic is <strong>blocked and logged</strong>. Without this checkpoint, anyone on the internet could attempt to communicate directly with the bank's internal systems.</p>`,
-    analogy: `🛂 Analogy: Think of the firewall as the security checkpoint at the entrance of a bank building — a guard who checks your ID and the type of business you are there for before allowing you inside. Authorised visitors pass through. Unknown or suspicious visitors are turned away.`
+  internet: {
+    icon: '🌐',
+    name: 'Internet',
+    layer: 'Step 2 — The Public Road Between Rahul and the Bank',
+    body: `<p>Rahul's encrypted request now travels across the <strong>internet</strong> — the vast public network of cables, fibre lines, and wireless signals connecting computers all over the world.</p>
+           <p>Nobody owns the internet. Not NorthBridge. Not the government. It is a <strong>public road</strong> that anyone can use. Some of the cables carrying Rahul's request run under the ocean — literally at the bottom of the sea.</p>
+           <p>Because the internet is public, NorthBridge has no control over what happens to traffic in transit. This is exactly why Rahul's request was wrapped in encryption before leaving his phone. Even if someone intercepts it, all they see is a locked box. <strong>Useless without the key.</strong></p>`,
+    analogy: `🛣️ Analogy: The internet is like a public road. Your courier van (the request) travels on it alongside millions of other vehicles. You cannot control who else is on the road — but because the package is inside a locked box, it does not matter. Nobody can open it in transit.`
   },
-  lb: {
-    icon: '⚖️',
-    name: 'Load Balancer',
-    layer: 'Step 3 — Traffic Distribution',
-    body: `<p>Once the request passes the firewall, it reaches the <strong>load balancer</strong>. NorthBridge does not run just one app server — it runs several, so the bank can serve thousands of customers simultaneously.</p>
-           <p>The load balancer's job is to receive every incoming request and <strong>decide which app server should handle it</strong>. It continuously monitors how busy each server is and routes each request to one that has capacity — keeping the workload evenly spread.</p>
-           <p>If one app server were to fail, the load balancer automatically stops sending requests to it and routes traffic to the healthy ones instead. This is what makes the banking service <strong>highly available</strong> — a single server failure does not take down the entire system.</p>`,
-    analogy: `🛒 Analogy: Think of the load balancer as a supermarket manager standing at the entrance directing each customer to the shortest checkout queue. No single cashier gets overwhelmed, and if one till breaks down, customers are simply redirected to the others.`
+  websvr: {
+    icon: '🖥️',
+    name: 'Web Server',
+    layer: "Step 3 — The Bank's Front Door",
+    body: `<p>After crossing the internet, Rahul's request arrives at the first system inside NorthBridge Bank — the <strong>web server</strong>.</p>
+           <p>The web server is the bank's front door. It receives every incoming request, opens the encryption (it holds the bank's key), reads what the request is asking for, and routes it to the correct system inside the bank.</p>
+           <p>The web server does not store account data. It does not verify passwords. Its job is to <strong>receive, unwrap, and route</strong> — like a highly efficient receptionist directing every visitor to the right department.</p>`,
+    analogy: `🏢 Analogy: Think of the web server as the reception desk at a bank branch. The receptionist greets you, checks which department you need, and sends you there. They do not process your transaction — they just make sure you reach the right place inside the bank.`
   },
   app: {
-    icon: '🖥️',
-    name: 'App Server',
-    layer: 'Step 4 — Business Logic Processing',
-    body: `<p>This is where the actual banking work happens. The <strong>application server</strong> receives Rahul's request and begins processing it:</p>
-           <p><strong>1. Authentication</strong> — Is this really Rahul? Was his session token valid when he logged in?<br>
-           <strong>2. Authorisation</strong> — Is Rahul allowed to view this account?<br>
-           <strong>3. Data retrieval</strong> — The app server sends a query to the database asking for Rahul's current balance.</p>
-           <p>Once it has the balance, it packages the result into a response and sends it back. The app server <strong>never stores data permanently</strong> — it processes requests and relies entirely on the database for the actual records.</p>
-           <p>Every transaction, every login, every page load produces activity on the app server — making it the <strong>busiest and most closely monitored</strong> component in the architecture.</p>`,
-    analogy: `👩‍💼 Analogy: Think of the app server as the bank teller behind the counter. The teller receives your request, checks your ID, walks to the filing room (the database) to retrieve your records, and hands you the result. The teller processes the work — the filing room stores the records.`
+    icon: '⚙️',
+    name: 'Application Server',
+    layer: 'Step 4 — Where the Real Work Happens',
+    body: `<p>The web server passes Rahul's request deeper into the bank's internal secure network — to the <strong>application server</strong>. This is where the actual banking work happens.</p>
+           <p>The application server performs two critical checks:</p>
+           <p><strong>Authentication</strong> — is this really Rahul? Are his credentials correct?<br>
+           <strong>Authorisation</strong> — is Rahul allowed to see this specific account?</p>
+           <p>Only when both checks pass does it send a precise question to the database — give me the current balance for this account — and wait for the answer.</p>`,
+    analogy: `👩‍💼 Analogy: The application server is like the bank manager. They check your ID, verify you are authorised, then walk to the filing room to retrieve exactly what you asked for. The manager does the thinking. The filing room just stores the records.`
   },
   db: {
     icon: '🗄️',
-    name: 'Database',
-    layer: 'Step 5 — Persistent Data Storage',
-    body: `<p>The <strong>database</strong> is the innermost and most protected component in the entire architecture. It holds everything that matters: every customer's <strong>account balance, transaction history, personal details, and audit records</strong>.</p>
-           <p>Only the app server is allowed to communicate with the database — no other system, and no human, can connect to it directly. Every piece of data stored in it is <strong>encrypted at rest</strong>, meaning that even if someone physically stole the storage hardware, they could not read the data without the encryption keys.</p>
-           <p>When the app server queries the balance, the database retrieves the correct record and returns it. The app server carries the result back through the chain to Rahul's phone.</p>
-           <p><strong>The full journey complete:</strong> Device → Firewall → Load Balancer → App Server → Database → App Server → Rahul's screen.</p>`,
-    analogy: `🏦 Analogy: Think of the database as the bank's physical vault — the most secure room in the building, accessible only to authorised staff, holding the most valuable records. No customer ever enters the vault directly. The teller (app server) retrieves what you need on your behalf.`
+    name: 'Customer Database',
+    layer: 'Step 5 — Where All Account Data Lives',
+    body: `<p>The <strong>customer database</strong> is the innermost and most protected component in the architecture. It holds everything: every account balance, transaction history, personal detail, and audit record.</p>
+           <p>Only the application server can communicate with the database. No other system — and no human — can connect to it directly from outside the bank's internal network.</p>
+           <p>When queried, the database retrieves exactly what was asked and sends it back. <strong>Nothing more. Nothing less.</strong> The response travels back up the chain — database to app server to web server — sealed in encryption and returned to Rahul's phone in <strong>under one second.</strong></p>`,
+    analogy: `🏦 Analogy: The database is the bank's strong room — the most secure space in the building, accessible only to authorised staff (the application server), holding the most valuable records. No customer enters directly. The bank manager retrieves what you need on your behalf.`
   }
 };
 
-// ── CORRECT ANSWERS ────────────────────────────────────────────────────────────
 const correct = { 1:'B', 2:'B', 3:'C', 4:'B', 5:'C' };
 const feedbacks = {
-  1: { B: "✓ Correct. Rahul's device sends a request message across the internet. The balance data lives on the bank's servers — the device only initiates the request.", wrong: "Not quite. The device cannot directly access the database or check a local file. It sends a request across the internet toward the bank's systems, which process the request and return the result." },
-  2: { B: "✓ Correct. The firewall's role is to inspect traffic at the network boundary and decide what is allowed in. It is the first line of defence between the internet and internal systems.", wrong: "Not quite. The firewall's job is inspection and access control — deciding what traffic is allowed to enter the internal network. It does not process requests, store data, or route traffic to specific servers." },
-  3: { C: "✓ Correct. The load balancer distributes requests across multiple app servers. This prevents any single server from being overwhelmed and keeps the service available even if one server fails.", wrong: "Not quite. The load balancer's specific role is distributing incoming requests across multiple servers — ensuring no single server handles too much traffic and that the service stays available even if one server fails." },
-  4: { B: "✓ Correct. The app server runs the banking business logic — it verifies who Rahul is, checks what he is authorised to see, and retrieves the right data from the database.", wrong: "Not quite. The app server is the component that processes the actual banking work — authentication, authorisation, and data retrieval. The other components handle routing, security boundary enforcement, and storage." },
-  5: { C: "✓ Correct. The database holds the bank's most sensitive data: every customer's balance, transaction history, and personal records. A breach here is catastrophic, which is why it sits behind multiple layers of protection and only the app server can query it.", wrong: "Not quite. The database is the most protected because it stores the 'crown jewels' — all customer financial and personal data. It does not face the internet, and only the app server is allowed to communicate with it." }
+  1: {
+    B: "✓ Correct. Rahul's device packages his request into an encrypted message and sends it across the internet toward the bank's systems. The balance data lives on the bank's servers — the device only knows how to ask for it.",
+    wrong: "Not quite. The device cannot access the database directly or look up a local file. It packages the request, encrypts it, and sends it across the internet toward NorthBridge's systems."
+  },
+  2: {
+    B: "✓ Correct. The internet is public infrastructure that nobody controls. Rahul's request passes through cables and routers the bank cannot secure — which is exactly why encryption is essential. Without it, anyone on that public road could read the traffic.",
+    wrong: "Not quite. The internet is untrusted because nobody owns or controls it. Traffic passes through infrastructure the bank has no visibility into. This is why Rahul's credentials are locked inside encryption before leaving his phone."
+  },
+  3: {
+    C: "✓ Correct. The web server's job is to receive incoming requests, open the encryption using the bank's key, and route the request to the right internal system. It does not store data or verify credentials.",
+    wrong: "Not quite. The web server receives requests, opens the encrypted package, and routes them to the correct internal system. Storing data is the database's job. Verifying credentials is the application server's job."
+  },
+  4: {
+    B: "✓ Correct. Authentication confirms this is really Rahul with valid credentials. Authorisation confirms he is allowed to access this specific account. Only when both pass does the app server fetch the data.",
+    wrong: "Not quite. The two key checks are authentication — who are you? — and authorisation — what are you allowed to do? These are the security gates protecting every customer's data."
+  },
+  5: {
+    C: "✓ Correct. The database sits deep inside the bank's internal network. Only the application server is authorised to query it. This means even if an attacker reaches the web server, they still cannot access customer data directly.",
+    wrong: "Not quite. The database is protected by its position inside the bank's internal network. No outside system — including Rahul's phone — can reach it directly. The application server is the only authorised gatekeeper."
+  }
 };
 
-// ── STATE ──────────────────────────────────────────────────────────────────────
-const order    = ['device','firewall','lb','app','db'];
-let visited    = [];
-let currentNode= 'device';
-let scores     = {};
-let currentQ   = 1;
+const order     = ['device','internet','websvr','app','db'];
+let visited     = [];
+let currentNode = 'device';
+let scores      = {};
+let currentQ    = 1;
 
-// ── OPEN NODE ─────────────────────────────────────────────────────────────────
 function openNode(id) {
-  const idx = order.indexOf(id);
+  const idx    = order.indexOf(id);
   const prevId = idx > 0 ? order[idx-1] : null;
-  if (idx > 0 && !visited.includes(prevId)) return; // locked
+  if (idx > 0 && !visited.includes(prevId)) return;
   if (document.getElementById('node-' + id).classList.contains('locked')) return;
 
   currentNode = id;
   const d = nodes[id];
 
-  // update active state
-  order.forEach(n => {
-    const el = document.getElementById('node-' + n);
-    el.classList.remove('active');
-  });
+  order.forEach(n => document.getElementById('node-' + n).classList.remove('active'));
   document.getElementById('node-' + id).classList.add('active');
 
-  // fill panel
-  document.getElementById('dIcon').textContent  = d.icon;
-  document.getElementById('dName').textContent  = d.name;
-  document.getElementById('dLayer').textContent = d.layer;
-  document.getElementById('dBody').innerHTML    = d.body;
+  document.getElementById('dIcon').textContent    = d.icon;
+  document.getElementById('dName').textContent    = d.name;
+  document.getElementById('dLayer').textContent   = d.layer;
+  document.getElementById('dBody').innerHTML      = d.body;
   document.getElementById('dAnalogy').textContent = d.analogy;
 
   const isLast = id === 'db';
@@ -909,13 +912,11 @@ function openNode(id) {
 
   const panel = document.getElementById('detailPanel');
   panel.classList.remove('show');
-  void panel.offsetWidth; // reflow for animation
+  void panel.offsetWidth;
   panel.classList.add('show');
-
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
-// ── MARK VISITED ───────────────────────────────────────────────────────────────
 function markVisited() {
   const id  = currentNode;
   const idx = order.indexOf(id);
@@ -925,15 +926,9 @@ function markVisited() {
     document.getElementById('node-' + id).classList.add('visited');
     document.getElementById('node-' + id).classList.remove('active');
 
-    // light up arrow
     if (idx < order.length - 1) {
       document.getElementById('arrow-' + (idx + 1)).classList.add('lit');
-    }
-
-    // unlock next
-    if (idx < order.length - 1) {
-      const nextId = order[idx + 1];
-      const nextEl = document.getElementById('node-' + nextId);
+      const nextEl = document.getElementById('node-' + order[idx + 1]);
       nextEl.classList.remove('locked');
       nextEl.classList.add('active');
     }
@@ -941,11 +936,9 @@ function markVisited() {
 
   updateProgress();
 
-  // auto-open next
   if (idx < order.length - 1) {
     openNode(order[idx + 1]);
   } else {
-    // all visited — unlock quiz
     document.getElementById('detailPanel').classList.remove('show');
     document.getElementById('quizSection').classList.add('show');
     document.getElementById('quizSection').scrollIntoView({ behavior:'smooth' });
@@ -955,29 +948,23 @@ function markVisited() {
 function updateProgress() {
   const pct = (visited.length / 5) * 100;
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressPct').textContent   = visited.length + ' / 5';
+  document.getElementById('progressPct').textContent  = visited.length + ' / 5';
 }
 
-// ── QUIZ ───────────────────────────────────────────────────────────────────────
 function answer(q, opt) {
-  if (scores[q] !== undefined) return; // already answered
-
+  if (scores[q] !== undefined) return;
   const btns = document.querySelectorAll(`[data-q="${q}"]`);
   btns.forEach(b => {
     b.disabled = true;
     if (b.dataset.opt === correct[q]) b.classList.add('correct');
     if (b.dataset.opt === opt && opt !== correct[q]) b.classList.add('wrong');
   });
-
   const isRight = opt === correct[q];
   scores[q] = isRight ? 1 : 0;
-
   const fb = document.getElementById('fb' + q);
-  fb.textContent  = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
-  fb.className    = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
-
+  fb.textContent = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
+  fb.className   = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
   document.getElementById('nxt' + q).disabled = false;
-
   document.getElementById('quizCounter').textContent = `Question ${q} of 5`;
 }
 
@@ -991,51 +978,35 @@ function nextQ(n) {
 function showResult() {
   document.getElementById('q5').classList.remove('show');
   document.getElementById('quizSection').classList.remove('show');
-
   const total = Object.values(scores).reduce((a,b) => a+b, 0);
   const rs    = document.getElementById('resultSection');
   rs.classList.add('show');
-
   document.getElementById('resultScore').textContent = `${total} / 5`;
-
   let icon, msg;
-  if (total === 5) {
-    icon = '🏆';
-    msg  = "Perfect score. You have traced Rahul's request through all five components and can explain what each one does. You are ready for Lesson 3.";
-  } else if (total >= 3) {
-    icon = '✅';
-    msg  = "Good work. You understand the core architecture. Review the components you missed, then move on to Lesson 3.";
-  } else {
-    icon = '📖';
-    msg  = "A few gaps to close. Work back through the architecture diagram — click each component and re-read the explanation — then try the quiz again.";
-  }
+  if (total === 5)      { icon = '🏆'; msg = "Perfect score. You have traced Rahul's complete request through all five components and can explain what each one does. You are ready for Lesson 3."; }
+  else if (total >= 3)  { icon = '✅'; msg = "Good work. You understand the core architecture. Review the components you missed, then move on to Lesson 3."; }
+  else                  { icon = '📖'; msg = "A few gaps to close. Click back through the architecture diagram, read each component again, then retry the quiz."; }
   document.getElementById('resultIcon').textContent = icon;
   document.getElementById('resultMsg').textContent  = msg;
-
   rs.scrollIntoView({ behavior:'smooth' });
 }
 
 function retryQuiz() {
   scores   = {};
   currentQ = 1;
-
   for (let i = 1; i <= 5; i++) {
     const fb = document.getElementById('fb' + i);
-    fb.className = 'feedback-box';
+    fb.className   = 'feedback-box';
     fb.textContent = '';
     document.getElementById('nxt' + i).disabled = true;
-
-    const btns = document.querySelectorAll(`[data-q="${i}"]`);
-    btns.forEach(b => {
+    document.querySelectorAll(`[data-q="${i}"]`).forEach(b => {
       b.disabled = false;
       b.classList.remove('correct','wrong');
     });
   }
-
   document.getElementById('q1').classList.add('show');
   for (let i = 2; i <= 5; i++) document.getElementById('q'+i).classList.remove('show');
   document.getElementById('quizCounter').textContent = 'Question 1 of 5';
-
   document.getElementById('resultSection').classList.remove('show');
   document.getElementById('quizSection').classList.add('show');
   document.getElementById('quizSection').scrollIntoView({ behavior:'smooth' });
