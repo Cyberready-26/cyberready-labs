@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NorthBridge Bank — Lesson 2 Diagram</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0e1a;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 28px 16px 48px;
+  padding-right: 360px;
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.title  { color: #3b82f6; font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
+.subtitle { color: #475569; font-size: 12px; margin-bottom: 24px; letter-spacing: 0.04em; }
+
+/* ── ZONES ── */
+.diagram { width: 100%; max-width: 720px; display: flex; flex-direction: column; align-items: center; overflow: visible; }
+.zone {
+  width: 100%; border-radius: 14px;
+  padding: 14px 16px 16px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.zone-label { font-size: 12px; font-weight: 700; width: 100%; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.zone-name  { font-size: 16px; font-weight: 700; margin-top: 6px; }
+.zone-desc  { font-size: 11px; margin-top: 2px; opacity: 0.75; text-align: center; }
+.zone svg   { width: 100%; max-width: 210px; height: auto; }
+
+/* Customer zone */
+#zone-rahul { background: #dbeeff; border: 2px solid #93c5fd; }
+#zone-rahul .zone-label { color: #1e40af; }
+#zone-rahul .zone-name  { color: #1e3a8a; }
+#zone-rahul .zone-desc  { color: #1e40af; }
+
+/* Internet zone */
+#zone-internet {
+  background: #e8eef6; border: 2px solid #8fa8c8;
+  max-height: 0; overflow: hidden; padding: 0 16px; opacity: 0;
+  transition: max-height 0.7s ease, opacity 0.7s ease, padding 0.5s ease;
+}
+#zone-internet.visible { max-height: 380px; opacity: 1; padding: 14px 16px 16px; }
+#zone-internet .zone-label { color: #2c3e6a; }
+#zone-internet .zone-name  { color: #1a2a4a; }
+#zone-internet .zone-desc  { color: #2c3e6a; }
+
+/* DMZ label */
+.dmz-label {
+  width: 100%; max-width: 480px; margin: 14px 0 6px;
+  padding: 5px 14px;
+  background: #1a1a2e; border: 1px dashed #4b5563; border-radius: 8px;
+  font-size: 11px; font-weight: 700; color: #6b7280; letter-spacing: 0.1em; text-transform: uppercase;
+  text-align: center;
+  max-height: 0; overflow: hidden; opacity: 0;
+  transition: max-height 0.5s ease, opacity 0.5s ease, margin 0.4s ease, padding 0.4s ease;
+}
+.dmz-label.visible { max-height: 60px; opacity: 1; }
+
+/* Firewall zone */
+#zone-fw {
+  background: #fef2f2; border: 2px solid #fca5a5;
+  max-height: 0; overflow: hidden; padding: 0 16px; opacity: 0;
+  transition: max-height 0.7s ease, opacity 0.7s ease, padding 0.5s ease;
+}
+#zone-fw.visible { max-height: 380px; opacity: 1; padding: 14px 16px 16px; }
+#zone-fw .zone-label { color: #991b1b; }
+#zone-fw .zone-name  { color: #7f1d1d; }
+#zone-fw .zone-desc  { color: #991b1b; }
+
+/* Load Balancer zone */
+#zone-lb {
+  background: #faf5ff; border: 2px solid #c4b5fd;
+  max-height: 0; overflow: hidden; padding: 0 16px; opacity: 0;
+  transition: max-height 0.7s ease, opacity 0.7s ease, padding 0.5s ease;
+}
+#zone-lb.visible { max-height: 380px; opacity: 1; padding: 14px 16px 16px; }
+#zone-lb .zone-label { color: #5b21b6; }
+#zone-lb .zone-name  { color: #4c1d95; }
+#zone-lb .zone-desc  { color: #5b21b6; }
+
+/* Web Server zone */
+#zone-web {
+  background: #fef3c7; border: 2px solid #fcd34d;
+  max-height: 0; overflow: hidden; padding: 0 16px; opacity: 0;
+  transition: max-height 0.7s ease, opacity 0.7s ease, padding 0.5s ease;
+}
+#zone-web.visible { max-height: 380px; opacity: 1; padding: 14px 16px 16px; }
+#zone-web .zone-label { color: #92400e; }
+#zone-web .zone-name  { color: #78350f; }
+#zone-web .zone-desc  { color: #92400e; }
+
+/* Internal label */
+.int-label {
+  width: 100%; max-width: 480px; margin: 14px 0 6px;
+  padding: 5px 14px;
+  background: #0f1a0f; border: 1px dashed #374151; border-radius: 8px;
+  font-size: 11px; font-weight: 700; color: #4b5563; letter-spacing: 0.1em; text-transform: uppercase;
+  text-align: center;
+  max-height: 0; overflow: hidden; opacity: 0;
+  transition: max-height 0.5s ease, opacity 0.5s ease, margin 0.4s ease, padding 0.4s ease;
+}
+.int-label.visible { max-height: 60px; opacity: 1; }
+
+/* App Server zone */
+#zone-app {
+  background: #dcfce7; border: 2px solid #86efac;
+  max-height: 0; overflow: hidden; padding: 0 16px; opacity: 0;
+  transition: max-height 0.7s ease, opacity 0.7s ease, padding 0.5s ease;
+}
+#zone-app.visible { max-height: 380px; opacity: 1; padding: 14px 16px 16px; }
+#zone-app .zone-label { color: #166534; }
+#zone-app .zone-name  { color: #14532d; }
+#zone-app .zone-desc  { color: #166534; }
+
+/* Database zone */
+#zone-db {
+  background: #dcfce7; border: 2px solid #86efac;
+  max-height: 0; overflow: hidden; padding: 0 16px; opacity: 0;
+  transition: max-height 0.7s ease, opacity 0.7s ease, padding 0.5s ease;
+}
+#zone-db.visible { max-height: 420px; opacity: 1; padding: 14px 16px 16px; }
+#zone-db .zone-label { color: #166534; }
+#zone-db .zone-name  { color: #14532d; }
+#zone-db .zone-desc  { color: #166534; }
+
+/* ── ATTACK BUTTON ── */
+.attack-btn {
+  display: none; width: 100%; margin-top: 12px; padding: 9px 14px;
+  background: transparent; border: 2px dashed #dc2626; border-radius: 10px;
+  color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.04em; text-align: center;
+  transition: background 0.2s, color 0.2s, border-style 0.2s;
+  animation: btnPulse 1.6s ease-in-out infinite;
+}
+.attack-btn.visible { display: block; }
+.attack-btn.clicked { border-style: solid; animation: none; background: rgba(220,38,38,0.08); }
+.attack-info { display: none; font-size: 11px; color: #fca5a5; background: #2d0a0a; border-radius: 8px; padding: 8px 10px; margin-top: 6px; line-height: 1.5; text-align: left; }
+.attack-info.visible { display: block; }
+
+/* ── ARROWS ── */
+/* Each gap between zones uses an .arrow-gap container holding arrows side by side */
+.arrow-gap {
+  width: 100%; max-width: 480px; align-self: flex-start;
+  display: flex; flex-direction: row; justify-content: center; align-items: flex-start;
+  gap: 24px;
+  padding: 6px 0;
+}
+.arrow-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  overflow: hidden; max-height: 0; opacity: 0;
+  transition: max-height 0.6s ease, opacity 0.55s ease;
+  min-width: 130px; max-width: 160px;
+}
+.arrow-wrap.visible { max-height: 70px; opacity: 1; }
+.arrow-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0;
+  width: 100%;
+}
+.arrow-shaft { width: 2px; height: 18px; border-radius: 1px; }
+.arrow-head  { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; }
+.arrow-label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; margin-top: 2px; text-align: center; white-space: nowrap; }
+
+/* down arrow (blue — request) */
+.arr-down .arrow-shaft { background: #3b82f6; }
+.arr-down .arrow-head  { border-top: 10px solid #3b82f6; }
+.arr-down .arrow-label { color: #93c5fd; }
+
+/* up arrow (green — response) */
+.arr-up .arrow-shaft { background: #22c55e; }
+.arr-up .arrow-head  { border-bottom: 10px solid #22c55e; border-top: none; }
+.arr-up .arrow-label { color: #86efac; }
+
+/* ── STATUS BAR ── */
+.status-bar {
+  font-size: 11px; font-weight: 600; color: #64748b;
+  background: #1e293b; border-radius: 6px; padding: 5px 10px;
+  margin-top: 8px; letter-spacing: 0.03em; text-align: center; width: 100%;
+  transition: color 0.3s, background 0.3s;
+}
+.status-bar.green { color: #22c55e; background: #0a1f0f; }
+
+/* ── SIDEBAR CONTROLS ── */
+.sidebar {
+  position: fixed; top: 28px; right: 16px; width: 320px;
+  background: #0f172a; border: 1.5px solid #1e293b; border-radius: 16px;
+  padding: 18px 16px 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.sidebar-title { color: #3b82f6; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.step-info { font-size: 13px; font-weight: 600; color: #f1f5f9; min-height: 36px; line-height: 1.5; }
+.step-info em { color: #fbbf24; font-style: normal; }
+.step-counter { font-size: 11px; color: #475569; }
+.btn-row { display: flex; gap: 8px; }
+.nav-btn {
+  flex: 1; padding: 9px 12px; border-radius: 9px; font-size: 13px; font-weight: 700;
+  cursor: pointer; border: 1.5px solid; transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+.btn-prev { background: #1e293b; border-color: #334155; color: #94a3b8; }
+.btn-prev:hover:not(:disabled) { background: #263448; color: #e2e8f0; }
+.btn-next { background: #1d4ed8; border-color: #2563eb; color: #fff; }
+.btn-next:hover:not(:disabled) { background: #2563eb; }
+.btn-reset { background: transparent; border-color: #334155; color: #64748b; font-size: 12px; padding: 7px 10px; border-radius: 8px; cursor: pointer; }
+.btn-reset:hover { background: #1e293b; color: #94a3b8; }
+.nav-btn:disabled, .btn-reset:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.progress-bar { height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: #3b82f6; border-radius: 2px; transition: width 0.35s ease; }
+
+@keyframes btnPulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+/* ── CONCEPT PANEL SYSTEM ── */
+/* zone-row: positions zone card and concept panel side by side.
+   Zone never changes size. Panel appears to the right via absolute positioning. */
+.zone-row {
+  width: 100%; max-width: 480px;
+  position: relative;  /* anchor for the absolutely-positioned concept panel */
+}
+
+/* concept panel — absolutely positioned to the right of the zone row */
+.concept-block {
+  display: none;
+  position: absolute;
+  top: 0; left: calc(100% + 12px);
+  width: 480px;
+  background: #fff8f0; border: 2px solid #e2c97e;
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  z-index: 20;
+}
+.concept-block.visible { display: block; }
+
+/* header bar */
+.concept-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fef3c7; padding: 8px 12px;
+  border-bottom: 1.5px solid #e2c97e;
+}
+.concept-title {
+  font-size: 12px; font-weight: 800; color: #92400e;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.concept-nav { display: flex; align-items: center; gap: 8px; }
+.cprev, .cnext {
+  background: #fff; border: 1.5px solid #d97706;
+  border-radius: 6px; color: #b45309; font-size: 14px; font-weight: 700;
+  width: 28px; height: 28px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.cprev:hover, .cnext:hover { background: #fde68a; }
+.cprev:disabled, .cnext:disabled { opacity: 0.3; cursor: not-allowed; }
+.concept-counter {
+  font-size: 11px; font-weight: 700; color: #92400e; min-width: 36px; text-align: center;
+}
+
+/* slide content */
+.concept-slide { padding: 12px 14px 14px; }
+.concept-slide svg { width: 100%; height: auto; display: block; }
+.concept-label {
+  font-size: 13px; font-weight: 700; color: #78350f;
+  text-align: center; margin-top: 8px; line-height: 1.4;
+}
+.concept-sub {
+  font-size: 11px; color: #92400e; text-align: center;
+  margin-top: 4px; line-height: 1.5;
+}
+
+/* concept trigger button — sits below zone card, outside it */
+.concept-btn {
+  display: none; width: 100%; max-width: 480px;
+  margin-top: 6px; padding: 9px 14px;
+  background: #fffbeb; border: 2px dashed #d97706;
+  border-radius: 10px;
+  color: #b45309; font-size: 12px; font-weight: 700; cursor: pointer;
+  text-align: center; white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+  animation: btnPulse 1.6s ease-in-out infinite;
+}
+.concept-btn.visible { display: block; }
+.concept-btn.open { border-style: solid; animation: none; background: #fde68a; border-color: #b45309; }
+
+</style>
+</head>
+<body>
+
+<div class="title">NorthBridge Bank</div>
+<div class="subtitle">Lesson 2 — Expanded Infrastructure (7 Components)</div>
+
+<div class="diagram" id="diagram">
+
+  <!-- ── Customer zone (always visible) ── -->
+  <div class="zone" id="zone-rahul">
+    <div class="zone-label">Customer Zone</div>
+    <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="20" width="100" height="60" rx="6" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+      <rect x="35" y="25" width="90" height="46" rx="3" fill="#1e3a8a"/>
+      <rect x="42" y="30" width="76" height="8" rx="2" fill="#3b82f6" opacity="0.6"/>
+      <rect x="42" y="42" width="50" height="5" rx="2" fill="#60a5fa" opacity="0.5"/>
+      <rect x="42" y="51" width="62" height="5" rx="2" fill="#60a5fa" opacity="0.3"/>
+      <rect x="42" y="60" width="30" height="6" rx="3" fill="#22c55e" opacity="0.8"/>
+      <rect x="10" y="80" width="140" height="6" rx="3" fill="#93c5fd" stroke="#3b82f6" stroke-width="1.5"/>
+    </svg>
+    <div class="zone-name">Rahul's Laptop</div>
+    <div class="zone-desc">Login request originates here</div>
+    <div class="status-bar" id="statusBar">App locked — awaiting login</div>
+    <button class="attack-btn" id="attack-rahul" onclick="showAttack('rahul')">⚠ Attack Surface — Rahul's Device</button>
+    <div class="attack-info" id="info-rahul">Outside bank's control. Phishing, fake banking apps, malware, credential theft. If compromised, attacker steals credentials before they leave the device.</div>
+  </div>
+
+  <!-- Gap 1: Rahul ↔ Internet — arr1 down · arr13 up -->
+  <div class="arrow-gap">
+    <div class="arrow-wrap" id="arr1">
+      <div class="arrow-inner arr-down">
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+        <div class="arrow-label">encrypted · in transit</div>
+      </div>
+    </div>
+    <div class="arrow-wrap" id="arr13">
+      <div class="arrow-inner arr-up">
+        <div class="arrow-label">balance shown · complete</div>
+        <div class="arrow-head"></div>
+        <div class="arrow-shaft"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Internet zone ── -->
+  <div class="zone" id="zone-internet">
+    <div class="zone-label">Public Internet</div>
+    <svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="80" cy="42" rx="52" ry="30" fill="#c7d9f0" stroke="#8fa8c8" stroke-width="2"/>
+      <ellipse cx="80" cy="42" rx="24" ry="30" fill="none" stroke="#8fa8c8" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <line x1="28" y1="42" x2="132" y2="42" stroke="#8fa8c8" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <text x="80" y="46" text-anchor="middle" font-size="11" fill="#2c3e6a" font-weight="600">Internet</text>
+    </svg>
+    <div class="zone-name">The Internet</div>
+    <div class="zone-desc">Encrypted traffic in transit · untrusted</div>
+    <button class="attack-btn" id="attack-internet" onclick="showAttack('internet')">⚠ Attack Surface — Internet</button>
+    <div class="attack-info" id="info-internet">Untrusted. Traffic can be intercepted or modified if not encrypted. Every packet travels through infrastructure the bank does not control.</div>
+  </div>
+
+  <!-- DMZ label -->
+  <div class="dmz-label" id="dmz-label">DMZ — Web Layer</div>
+
+  <!-- Gap 2: Internet ↔ Firewall — arr2 down · arr12 up -->
+  <div class="arrow-gap">
+    <div class="arrow-wrap" id="arr2">
+      <div class="arrow-inner arr-down">
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+        <div class="arrow-label">to network boundary</div>
+      </div>
+    </div>
+    <div class="arrow-wrap" id="arr12">
+      <div class="arrow-inner arr-up">
+        <div class="arrow-label">back across internet</div>
+        <div class="arrow-head"></div>
+        <div class="arrow-shaft"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Firewall zone ── -->
+  <div class="zone-row" id="row-fw">
+  <div class="zone" id="zone-fw">
+    <div class="zone-label">DMZ — Web Layer</div>
+    <svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+      <path d="M80 12 L120 28 L120 52 Q120 70 80 78 Q40 70 40 52 L40 28 Z" fill="#fecaca" stroke="#dc2626" stroke-width="2"/>
+      <rect x="58" y="36" width="10" height="20" rx="3" fill="#ef4444" opacity="0.7"/>
+      <rect x="72" y="30" width="10" height="26" rx="3" fill="#dc2626" opacity="0.9"/>
+      <rect x="86" y="34" width="10" height="22" rx="3" fill="#ef4444" opacity="0.7"/>
+      <rect x="100" y="38" width="10" height="18" rx="3" fill="#f87171" opacity="0.6"/>
+      <text x="80" y="75" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">INSPECT · ALLOW · BLOCK</text>
+    </svg>
+    <div class="zone-name">Firewall</div>
+    <div class="zone-desc">Security checkpoint — allow or block every connection</div>
+    <button class="attack-btn" id="attack-fw" onclick="showAttack('fw')">⚠ Attack Surface — Firewall</button>
+    <div class="attack-info" id="info-fw">First internal component a request reaches. Misconfiguration can block all customers or expose the internal network. Configuration changes are high-risk events requiring change management.</div>
+    
+  </div>
+  <button class="concept-btn" id="concept-btn-fw" onclick="openConcept('fw')">&#128161; Concept Panels — Firewall (tap to explore)</button>
+  <div class="concept-block" id="concept-fw">
+      <div class="concept-header">
+        <span class="concept-title" id="concept-fw-title">Firewall Concepts</span>
+        <div class="concept-nav">
+          <button class="cprev" id="fw-prev" onclick="conceptNav('fw',-1)" disabled>&#8592;</button>
+          <span class="concept-counter" id="fw-counter">1 / 5</span>
+          <button class="cnext" id="fw-next" onclick="conceptNav('fw',+1)">&#8594;</button>
+        </div>
+      </div>
+      <!-- SLIDE 1: Location -->
+      <div class="concept-slide" id="fw-slide-0">
+        <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Public Internet side -->
+          <rect x="4" y="10" width="130" height="80" rx="10" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1.5"/>
+          <text x="69" y="32" text-anchor="middle" font-size="9" font-weight="700" fill="#0369a1">PUBLIC INTERNET</text>
+          <ellipse cx="69" cy="62" rx="34" ry="20" fill="#bae6fd" stroke="#7dd3fc" stroke-width="1"/>
+          <text x="69" y="66" text-anchor="middle" font-size="8" fill="#0369a1">untrusted</text>
+          <!-- Divider / boundary line -->
+          <line x1="170" y1="5" x2="170" y2="95" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="5 3"/>
+          <text x="170" y="102" text-anchor="middle" font-size="8" font-weight="700" fill="#dc2626">BOUNDARY</text>
+          <!-- Firewall label -->
+          <rect x="148" y="36" width="44" height="24" rx="6" fill="#fecaca" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="170" y="52" text-anchor="middle" font-size="8" font-weight="800" fill="#991b1b">FIREWALL</text>
+          <!-- NorthBridge side -->
+          <rect x="206" y="10" width="130" height="80" rx="10" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+          <text x="271" y="32" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">NORTHBRIDGE</text>
+          <text x="271" y="46" text-anchor="middle" font-size="8" fill="#166534">PRIVATE NETWORK</text>
+          <rect x="230" y="54" width="82" height="24" rx="6" fill="#bbf7d0" stroke="#4ade80" stroke-width="1"/>
+          <text x="271" y="70" text-anchor="middle" font-size="8" fill="#14532d">owned &amp; controlled</text>
+        </svg>
+        <div class="concept-label">Where the Firewall sits</div>
+        <div class="concept-sub">Public Internet ends at the left. NorthBridge private network begins at the right. The Firewall is the gate between them.</div>
+      </div>
+      <!-- SLIDE 2: Allow or Block -->
+      <div class="concept-slide" id="fw-slide-1" style="display:none">
+        <svg viewBox="0 0 340 110" xmlns="http://www.w3.org/2000/svg">
+          <!-- Incoming request -->
+          <rect x="4" y="44" width="60" height="22" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+          <text x="34" y="59" text-anchor="middle" font-size="8" font-weight="700" fill="#1e40af">REQUEST</text>
+          <line x1="64" y1="55" x2="90" y2="55" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrB)"/>
+          <defs><marker id="arrB" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#3b82f6"/></marker></defs>
+          <!-- Firewall checkpoint -->
+          <rect x="90" y="30" width="80" height="50" rx="10" fill="#fecaca" stroke="#dc2626" stroke-width="2"/>
+          <text x="130" y="50" text-anchor="middle" font-size="8" font-weight="800" fill="#991b1b">FIREWALL</text>
+          <text x="130" y="63" text-anchor="middle" font-size="7" fill="#7f1d1d">INSPECT</text>
+          <text x="130" y="74" text-anchor="middle" font-size="7" fill="#7f1d1d">&#8593; DECIDE &#8593;</text>
+          <!-- Allow path -->
+          <line x1="170" y1="43" x2="260" y2="30" stroke="#16a34a" stroke-width="2" marker-end="url(#arrG)"/>
+          <defs><marker id="arrG" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#16a34a"/></marker></defs>
+          <rect x="260" y="18" width="72" height="24" rx="8" fill="#dcfce7" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="296" y="34" text-anchor="middle" font-size="9" font-weight="800" fill="#166534">&#10003; ALLOW</text>
+          <!-- Block path -->
+          <line x1="170" y1="63" x2="260" y2="76" stroke="#dc2626" stroke-width="2" marker-end="url(#arrR)"/>
+          <defs><marker id="arrR" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#dc2626"/></marker></defs>
+          <rect x="260" y="64" width="72" height="24" rx="8" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+          <text x="296" y="80" text-anchor="middle" font-size="9" font-weight="800" fill="#991b1b">&#10007; BLOCK</text>
+        </svg>
+        <div class="concept-label">One decision — Allow or Block</div>
+        <div class="concept-sub">Every incoming connection is inspected. One of two outcomes. No middle ground.</div>
+      </div>
+      <!-- SLIDE 3: Policies -->
+      <div class="concept-slide" id="fw-slide-2" style="display:none">
+        <svg viewBox="0 0 340 110" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="8" width="320" height="94" rx="12" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/>
+          <text x="170" y="26" text-anchor="middle" font-size="10" font-weight="800" fill="#92400e">FIREWALL POLICY RULES</text>
+          <text x="20" y="26" font-size="8" fill="#78350f">&#128196;</text>
+          <!-- Rule 1 -->
+          <rect x="22" y="32" width="296" height="18" rx="5" fill="#dcfce7"/>
+          <text x="34" y="45" font-size="8" font-weight="700" fill="#166534">&#10003;  ALLOW</text>
+          <text x="88" y="45" font-size="8" fill="#14532d">HTTPS traffic on port 443 from any source</text>
+          <!-- Rule 2 -->
+          <rect x="22" y="54" width="296" height="18" rx="5" fill="#fee2e2"/>
+          <text x="34" y="67" font-size="8" font-weight="700" fill="#991b1b">&#10007;  BLOCK</text>
+          <text x="88" y="67" font-size="8" fill="#7f1d1d">Connections scanning more than 5 ports in 1 second</text>
+          <!-- Rule 3 -->
+          <rect x="22" y="76" width="296" height="18" rx="5" fill="#fee2e2"/>
+          <text x="34" y="89" font-size="8" font-weight="700" fill="#991b1b">&#10007;  BLOCK</text>
+          <text x="88" y="89" font-size="8" fill="#7f1d1d">Any IP address on the known attacker list</text>
+        </svg>
+        <div class="concept-label">Policies — the rulebook</div>
+        <div class="concept-sub">Written by security engineers. Define exactly what is permitted and what is not. The Firewall enforces these rules automatically.</div>
+      </div>
+      <!-- SLIDE 4: Ports -->
+      <div class="concept-slide" id="fw-slide-3" style="display:none">
+        <svg viewBox="0 0 340 110" xmlns="http://www.w3.org/2000/svg">
+          <!-- Building -->
+          <rect x="90" y="20" width="160" height="70" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+          <text x="170" y="38" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">SERVER</text>
+          <!-- Doors / ports -->
+          <rect x="100" y="48" width="24" height="34" rx="3" fill="#d97706" stroke="#b45309" stroke-width="1.5"/>
+          <text x="112" y="63" text-anchor="middle" font-size="7" font-weight="700" fill="#fff">80</text>
+          <text x="112" y="74" text-anchor="middle" font-size="6" fill="#fde68a">HTTP</text>
+          <rect x="134" y="48" width="24" height="34" rx="3" fill="#16a34a" stroke="#15803d" stroke-width="1.5"/>
+          <text x="146" y="63" text-anchor="middle" font-size="7" font-weight="700" fill="#fff">443</text>
+          <text x="146" y="74" text-anchor="middle" font-size="6" fill="#bbf7d0">HTTPS</text>
+          <rect x="168" y="48" width="24" height="34" rx="3" fill="#6b7280" stroke="#4b5563" stroke-width="1.5"/>
+          <text x="180" y="63" text-anchor="middle" font-size="7" font-weight="700" fill="#fff">22</text>
+          <text x="180" y="74" text-anchor="middle" font-size="6" fill="#d1d5db">SSH</text>
+          <rect x="202" y="48" width="24" height="34" rx="3" fill="#dc2626" stroke="#991b1b" stroke-width="1.5"/>
+          <text x="214" y="63" text-anchor="middle" font-size="7" font-weight="700" fill="#fff">???</text>
+          <text x="214" y="74" text-anchor="middle" font-size="6" fill="#fca5a5">unknown</text>
+          <!-- Attacker trying all doors -->
+          <text x="28" y="55" font-size="20" text-anchor="middle">&#128373;</text>
+          <line x1="46" y1="62" x2="90" y2="62" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arrR2)"/>
+          <defs><marker id="arrR2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#dc2626"/></marker></defs>
+          <text x="28" y="80" text-anchor="middle" font-size="7" fill="#dc2626">attacker</text>
+          <text x="28" y="90" text-anchor="middle" font-size="7" fill="#dc2626">port scanning</text>
+        </svg>
+        <div class="concept-label">Ports — the server's doors</div>
+        <div class="concept-sub">Every service uses a specific door (port). An attacker trying every door in sequence is port scanning. The Firewall detects this pattern and blocks it.</div>
+      </div>
+      <!-- SLIDE 5: Attack Signatures -->
+      <div class="concept-slide" id="fw-slide-4" style="display:none">
+        <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Fingerprint icon area -->
+          <circle cx="80" cy="52" r="36" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+          <text x="80" y="42" text-anchor="middle" font-size="22">&#128073;</text>
+          <text x="80" y="64" text-anchor="middle" font-size="8" font-weight="700" fill="#991b1b">KNOWN</text>
+          <text x="80" y="75" text-anchor="middle" font-size="8" font-weight="700" fill="#991b1b">SIGNATURE</text>
+          <!-- Arrow to database -->
+          <line x1="116" y1="52" x2="148" y2="52" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrS)"/>
+          <defs><marker id="arrS" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#64748b"/></marker></defs>
+          <!-- Signature DB -->
+          <rect x="148" y="28" width="80" height="48" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5"/>
+          <text x="188" y="45" text-anchor="middle" font-size="8" font-weight="700" fill="#92400e">SIGNATURE</text>
+          <text x="188" y="57" text-anchor="middle" font-size="8" font-weight="700" fill="#92400e">DATABASE</text>
+          <text x="188" y="69" text-anchor="middle" font-size="7" fill="#78350f">updated daily</text>
+          <!-- Arrow to block -->
+          <line x1="228" y1="52" x2="258" y2="52" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrB2)"/>
+          <defs><marker id="arrB2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#dc2626"/></marker></defs>
+          <rect x="258" y="38" width="72" height="28" rx="8" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+          <text x="294" y="55" text-anchor="middle" font-size="9" font-weight="800" fill="#991b1b">AUTO-BLOCK</text>
+        </svg>
+        <div class="concept-label">Attack signatures — known fingerprints</div>
+        <div class="concept-sub">Every attack leaves a recognisable pattern. The Firewall checks every request against a database of known signatures and blocks matches automatically.</div>
+      </div>
+    </div>
+  </div><!-- /zone-row -->
+
+  <!-- Gap 3: Firewall ↔ Load Balancer — arr3 down · arr10 up -->
+  <div class="arrow-gap">
+    <div class="arrow-wrap" id="arr3">
+      <div class="arrow-inner arr-down">
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+        <div class="arrow-label">allowed through</div>
+      </div>
+    </div>
+    <div class="arrow-wrap" id="arr10">
+      <div class="arrow-inner arr-up">
+        <div class="arrow-label">back through LB</div>
+        <div class="arrow-head"></div>
+        <div class="arrow-shaft"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Load Balancer zone ── -->
+  <div class="zone-row" id="row-lb">
+  <div class="zone" id="zone-lb">
+    <div class="zone-label">DMZ — Web Layer</div>
+    <svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+      <rect x="55" y="22" width="50" height="30" rx="6" fill="#e9d5ff" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="80" y="41" text-anchor="middle" font-size="10" fill="#4c1d95" font-weight="700">LB</text>
+      <line x1="80" y1="52" x2="32" y2="72" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="80" y1="52" x2="80" y2="72" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="80" y1="52" x2="128" y2="72" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr)"/>
+      <defs>
+        <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#8b5cf6"/>
+        </marker>
+      </defs>
+      <rect x="20" y="72" width="22" height="6" rx="2" fill="#c4b5fd"/>
+      <rect x="69" y="72" width="22" height="6" rx="2" fill="#c4b5fd"/>
+      <rect x="118" y="72" width="22" height="6" rx="2" fill="#c4b5fd"/>
+    </svg>
+    <div class="zone-name">Load Balancer</div>
+    <div class="zone-desc">Distributes requests across multiple Web Servers</div>
+    <button class="attack-btn" id="attack-lb" onclick="showAttack('lb')">⚠ Attack Surface — Load Balancer</button>
+    <div class="attack-info" id="info-lb">If the Load Balancer fails, no request can reach any Web Server — even though all servers are healthy. A single point of failure for all customer traffic passing through the Firewall.</div>
+    
+  </div>
+  <button class="concept-btn" id="concept-btn-lb" onclick="openConcept('lb')">&#128161; Concept Panels — Load Balancer (tap to explore)</button>
+  <div class="concept-block" id="concept-lb">
+      <div class="concept-header">
+        <span class="concept-title" id="concept-lb-title">Load Balancer Concepts</span>
+        <div class="concept-nav">
+          <button class="cprev" id="lb-prev" onclick="conceptNav('lb',-1)" disabled>&#8592;</button>
+          <span class="concept-counter" id="lb-counter">1 / 4</span>
+          <button class="cnext" id="lb-next" onclick="conceptNav('lb',+1)">&#8594;</button>
+        </div>
+      </div>
+      <!-- SLIDE 1: Location -->
+      <div class="concept-slide" id="lb-slide-0">
+        <svg viewBox="0 0 340 80" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="24" width="60" height="32" rx="8" fill="#fecaca" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="34" y="43" text-anchor="middle" font-size="8" font-weight="800" fill="#991b1b">FIREWALL</text>
+          <line x1="64" y1="40" x2="90" y2="40" stroke="#64748b" stroke-width="2" marker-end="url(#arrLB1)"/>
+          <defs><marker id="arrLB1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#64748b"/></marker></defs>
+          <rect x="90" y="24" width="70" height="32" rx="8" fill="#e9d5ff" stroke="#8b5cf6" stroke-width="2"/>
+          <text x="125" y="38" text-anchor="middle" font-size="8" font-weight="800" fill="#4c1d95">LOAD</text>
+          <text x="125" y="50" text-anchor="middle" font-size="8" font-weight="800" fill="#4c1d95">BALANCER</text>
+          <line x1="160" y1="32" x2="196" y2="18" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrLB2)"/>
+          <line x1="160" y1="40" x2="196" y2="40" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrLB3)"/>
+          <line x1="160" y1="48" x2="196" y2="62" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrLB4)"/>
+          <defs>
+            <marker id="arrLB2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#64748b"/></marker>
+            <marker id="arrLB3" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#64748b"/></marker>
+            <marker id="arrLB4" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#64748b"/></marker>
+          </defs>
+          <rect x="196" y="8" width="56" height="20" rx="5" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5"/>
+          <text x="224" y="22" text-anchor="middle" font-size="7" font-weight="700" fill="#92400e">WEB SERVER 1</text>
+          <rect x="196" y="30" width="56" height="20" rx="5" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5"/>
+          <text x="224" y="44" text-anchor="middle" font-size="7" font-weight="700" fill="#92400e">WEB SERVER 2</text>
+          <rect x="196" y="52" width="56" height="20" rx="5" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5"/>
+          <text x="224" y="66" text-anchor="middle" font-size="7" font-weight="700" fill="#92400e">WEB SERVER 3</text>
+          <text x="280" y="20" font-size="7" fill="#64748b">traffic</text>
+          <text x="280" y="30" font-size="7" fill="#64748b">director</text>
+        </svg>
+        <div class="concept-label">Where the Load Balancer sits</div>
+        <div class="concept-sub">After the Firewall. Directly in front of the Web Servers. It decides which server handles each incoming request.</div>
+      </div>
+      <!-- SLIDE 2: The problem — one server overwhelmed -->
+      <div class="concept-slide" id="lb-slide-1" style="display:none">
+        <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Many arrows hitting one server -->
+          <rect x="220" y="30" width="80" height="40" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="260" y="48" text-anchor="middle" font-size="8" font-weight="700" fill="#991b1b">ONE SERVER</text>
+          <text x="260" y="60" text-anchor="middle" font-size="9">&#128165;</text>
+          <!-- Many requests -->
+          <text x="20" y="28" font-size="7" fill="#1e40af">request 1</text>
+          <line x1="74" y1="24" x2="218" y2="38" stroke="#3b82f6" stroke-width="1" marker-end="url(#arrO1)"/>
+          <text x="20" y="44" font-size="7" fill="#1e40af">request 2</text>
+          <line x1="74" y1="40" x2="218" y2="46" stroke="#3b82f6" stroke-width="1" marker-end="url(#arrO2)"/>
+          <text x="20" y="60" font-size="7" fill="#1e40af">request 3</text>
+          <line x1="74" y1="56" x2="218" y2="52" stroke="#3b82f6" stroke-width="1" marker-end="url(#arrO3)"/>
+          <text x="20" y="76" font-size="7" fill="#1e40af">request 4...</text>
+          <line x1="74" y1="72" x2="218" y2="62" stroke="#3b82f6" stroke-width="1" marker-end="url(#arrO4)"/>
+          <defs>
+            <marker id="arrO1" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#3b82f6"/></marker>
+            <marker id="arrO2" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#3b82f6"/></marker>
+            <marker id="arrO3" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#3b82f6"/></marker>
+            <marker id="arrO4" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#3b82f6"/></marker>
+          </defs>
+          <text x="170" y="92" text-anchor="middle" font-size="8" font-weight="700" fill="#dc2626">Server overwhelmed &#8594; stops responding</text>
+        </svg>
+        <div class="concept-label">The problem — one server, thousands of requests</div>
+        <div class="concept-sub">Without a Load Balancer, all traffic hits one server. At peak time — 9:15 AM Monday — it collapses under the load.</div>
+      </div>
+      <!-- SLIDE 3: The solution — distributed -->
+      <div class="concept-slide" id="lb-slide-2" style="display:none">
+        <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- LB box -->
+          <rect x="110" y="36" width="64" height="28" rx="8" fill="#e9d5ff" stroke="#8b5cf6" stroke-width="2"/>
+          <text x="142" y="53" text-anchor="middle" font-size="8" font-weight="800" fill="#4c1d95">LOAD BALANCER</text>
+          <!-- Incoming -->
+          <line x1="30" y1="50" x2="108" y2="50" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrD0)"/>
+          <defs><marker id="arrD0" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#3b82f6"/></marker></defs>
+          <text x="14" y="54" font-size="7" fill="#1e40af">traffic</text>
+          <!-- Out to 3 servers -->
+          <line x1="174" y1="44" x2="228" y2="24" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrD1)"/>
+          <line x1="174" y1="50" x2="228" y2="50" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrD2)"/>
+          <line x1="174" y1="56" x2="228" y2="76" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrD3)"/>
+          <defs>
+            <marker id="arrD1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#16a34a"/></marker>
+            <marker id="arrD2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#16a34a"/></marker>
+            <marker id="arrD3" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#16a34a"/></marker>
+          </defs>
+          <rect x="228" y="12" width="72" height="22" rx="6" fill="#dcfce7" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="264" y="27" text-anchor="middle" font-size="7" font-weight="700" fill="#166534">&#128994; WS 1 — healthy</text>
+          <rect x="228" y="38" width="72" height="22" rx="6" fill="#dcfce7" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="264" y="53" text-anchor="middle" font-size="7" font-weight="700" fill="#166534">&#128994; WS 2 — healthy</text>
+          <rect x="228" y="64" width="72" height="22" rx="6" fill="#dcfce7" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="264" y="79" text-anchor="middle" font-size="7" font-weight="700" fill="#166534">&#128994; WS 3 — healthy</text>
+        </svg>
+        <div class="concept-label">The solution — requests distributed evenly</div>
+        <div class="concept-sub">Each server handles a share of the traffic. No single server is overwhelmed. If one slows down, the Load Balancer routes around it automatically.</div>
+      </div>
+      <!-- SLIDE 4: Failure scenario -->
+      <div class="concept-slide" id="lb-slide-3" style="display:none">
+        <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- FW healthy -->
+          <rect x="4" y="34" width="58" height="28" rx="8" fill="#dcfce7" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="33" y="46" text-anchor="middle" font-size="7" font-weight="700" fill="#166534">&#128994; FIREWALL</text>
+          <text x="33" y="57" text-anchor="middle" font-size="7" fill="#166534">healthy</text>
+          <!-- Arrow blocked -->
+          <line x1="62" y1="48" x2="90" y2="48" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 2"/>
+          <!-- LB failed -->
+          <rect x="90" y="30" width="72" height="36" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2.5"/>
+          <text x="126" y="46" text-anchor="middle" font-size="8" font-weight="800" fill="#991b1b">LOAD</text>
+          <text x="126" y="57" text-anchor="middle" font-size="8" font-weight="800" fill="#991b1b">BALANCER &#128683;</text>
+          <!-- Servers all healthy but unreachable -->
+          <line x1="162" y1="40" x2="196" y2="24" stroke="#d1d5db" stroke-width="1" stroke-dasharray="3 2"/>
+          <line x1="162" y1="48" x2="196" y2="48" stroke="#d1d5db" stroke-width="1" stroke-dasharray="3 2"/>
+          <line x1="162" y1="56" x2="196" y2="72" stroke="#d1d5db" stroke-width="1" stroke-dasharray="3 2"/>
+          <rect x="196" y="12" width="68" height="20" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+          <text x="230" y="26" text-anchor="middle" font-size="7" fill="#166534">&#128994; WS 1 healthy</text>
+          <rect x="196" y="36" width="68" height="20" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+          <text x="230" y="50" text-anchor="middle" font-size="7" fill="#166534">&#128994; WS 2 healthy</text>
+          <rect x="196" y="60" width="68" height="20" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+          <text x="230" y="74" text-anchor="middle" font-size="7" fill="#166534">&#128994; WS 3 healthy</text>
+          <text x="170" y="94" text-anchor="middle" font-size="7" font-weight="700" fill="#dc2626">Servers healthy — but unreachable. LB is the single point of failure.</text>
+        </svg>
+        <div class="concept-label">Load Balancer failure — all traffic blocked</div>
+        <div class="concept-sub">Even though all Web Servers are healthy, no request can reach them. The failure is in the routing, not the processing.</div>
+      </div>
+    </div>
+  </div><!-- /zone-row -->
+
+  <!-- Gap 4: Load Balancer ↔ Web Server — arr4 down · arr9 up -->
+  <div class="arrow-gap">
+    <div class="arrow-wrap" id="arr4">
+      <div class="arrow-inner arr-down">
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+        <div class="arrow-label">to web server</div>
+      </div>
+    </div>
+    <div class="arrow-wrap" id="arr9">
+      <div class="arrow-inner arr-up">
+        <div class="arrow-label">response sealed</div>
+        <div class="arrow-head"></div>
+        <div class="arrow-shaft"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Web Server zone ── -->
+  <div class="zone-row" id="row-web">
+  <div class="zone" id="zone-web">
+    <div class="zone-label">DMZ — Web Layer</div>
+    <svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+      <rect x="25" y="18" width="110" height="50" rx="6" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/>
+      <rect x="31" y="24" width="98" height="8" rx="3" fill="#b45309" opacity="0.3"/>
+      <rect x="31" y="36" width="70" height="5" rx="2" fill="#92400e" opacity="0.4"/>
+      <rect x="31" y="45" width="55" height="5" rx="2" fill="#92400e" opacity="0.3"/>
+      <circle cx="120" cy="42" r="10" fill="#f59e0b" opacity="0.4"/>
+      <text x="120" y="46" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">WS</text>
+    </svg>
+    <div class="zone-name">Web Server</div>
+    <div class="zone-desc">Bank's front door — receives and routes requests</div>
+    <button class="attack-btn" id="attack-web" onclick="showAttack('web')">⚠ Attack Surface — Web Server</button>
+    <div class="attack-info" id="info-web">Directly exposed to public internet. First application-layer system an attacker probes. A vulnerability here can give a foothold inside the bank's infrastructure.</div>
+    
+  </div>
+  <button class="concept-btn" id="concept-btn-web" onclick="openConcept('web')">&#128161; Concept Panels — Web Server (tap to explore)</button>
+  <div class="concept-block" id="concept-web">
+      <div class="concept-header">
+        <span class="concept-title" id="concept-web-title">Web Server Concepts</span>
+        <div class="concept-nav">
+          <button class="cprev" id="web-prev" onclick="conceptNav('web',-1)" disabled>&#8592;</button>
+          <span class="concept-counter" id="web-counter">1 / 3</span>
+          <button class="cnext" id="web-next" onclick="conceptNav('web',+1)">&#8594;</button>
+        </div>
+      </div>
+      <!-- SLIDE 1: Role -->
+      <div class="concept-slide" id="web-slide-0">
+        <svg viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- Visitor -->
+          <text x="28" y="48" text-anchor="middle" font-size="22">&#128100;</text>
+          <text x="28" y="64" text-anchor="middle" font-size="7" fill="#64748b">Rahul's request</text>
+          <!-- Arrow to reception -->
+          <line x1="46" y1="44" x2="88" y2="44" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrW1)"/>
+          <defs><marker id="arrW1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#3b82f6"/></marker></defs>
+          <!-- Reception desk — Web Server -->
+          <rect x="88" y="20" width="100" height="48" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+          <text x="138" y="36" text-anchor="middle" font-size="7" font-weight="700" fill="#92400e">WEB SERVER</text>
+          <text x="138" y="48" text-anchor="middle" font-size="8">&#128722;</text>
+          <text x="138" y="62" text-anchor="middle" font-size="7" fill="#78350f">reception desk</text>
+          <!-- Three functions -->
+          <line x1="188" y1="30" x2="224" y2="18" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrW2)"/>
+          <line x1="188" y1="44" x2="224" y2="44" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrW3)"/>
+          <line x1="188" y1="58" x2="224" y2="70" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrW4)"/>
+          <defs>
+            <marker id="arrW2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#d97706"/></marker>
+            <marker id="arrW3" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#d97706"/></marker>
+            <marker id="arrW4" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#d97706"/></marker>
+          </defs>
+          <text x="228" y="22" font-size="7" fill="#92400e">1. Receive</text>
+          <text x="228" y="48" font-size="7" fill="#92400e">2. Check</text>
+          <text x="228" y="74" font-size="7" fill="#92400e">3. Route inward</text>
+        </svg>
+        <div class="concept-label">Web Server — the bank's front door</div>
+        <div class="concept-sub">Like a reception desk: receives the request, does a quick check, and routes it to the right internal system. Does not process logic or hold data.</div>
+      </div>
+      <!-- SLIDE 2: What it does NOT do -->
+      <div class="concept-slide" id="web-slide-1" style="display:none">
+        <svg viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="148" height="70" rx="10" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+          <text x="84" y="28" text-anchor="middle" font-size="8" font-weight="700" fill="#991b1b">&#10007; Does NOT store data</text>
+          <text x="84" y="44" text-anchor="middle" font-size="7" fill="#7f1d1d">No account records.</text>
+          <text x="84" y="55" text-anchor="middle" font-size="7" fill="#7f1d1d">No balances.</text>
+          <text x="84" y="66" text-anchor="middle" font-size="7" fill="#7f1d1d">No transaction history.</text>
+          <rect x="182" y="10" width="148" height="70" rx="10" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+          <text x="256" y="28" text-anchor="middle" font-size="8" font-weight="700" fill="#991b1b">&#10007; Does NOT verify identity</text>
+          <text x="256" y="44" text-anchor="middle" font-size="7" fill="#7f1d1d">Does not check passwords.</text>
+          <text x="256" y="55" text-anchor="middle" font-size="7" fill="#7f1d1d">Does not check permissions.</text>
+          <text x="256" y="66" text-anchor="middle" font-size="7" fill="#7f1d1d">That is the App Server's job.</text>
+        </svg>
+        <div class="concept-label">What the Web Server does NOT do</div>
+        <div class="concept-sub">Each component in the chain does only its specific job. The Web Server receives and routes. Nothing more. This separation is intentional — it is part of defence in depth.</div>
+      </div>
+      <!-- SLIDE 3: Exposure -->
+      <div class="concept-slide" id="web-slide-2" style="display:none">
+        <svg viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- Internet side -->
+          <ellipse cx="60" cy="44" rx="44" ry="28" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1.5"/>
+          <text x="60" y="40" text-anchor="middle" font-size="8" font-weight="700" fill="#0369a1">PUBLIC</text>
+          <text x="60" y="52" text-anchor="middle" font-size="8" font-weight="700" fill="#0369a1">INTERNET</text>
+          <!-- Arrow to WS -->
+          <line x1="104" y1="44" x2="136" y2="44" stroke="#dc2626" stroke-width="2" stroke-dasharray="none" marker-end="url(#arrE1)"/>
+          <defs><marker id="arrE1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#dc2626"/></marker></defs>
+          <text x="120" y="38" text-anchor="middle" font-size="7" fill="#dc2626">directly</text>
+          <text x="120" y="56" text-anchor="middle" font-size="7" fill="#dc2626">exposed</text>
+          <!-- Web Server -->
+          <rect x="136" y="26" width="72" height="36" rx="8" fill="#fef3c7" stroke="#dc2626" stroke-width="2.5"/>
+          <text x="172" y="42" text-anchor="middle" font-size="8" font-weight="800" fill="#dc2626">WEB SERVER</text>
+          <text x="172" y="54" text-anchor="middle" font-size="8">&#127919;</text>
+          <!-- Arrow to protected interior -->
+          <line x1="208" y1="44" x2="238" y2="44" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrE2)"/>
+          <defs><marker id="arrE2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#16a34a"/></marker></defs>
+          <rect x="238" y="26" width="88" height="36" rx="8" fill="#dcfce7" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="282" y="40" text-anchor="middle" font-size="7" font-weight="700" fill="#166534">PROTECTED</text>
+          <text x="282" y="52" text-anchor="middle" font-size="7" fill="#166534">INTERIOR</text>
+          <text x="172" y="78" text-anchor="middle" font-size="7" font-weight="700" fill="#dc2626">First target an attacker probes</text>
+        </svg>
+        <div class="concept-label">The most exposed component</div>
+        <div class="concept-sub">The Web Server faces the public Internet directly. It is the first application-layer system an attacker reaches. A vulnerability here is a foothold into the bank.</div>
+      </div>
+    </div>
+  </div><!-- /zone-row -->
+
+  <!-- Internal network label -->
+  <div class="int-label" id="int-label">Internal Secure Network</div>
+
+  <!-- Gap 5: Web Server ↔ App Server — arr5 down · arr8 up -->
+  <div class="arrow-gap">
+    <div class="arrow-wrap" id="arr5">
+      <div class="arrow-inner arr-down">
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+        <div class="arrow-label">credentials inward</div>
+      </div>
+    </div>
+    <div class="arrow-wrap" id="arr8">
+      <div class="arrow-inner arr-up">
+        <div class="arrow-label">formatted response</div>
+        <div class="arrow-head"></div>
+        <div class="arrow-shaft"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Application Server zone ── -->
+  <div class="zone-row" id="row-app">
+  <div class="zone" id="zone-app">
+    <div class="zone-label">Internal Secure Network</div>
+    <svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+      <rect x="25" y="15" width="110" height="54" rx="8" fill="#bbf7d0" stroke="#22c55e" stroke-width="2"/>
+      <rect x="34" y="24" width="60" height="7" rx="3" fill="#16a34a" opacity="0.35"/>
+      <rect x="34" y="35" width="88" height="5" rx="2" fill="#15803d" opacity="0.3"/>
+      <rect x="34" y="44" width="72" height="5" rx="2" fill="#15803d" opacity="0.25"/>
+      <rect x="34" y="53" width="44" height="5" rx="2" fill="#15803d" opacity="0.2"/>
+      <text x="130" y="46" text-anchor="middle" font-size="9" fill="#14532d" font-weight="700">APP</text>
+    </svg>
+    <div class="zone-name">Application Server</div>
+    <div class="zone-desc">Verifies identity and authorisation · business logic</div>
+    <button class="attack-btn" id="attack-app" onclick="showAttack('app')">⚠ Attack Surface — Application Server</button>
+    <div class="attack-info" id="info-app">Highest-value target. Handles all authentication and authorisation logic. Compromise gives access to every customer account. Not directly exposed to internet — protected by Firewall, Load Balancer, and Web Server layers.</div>
+    
+  </div>
+  <button class="concept-btn" id="concept-btn-app" onclick="openConcept('app')">&#128161; Concept Panels — Application Server (tap to explore)</button>
+  <div class="concept-block" id="concept-app">
+      <div class="concept-header">
+        <span class="concept-title" id="concept-app-title">App Server Concepts</span>
+        <div class="concept-nav">
+          <button class="cprev" id="app-prev" onclick="conceptNav('app',-1)" disabled>&#8592;</button>
+          <span class="concept-counter" id="app-counter">1 / 3</span>
+          <button class="cnext" id="app-next" onclick="conceptNav('app',+1)">&#8594;</button>
+        </div>
+      </div>
+      <!-- SLIDE 1: AuthN vs AuthZ -->
+      <div class="concept-slide" id="app-slide-0">
+        <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Step 1: AuthN -->
+          <rect x="10" y="20" width="148" height="60" rx="10" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+          <text x="84" y="38" text-anchor="middle" font-size="9" font-weight="800" fill="#1e40af">AUTHENTICATION</text>
+          <text x="84" y="52" text-anchor="middle" font-size="8" fill="#1e40af">Who are you?</text>
+          <text x="84" y="65" text-anchor="middle" font-size="16">&#128274;</text>
+          <text x="84" y="78" text-anchor="middle" font-size="7" fill="#1e40af">verify identity</text>
+          <!-- Arrow -->
+          <line x1="158" y1="50" x2="178" y2="50" stroke="#64748b" stroke-width="2" marker-end="url(#arrAP1)"/>
+          <defs><marker id="arrAP1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#64748b"/></marker></defs>
+          <!-- Step 2: AuthZ -->
+          <rect x="178" y="20" width="148" height="60" rx="10" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+          <text x="252" y="38" text-anchor="middle" font-size="9" font-weight="800" fill="#166534">AUTHORISATION</text>
+          <text x="252" y="52" text-anchor="middle" font-size="8" fill="#166534">What can you do?</text>
+          <text x="252" y="65" text-anchor="middle" font-size="16">&#128275;</text>
+          <text x="252" y="78" text-anchor="middle" font-size="7" fill="#166534">verify permissions</text>
+        </svg>
+        <div class="concept-label">Authentication vs Authorisation — two separate checks</div>
+        <div class="concept-sub">Authentication confirms who you are. Authorisation confirms what you are allowed to access. The App Server performs both — in that order — for every request.</div>
+      </div>
+      <!-- SLIDE 2: Dependency — no DB = no login -->
+      <div class="concept-slide" id="app-slide-1" style="display:none">
+        <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- App Server -->
+          <rect x="90" y="20" width="80" height="36" rx="8" fill="#bbf7d0" stroke="#22c55e" stroke-width="2"/>
+          <text x="130" y="36" text-anchor="middle" font-size="8" font-weight="700" fill="#166534">APP SERVER</text>
+          <text x="130" y="49" text-anchor="middle" font-size="7" fill="#166534">needs DB to verify login</text>
+          <!-- Arrow down to broken DB link -->
+          <line x1="130" y1="56" x2="130" y2="74" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 2"/>
+          <!-- Broken DB -->
+          <rect x="88" y="74" width="84" height="22" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="130" y="89" text-anchor="middle" font-size="8" font-weight="700" fill="#991b1b">DATABASE &#128683; OFFLINE</text>
+          <!-- Result -->
+          <rect x="210" y="30" width="116" height="36" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5"/>
+          <text x="268" y="46" text-anchor="middle" font-size="8" font-weight="700" fill="#92400e">App Server frozen.</text>
+          <text x="268" y="58" text-anchor="middle" font-size="7" fill="#78350f">Cannot verify anyone.</text>
+          <!-- Arrow -->
+          <line x1="170" y1="38" x2="208" y2="38" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrAP2)"/>
+          <defs><marker id="arrAP2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#dc2626"/></marker></defs>
+        </svg>
+        <div class="concept-label">Service dependency in action</div>
+        <div class="concept-sub">The App Server depends on the Database. If the Database goes offline, the App Server cannot verify any login — even though the App Server itself is perfectly healthy.</div>
+      </div>
+      <!-- SLIDE 3: Highest value target -->
+      <div class="concept-slide" id="app-slide-2" style="display:none">
+        <svg viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- Crown -->
+          <text x="170" y="38" text-anchor="middle" font-size="28">&#128081;</text>
+          <rect x="80" y="48" width="180" height="30" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+          <text x="170" y="62" text-anchor="middle" font-size="9" font-weight="800" fill="#92400e">HIGHEST VALUE TARGET</text>
+          <text x="170" y="73" text-anchor="middle" font-size="7" fill="#78350f">Compromise here = access to every customer account</text>
+          <!-- Warning sides -->
+          <text x="30" y="52" font-size="20" text-anchor="middle">&#9888;&#65039;</text>
+          <text x="310" y="52" font-size="20" text-anchor="middle">&#9888;&#65039;</text>
+        </svg>
+        <div class="concept-label">The highest-value internal target</div>
+        <div class="concept-sub">The App Server holds all authentication and authorisation logic. If an attacker compromises it, they can access every customer account. It is protected behind the Firewall, Load Balancer, and Web Server — but remains the prime target.</div>
+      </div>
+    </div>
+  </div><!-- /zone-row -->
+
+  <!-- Gap 6: App Server ↔ Database — arr6 down · arr7 up -->
+  <div class="arrow-gap">
+    <div class="arrow-wrap" id="arr6">
+      <div class="arrow-inner arr-down">
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+        <div class="arrow-label">balance request</div>
+      </div>
+    </div>
+    <div class="arrow-wrap" id="arr7">
+      <div class="arrow-inner arr-up">
+        <div class="arrow-label">balance returned</div>
+        <div class="arrow-head"></div>
+        <div class="arrow-shaft"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Database zone ── -->
+  <div class="zone-row" id="row-db">
+  <div class="zone" id="zone-db">
+    <div class="zone-label">Internal Secure Network</div>
+    <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="80" cy="22" rx="46" ry="12" fill="#bbf7d0" stroke="#22c55e" stroke-width="2"/>
+      <rect x="34" y="22" width="92" height="46" fill="#bbf7d0"/>
+      <ellipse cx="80" cy="68" rx="46" ry="12" fill="#d1fae5" stroke="#22c55e" stroke-width="2"/>
+      <line x1="34" y1="38" x2="126" y2="38" stroke="#22c55e" stroke-width="1.2" opacity="0.5"/>
+      <line x1="34" y1="52" x2="126" y2="52" stroke="#22c55e" stroke-width="1.2" opacity="0.5"/>
+      <text x="80" y="46" text-anchor="middle" font-size="9" fill="#14532d" font-weight="700">RECORDS</text>
+    </svg>
+    <div class="zone-name">Customer Database</div>
+    <div class="zone-desc">All account records · balances · transactions</div>
+    <button class="attack-btn" id="attack-db" onclick="showAttack('db')">⚠ Attack Surface — Customer Database</button>
+    <div class="attack-info" id="info-db">The crown jewel. Every account record, every password hash, every transaction. A breach here exposes every NorthBridge customer. Protected behind the full 7-component chain.</div>
+    
+  </div>
+  <button class="concept-btn" id="concept-btn-db" onclick="openConcept('db')">&#128161; Concept Panels — Customer Database (tap to explore)</button>
+  <div class="concept-block" id="concept-db">
+      <div class="concept-header">
+        <span class="concept-title" id="concept-db-title">Database Concepts</span>
+        <div class="concept-nav">
+          <button class="cprev" id="db-prev" onclick="conceptNav('db',-1)" disabled>&#8592;</button>
+          <span class="concept-counter" id="db-counter">1 / 3</span>
+          <button class="cnext" id="db-next" onclick="conceptNav('db',+1)">&#8594;</button>
+        </div>
+      </div>
+      <!-- SLIDE 1: What it holds -->
+      <div class="concept-slide" id="db-slide-0">
+        <svg viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- Three cylinders -->
+          <ellipse cx="64" cy="28" rx="46" ry="12" fill="#bbf7d0" stroke="#22c55e" stroke-width="1.5"/>
+          <rect x="18" y="28" width="92" height="34" fill="#bbf7d0"/>
+          <ellipse cx="64" cy="62" rx="46" ry="12" fill="#d1fae5" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="64" y="48" text-anchor="middle" font-size="8" font-weight="700" fill="#14532d">ACCOUNTS</text>
+          <text x="64" y="76" text-anchor="middle" font-size="7" fill="#166534">Customer IDs, names</text>
+
+          <ellipse cx="170" cy="28" rx="46" ry="12" fill="#bbf7d0" stroke="#22c55e" stroke-width="1.5"/>
+          <rect x="124" y="28" width="92" height="34" fill="#bbf7d0"/>
+          <ellipse cx="170" cy="62" rx="46" ry="12" fill="#d1fae5" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="170" y="48" text-anchor="middle" font-size="8" font-weight="700" fill="#14532d">BALANCES</text>
+          <text x="170" y="76" text-anchor="middle" font-size="7" fill="#166534">Current account values</text>
+
+          <ellipse cx="276" cy="28" rx="46" ry="12" fill="#bbf7d0" stroke="#22c55e" stroke-width="1.5"/>
+          <rect x="230" y="28" width="92" height="34" fill="#bbf7d0"/>
+          <ellipse cx="276" cy="62" rx="46" ry="12" fill="#d1fae5" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="276" y="48" text-anchor="middle" font-size="8" font-weight="700" fill="#14532d">TRANSACTIONS</text>
+          <text x="276" y="76" text-anchor="middle" font-size="7" fill="#166534">Every payment, every transfer</text>
+        </svg>
+        <div class="concept-label">What the Database holds</div>
+        <div class="concept-sub">Every account record. Every balance. Every transaction. This is the complete financial picture of every NorthBridge customer — all in one place.</div>
+      </div>
+      <!-- SLIDE 2: Crown jewel — deepest protection -->
+      <div class="concept-slide" id="db-slide-1" style="display:none">
+        <svg viewBox="0 0 340 118" xmlns="http://www.w3.org/2000/svg">
+          <!-- Shield layers from outside in — 6 protection layers above Database -->
+          <rect x="4"  y="4"  width="332" height="18" rx="6" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>
+          <text x="170" y="17" text-anchor="middle" font-size="8" font-weight="700" fill="#0369a1">Internet</text>
+          <rect x="14" y="25" width="312" height="16" rx="5" fill="#fecaca" stroke="#dc2626" stroke-width="1"/>
+          <text x="170" y="37" text-anchor="middle" font-size="7" font-weight="700" fill="#991b1b">Firewall</text>
+          <rect x="26" y="44" width="288" height="15" rx="5" fill="#e9d5ff" stroke="#8b5cf6" stroke-width="1"/>
+          <text x="170" y="55" text-anchor="middle" font-size="7" font-weight="700" fill="#4c1d95">Load Balancer</text>
+          <rect x="40" y="62" width="260" height="14" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+          <text x="170" y="73" text-anchor="middle" font-size="7" font-weight="700" fill="#92400e">Web Server</text>
+          <rect x="56" y="79" width="228" height="14" rx="4" fill="#bbf7d0" stroke="#22c55e" stroke-width="1"/>
+          <text x="170" y="90" text-anchor="middle" font-size="7" font-weight="700" fill="#166534">Application Server</text>
+          <rect x="74" y="96" width="192" height="16" rx="5" fill="#6ee7b7" stroke="#059669" stroke-width="1.5"/>
+          <text x="170" y="108" text-anchor="middle" font-size="8" font-weight="800" fill="#064e3b">Database &#128081;</text>
+        </svg>
+        <div class="concept-label">The crown jewel — deepest in the chain</div>
+        <div class="concept-sub">Six layers of components stand between the public Internet and the Database. An attacker must breach every one of them to reach it. That is by design.</div>
+      </div>
+      <!-- SLIDE 3: Failure propagation domino -->
+      <div class="concept-slide" id="db-slide-2" style="display:none">
+        <svg viewBox="0 0 340 102" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="50" height="18" rx="4" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="29" y="16" text-anchor="middle" font-size="7" font-weight="700" fill="#991b1b">DB &#128683;</text>
+          <line x1="54" y1="13" x2="70" y2="13" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrDB)"/>
+          <defs><marker id="arrDB" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#dc2626"/></marker></defs>
+          <rect x="70" y="4" width="52" height="18" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+          <text x="96" y="16" text-anchor="middle" font-size="6" fill="#92400e">App Server: no reply</text>
+          <line x1="122" y1="13" x2="136" y2="13" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrDB2)"/>
+          <defs><marker id="arrDB2" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#dc2626"/></marker></defs>
+          <rect x="136" y="4" width="62" height="18" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+          <text x="167" y="16" text-anchor="middle" font-size="6" fill="#92400e">Cannot verify login</text>
+          <line x1="198" y1="13" x2="212" y2="13" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrDB3)"/>
+          <defs><marker id="arrDB3" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#dc2626"/></marker></defs>
+          <rect x="212" y="4" width="56" height="18" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+          <text x="240" y="16" text-anchor="middle" font-size="6" fill="#92400e">Error to Web Server</text>
+          <line x1="268" y1="13" x2="282" y2="13" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrDB4)"/>
+          <defs><marker id="arrDB4" markerWidth="5" markerHeight="5" refX="3" refY="3" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill="#dc2626"/></marker></defs>
+          <rect x="282" y="4" width="52" height="18" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+          <text x="308" y="16" text-anchor="middle" font-size="6" fill="#991b1b">Error to Rahul</text>
+          <!-- Root vs Surface -->
+          <rect x="4" y="40" width="80" height="28" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="44" y="54" text-anchor="middle" font-size="8" font-weight="700" fill="#991b1b">ROOT CAUSE</text>
+          <text x="44" y="63" text-anchor="middle" font-size="7" fill="#7f1d1d">Step 1 — DB offline</text>
+          <rect x="250" y="40" width="84" height="28" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5"/>
+          <text x="292" y="54" text-anchor="middle" font-size="8" font-weight="700" fill="#92400e">VISIBLE FAILURE</text>
+          <text x="292" y="63" text-anchor="middle" font-size="7" fill="#78350f">Step 6 — Rahul sees error</text>
+          <line x1="84" y1="54" x2="248" y2="54" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 2"/>
+          <text x="166" y="50" text-anchor="middle" font-size="7" fill="#64748b">failure travels upward</text>
+          <text x="166" y="76" text-anchor="middle" font-size="8" font-weight="700" fill="#1e40af">One failure. Four components affected. Six steps to the customer.</text>
+        </svg>
+        <div class="concept-label">Failure propagation — one cause, six steps</div>
+        <div class="concept-sub">The Database going offline triggers a cascade through every dependent component. The error Rahul sees is at step 6. The cause is at step 1. Engineers must trace the chain.</div>
+      </div>
+    </div>
+  </div><!-- /zone-row -->
+
+</div><!-- /diagram -->
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar">
+  <div class="sidebar-title">NorthBridge — Lesson 2</div>
+  <div class="step-counter" id="stepCounter">Step 0 of 17</div>
+  <div class="step-info" id="stepInfo">Click <em>Next step</em> to begin the expanded request journey.</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="btn-row">
+    <button class="nav-btn btn-prev" id="btnPrev" onclick="prev()" disabled>◄ Prev</button>
+    <button class="nav-btn btn-next" id="btnNext" onclick="next()">► Next step</button>
+  </div>
+  <button class="btn-reset" onclick="reset()">↺ Reset</button>
+</div>
+
+<script>
+// ── STEP SEQUENCE ─────────────────────────────────────────────────────────────
+// Each step: { type, id, info, attackId? }
+// type: 'zone' | 'label' | 'arrow' | 'attack' | 'status'
+const STEPS = [
+  // 1 — unlock device
+  { type: 'status', info: 'Rahul unlocks the banking app — Customer ID & password ready to send.', statusClass: 'green', statusText: 'Unlocked — credentials ready', attack: 'rahul',
+    scrollTo: 'zone-rahul' },
+  // 2 — internet zone appears
+  { type: 'zone',   id: 'zone-internet', info: 'The Internet — the road between Rahul and the bank.',
+    scrollTo: 'zone-internet' },
+  // 3 — encrypted request leaves device (arrow sits between Rahul and Internet — scroll to Internet bottom)
+  { type: 'arrow',  id: 'arr1', info: "Rahul's encrypted credentials leave his device.", attack: 'internet',
+    scrollTo: 'zone-internet' },
+  // 4 — DMZ label
+  { type: 'label',  id: 'dmz-label', info: 'Entering the DMZ — the web-facing security layer.',
+    scrollTo: 'dmz-label' },
+  // 5 — firewall zone appears
+  { type: 'zone',   id: 'zone-fw', info: 'Firewall — the security checkpoint. Every connection is inspected here.',
+    scrollTo: 'zone-fw' },
+  // 6 — arrow from Internet → Firewall (Firewall already visible — keep it fully in view, scroll to its bottom)
+  { type: 'arrow',  id: 'arr2', info: 'Request arrives at the network boundary — Firewall inspects it.', attack: 'fw',
+    scrollTo: 'zone-fw' },
+  // 7 — load balancer zone appears
+  { type: 'zone',   id: 'zone-lb', info: 'Load Balancer — distributes traffic across multiple Web Servers.',
+    scrollTo: 'zone-lb' },
+  // 8 — arrow from Firewall → Load Balancer
+  { type: 'arrow',  id: 'arr3', info: 'Allowed through — Load Balancer routes the request.', attack: 'lb',
+    scrollTo: 'zone-lb' },
+  // 9 — web server zone appears
+  { type: 'zone',   id: 'zone-web', info: "Web Server — the bank's front door. Receives and routes requests.",
+    scrollTo: 'zone-web' },
+  // 10 — arrow from Load Balancer → Web Server
+  { type: 'arrow',  id: 'arr4', info: 'Request routed from Load Balancer to Web Server.', attack: 'web',
+    scrollTo: 'zone-web' },
+  // 11 — internal network label
+  { type: 'label',  id: 'int-label', info: 'Crossing into the Internal Secure Network.',
+    scrollTo: 'int-label' },
+  // 12 — app server zone appears
+  { type: 'zone',   id: 'zone-app', info: 'Application Server — verifies identity and authorisation.',
+    scrollTo: 'zone-app' },
+  // 13 — arrow from Web Server → App Server
+  { type: 'arrow',  id: 'arr5', info: 'Credentials passed inward for verification.', attack: 'app',
+    scrollTo: 'zone-app' },
+  // 14 — database zone appears
+  { type: 'zone',   id: 'zone-db', info: 'Customer Database — all account records and balances.',
+    scrollTo: 'zone-db' },
+  // 15 — arrow from App Server → Database
+  { type: 'arrow',  id: 'arr6', info: 'Application Server asks Database for balance.', attack: 'db',
+    scrollTo: 'zone-db' },
+  // 16–22 — return journey: arrows are now interleaved between zones in the HTML
+  { type: 'arrow',  id: 'arr7',  info: 'Balance record returned from Database to Application Server.',           scrollTo: 'arr7'  },
+  { type: 'arrow',  id: 'arr8',  info: 'Application Server formats the response — passes it up to Web Server.',  scrollTo: 'arr8'  },
+  { type: 'arrow',  id: 'arr9',  info: 'Web Server seals the response — sending it back toward the customer.',   scrollTo: 'arr9'  },
+  { type: 'arrow',  id: 'arr10', info: 'Response routed back through Load Balancer.',                            scrollTo: 'arr10' },
+  { type: 'arrow',  id: 'arr11', info: 'Response clears Firewall — outbound allowed.',                          scrollTo: 'arr11' },
+  { type: 'arrow',  id: 'arr12', info: 'Encrypted response travels back across the Internet.',                   scrollTo: 'arr12' },
+  { type: 'arrow',  id: 'arr13', info: 'Rahul sees his balance. Round trip complete.',                           scrollTo: 'zone-rahul' },
+];
+
+const TOTAL = STEPS.length;
+let current = 0;
+
+function showEl(id) { document.getElementById(id)?.classList.add('visible'); }
+function hideEl(id) { document.getElementById(id)?.classList.remove('visible'); }
+
+const CONCEPT_BTN_MAP = {
+  fw:'concept-btn-fw', lb:'concept-btn-lb',
+  web:'concept-btn-web', app:'concept-btn-app', db:'concept-btn-db'
+};
+
+function applyStep(idx) {
+  const s = STEPS[idx];
+  if (s.type === 'zone')   showEl(s.id);
+  if (s.type === 'label')  showEl(s.id);
+  if (s.type === 'arrow')  showEl(s.id);
+  if (s.type === 'status') {
+    const sb = document.getElementById('statusBar');
+    sb.textContent = s.statusText;
+    sb.className = 'status-bar ' + (s.statusClass || '');
+    showEl('attack-rahul');
+  }
+  if (s.attack) {
+    showEl('attack-' + s.attack);
+    const cbId = CONCEPT_BTN_MAP[s.attack];
+    if (cbId) { const cb = document.getElementById(cbId); if (cb) cb.classList.add('visible'); }
+  }
+}
+
+function undoStep(idx) {
+  const s = STEPS[idx];
+  if (s.type === 'zone')   hideEl(s.id);
+  if (s.type === 'label')  hideEl(s.id);
+  if (s.type === 'arrow')  hideEl(s.id);
+  if (s.type === 'status') {
+    const sb = document.getElementById('statusBar');
+    sb.textContent = 'App locked — awaiting login';
+    sb.className = 'status-bar';
+    hideEl('attack-rahul');
+  }
+  if (s.attack) {
+    hideEl('attack-' + s.attack);
+    hideEl('info-'   + s.attack);
+    const btn = document.getElementById('attack-' + s.attack);
+    if (btn) btn.classList.remove('clicked');
+    const cbId = CONCEPT_BTN_MAP[s.attack];
+    if (cbId) {
+      const cb = document.getElementById(cbId);
+      if (cb) { cb.classList.remove('visible'); cb.classList.remove('open'); }
+      const block = document.getElementById('concept-' + s.attack);
+      if (block) block.classList.remove('visible');
+    }
+  }
+}
+
+function updateUI() {
+  document.getElementById('stepCounter').textContent = `Step ${current} of ${TOTAL}`;
+  document.getElementById('stepInfo').innerHTML     = current === 0
+    ? 'Click <em>Next step</em> to begin the expanded request journey.'
+    : STEPS[current - 1].info;
+  document.getElementById('progressFill').style.width = (current / TOTAL * 100) + '%';
+  document.getElementById('btnPrev').disabled = current === 0;
+  document.getElementById('btnNext').disabled = current === TOTAL;
+}
+
+function scrollToLatest(s) {
+  const el = document.getElementById(s.scrollTo);
+  if (!el) return;
+
+  // Delay until the CSS transition for the *revealed* element has finished.
+  // The scroll target (s.scrollTo) may be a zone that was revealed this step
+  // or a zone that was already visible — either way we wait for any transition.
+  const revealedType = s.type;
+  const delay = revealedType === 'status' ? 0      // Rahul zone always visible
+              : (revealedType === 'zone' || revealedType === 'label') ? 760
+              : 0; // arrows: scrollTo target is always an already-expanded zone or the arrow itself — no wait needed
+
+  setTimeout(() => {
+    const rect       = el.getBoundingClientRect();
+    const elBottom   = window.scrollY + rect.top + rect.height;
+    const viewH      = window.innerHeight;
+    const padding    = 48; // breathing room below the element
+    const targetY    = elBottom - viewH + padding;
+    window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+  }, delay);
+}
+
+function next() {
+  if (current >= TOTAL) return;
+  const s = STEPS[current];
+  applyStep(current);
+  current++;
+  updateUI();
+  scrollToLatest(s);
+}
+
+function prev() {
+  if (current === 0) return;
+  current--;
+  undoStep(current);
+  updateUI();
+}
+
+function reset() {
+  while (current > 0) { current--; undoStep(current); }
+  document.querySelectorAll('.attack-info').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.attack-btn').forEach(el => el.classList.remove('clicked'));
+  document.querySelectorAll('.concept-block').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.concept-btn').forEach(el => { el.classList.remove('visible'); el.classList.remove('open'); });
+  updateUI();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showAttack(key) {
+  const btn  = document.getElementById('attack-' + key);
+  const info = document.getElementById('info-'   + key);
+  btn.classList.add('clicked');
+  info.classList.add('visible');
+}
+
+updateUI();
+
+// ── CONCEPT PANEL SYSTEM ──────────────────────────────────────────────────────
+const CONCEPT_CONFIG = {
+  fw:  { total: 5, current: 0 },
+  lb:  { total: 4, current: 0 },
+  web: { total: 3, current: 0 },
+  app: { total: 3, current: 0 },
+  db:  { total: 3, current: 0 },
+};
+
+function openConcept(key) {
+  const block = document.getElementById('concept-' + key);
+  const btn   = document.getElementById('concept-btn-' + key);
+  const row   = document.getElementById('row-' + key);
+  const zone  = row ? row.querySelector('.zone') : null;
+  if (!block) return;
+  const isOpen = block.classList.contains('visible');
+  // Match panel width and minimum height to the actual zone card
+  if (!isOpen && zone) {
+    const zoneRect = zone.getBoundingClientRect();
+    block.style.width    = zoneRect.width + 'px';
+    block.style.minHeight = zoneRect.height + 'px';
+  }
+  block.classList.toggle('visible', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  const names = {fw:'Firewall',lb:'Load Balancer',web:'Web Server',app:'Application Server',db:'Customer Database'};
+  btn.textContent = isOpen
+    ? '💡 Concept Panels — ' + names[key] + ' (tap to explore)'
+    : '✖ Close Concept Panel';
+}
+
+function conceptNav(key, dir) {
+  const cfg = CONCEPT_CONFIG[key];
+  const oldSlide = document.getElementById(key + '-slide-' + cfg.current);
+  if (oldSlide) oldSlide.style.display = 'none';
+  cfg.current = Math.max(0, Math.min(cfg.total - 1, cfg.current + dir));
+  const newSlide = document.getElementById(key + '-slide-' + cfg.current);
+  if (newSlide) newSlide.style.display = 'block';
+  document.getElementById(key + '-counter').textContent = (cfg.current + 1) + ' / ' + cfg.total;
+  document.getElementById(key + '-prev').disabled = cfg.current === 0;
+  document.getElementById(key + '-next').disabled = cfg.current === cfg.total - 1;
+}
+
+
+
+</script>
+</body>
+</html>
