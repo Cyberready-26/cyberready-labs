@@ -29,6 +29,8 @@
     --noc-col:   #3b82f6;
     --sre-col:   #10b981;
     --dev-col:   #8b5cf6;
+    --ito-col:   #f97316;
+    --ple-col:   #06b6d4;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,14 +53,17 @@
   .section-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 16px; }
 
   /* TEAM REFERENCE CARDS */
-  .teams-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 28px; }
-  @media (max-width: 600px) { .teams-grid { grid-template-columns: 1fr; } }
+  .teams-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  @media (max-width: 720px) { .teams-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .teams-grid { grid-template-columns: 1fr; } }
 
   .team-card { border-radius: 10px; padding: 18px 20px; border: 2px solid; }
-  .team-card.soc { border-color: rgba(239,68,68,.4);  background: rgba(239,68,68,.07); }
-  .team-card.noc { border-color: rgba(59,130,246,.4); background: rgba(59,130,246,.07); }
-  .team-card.sre { border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.07); }
-  .team-card.dev { border-color: rgba(139,92,246,.4); background: rgba(139,92,246,.07); }
+  .team-card.soc { border-color: rgba(239,68,68,.4);   background: rgba(239,68,68,.07); }
+  .team-card.noc { border-color: rgba(59,130,246,.4);  background: rgba(59,130,246,.07); }
+  .team-card.sre { border-color: rgba(16,185,129,.4);  background: rgba(16,185,129,.07); }
+  .team-card.dev { border-color: rgba(139,92,246,.4);  background: rgba(139,92,246,.07); }
+  .team-card.ito { border-color: rgba(249,115,22,.4);  background: rgba(249,115,22,.07); }
+  .team-card.ple { border-color: rgba(6,182,212,.4);   background: rgba(6,182,212,.07); }
 
   .team-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .team-icon { font-size: 22px; }
@@ -67,6 +72,8 @@
   .team-card.noc .team-name { color: #93c5fd; }
   .team-card.sre .team-name { color: #6ee7b7; }
   .team-card.dev .team-name { color: #c4b5fd; }
+  .team-card.ito .team-name { color: #fdba74; }
+  .team-card.ple .team-name { color: #67e8f9; }
   .team-full { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .06em; }
   .team-desc { font-size: 13px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.5; }
   .team-analogy { font-size: 12.5px; color: var(--muted); font-style: italic; }
@@ -96,25 +103,32 @@
   /* TEAM BUTTONS */
   .team-btns { display: flex; gap: 8px; padding: 12px 22px 18px; flex-wrap: wrap; }
   .team-btn {
-    border: 2px solid; border-radius: 7px; padding: 8px 16px;
-    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    border: 2px solid; border-radius: 7px; padding: 7px 13px;
+    font-family: var(--sans); font-size: 12.5px; font-weight: 600;
     cursor: pointer; transition: all .18s; background: transparent;
-    display: flex; align-items: center; gap: 7px;
+    display: flex; align-items: center; gap: 6px;
   }
-  .team-btn.soc-btn { border-color: rgba(239,68,68,.4);  color: #fca5a5; }
-  .team-btn.noc-btn { border-color: rgba(59,130,246,.4); color: #93c5fd; }
-  .team-btn.sre-btn { border-color: rgba(16,185,129,.4); color: #6ee7b7; }
-  .team-btn.dev-btn { border-color: rgba(139,92,246,.4); color: #c4b5fd; }
+  .team-btn.soc-btn { border-color: rgba(239,68,68,.4);   color: #fca5a5; }
+  .team-btn.noc-btn { border-color: rgba(59,130,246,.4);  color: #93c5fd; }
+  .team-btn.sre-btn { border-color: rgba(16,185,129,.4);  color: #6ee7b7; }
+  .team-btn.dev-btn { border-color: rgba(139,92,246,.4);  color: #c4b5fd; }
+  .team-btn.ito-btn { border-color: rgba(249,115,22,.4);  color: #fdba74; }
+  .team-btn.ple-btn { border-color: rgba(6,182,212,.4);   color: #67e8f9; }
+
   .team-btn.soc-btn:hover:not(:disabled) { background: rgba(239,68,68,.12); }
   .team-btn.noc-btn:hover:not(:disabled) { background: rgba(59,130,246,.12); }
   .team-btn.sre-btn:hover:not(:disabled) { background: rgba(16,185,129,.12); }
   .team-btn.dev-btn:hover:not(:disabled) { background: rgba(139,92,246,.12); }
+  .team-btn.ito-btn:hover:not(:disabled) { background: rgba(249,115,22,.12); }
+  .team-btn.ple-btn:hover:not(:disabled) { background: rgba(6,182,212,.12); }
 
   .team-btn.correct { opacity: 1; }
-  .team-btn.soc-btn.correct { background: rgba(239,68,68,.2);  border-color: var(--soc-col); }
-  .team-btn.noc-btn.correct { background: rgba(59,130,246,.2); border-color: var(--noc-col); }
-  .team-btn.sre-btn.correct { background: rgba(16,185,129,.2); border-color: var(--sre-col); }
-  .team-btn.dev-btn.correct { background: rgba(139,92,246,.2); border-color: var(--dev-col); }
+  .team-btn.soc-btn.correct { background: rgba(239,68,68,.2);   border-color: var(--soc-col); }
+  .team-btn.noc-btn.correct { background: rgba(59,130,246,.2);  border-color: var(--noc-col); }
+  .team-btn.sre-btn.correct { background: rgba(16,185,129,.2);  border-color: var(--sre-col); }
+  .team-btn.dev-btn.correct { background: rgba(139,92,246,.2);  border-color: var(--dev-col); }
+  .team-btn.ito-btn.correct { background: rgba(249,115,22,.2);  border-color: var(--ito-col); }
+  .team-btn.ple-btn.correct { background: rgba(6,182,212,.2);   border-color: var(--ple-col); }
   .team-btn.wrong  { background: rgba(239,68,68,.1); border-color: var(--red) !important; color: #fca5a5 !important; }
   .team-btn:disabled { cursor: default; opacity: .5; }
   .team-btn.correct:disabled { opacity: 1; }
@@ -179,7 +193,7 @@
   .result-icon { font-size: 56px; margin-bottom: 16px; }
   .result-score { font-size: 52px; font-weight: 800; color: #f8fafc; font-family: var(--mono); margin-bottom: 6px; }
   .result-label { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
-  .result-msg { font-size: 16px; max-width: 500px; margin: 0 auto 28px; color: #cbd5e1; line-height: 1.6; }
+  .result-msg { font-size: 16px; max-width: 520px; margin: 0 auto 28px; color: #cbd5e1; line-height: 1.6; }
   .retry-btn { background: transparent; color: var(--accent); border: 2px solid var(--accent); border-radius: 8px; padding: 10px 28px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
   .retry-btn:hover { background: var(--accent); color: #fff; }
 </style>
@@ -196,7 +210,7 @@
   <div class="lab-header">
     <div class="lab-badge">Concept Lab</div>
     <h1 class="lab-title">Match Incidents to Teams</h1>
-    <div class="lab-subtitle">Module 1 — Systems Thinking &amp; Digital Infrastructure &nbsp;|&nbsp; 10 incidents · 5-question quiz</div>
+    <div class="lab-subtitle">Module 1 — Systems Thinking &amp; Digital Infrastructure &nbsp;|&nbsp; 10 incidents · 6 teams · 5-question quiz</div>
   </div>
 
   <div class="story-block">
@@ -205,7 +219,7 @@
 
   <!-- TEAM REFERENCE -->
   <div class="section">
-    <div class="section-title">The Four Teams — Reference Guide</div>
+    <div class="section-title">The Six Teams — Reference Guide</div>
     <div class="teams-grid">
       <div class="team-card soc">
         <div class="team-card-header">
@@ -216,7 +230,7 @@
           </div>
         </div>
         <div class="team-desc">Monitors for threats, attacks, and suspicious activity 24×7. Responds to security incidents — unauthorised access, malware, data exfiltration, policy violations.</div>
-        <div class="team-analogy">🔒 Analogy: Security guards — focused on threats and intrusions</div>
+        <div class="team-analogy">🔒 Security guards — focused on threats and intrusions</div>
       </div>
       <div class="team-card noc">
         <div class="team-card-header">
@@ -227,7 +241,7 @@
           </div>
         </div>
         <div class="team-desc">Monitors and maintains network infrastructure — routers, switches, firewalls, bandwidth, connectivity. Responds to network outages and performance issues.</div>
-        <div class="team-analogy">🏗️ Analogy: Facilities management — keeps the building infrastructure running</div>
+        <div class="team-analogy">🏗️ Road crew — keeps the network pipes flowing</div>
       </div>
       <div class="team-card sre">
         <div class="team-card-header">
@@ -237,8 +251,8 @@
             <div class="team-full">Site Reliability Engineering</div>
           </div>
         </div>
-        <div class="team-desc">Owns service availability, performance, and reliability. Responds when applications crash, degrade, or fail to meet SLA — restoring service as quickly as possible.</div>
-        <div class="team-analogy">🏥 Analogy: Hospital ICU — responds when systems are critically unwell</div>
+        <div class="team-desc">Owns service availability, performance, and reliability. Responds when applications crash, degrade, or fail to meet their SLA — restoring service as quickly as possible.</div>
+        <div class="team-analogy">🏥 Hospital ICU — responds when systems are critically unwell</div>
       </div>
       <div class="team-card dev">
         <div class="team-card-header">
@@ -248,8 +262,30 @@
             <div class="team-full">Development Operations</div>
           </div>
         </div>
-        <div class="team-desc">Owns the deployment pipeline and application code releases. Responds to deployment failures, build errors, and code-level application bugs introduced by a release.</div>
-        <div class="team-analogy">🚀 Analogy: Construction crew — builds and deploys new systems</div>
+        <div class="team-desc">Owns the deployment pipeline and application code releases. Responds to deployment failures, build errors, and code-level bugs introduced by a specific release.</div>
+        <div class="team-analogy">🚀 Construction crew — builds and deploys new systems</div>
+      </div>
+      <div class="team-card ito">
+        <div class="team-card-header">
+          <div class="team-icon">🟠</div>
+          <div>
+            <div class="team-name">IT Operations</div>
+            <div class="team-full">IT Operations</div>
+          </div>
+        </div>
+        <div class="team-desc">Manages physical and virtual infrastructure — server hardware, data centre racks, cabling, power systems, OS patching, and hardware provisioning. Hands-on physical layer work.</div>
+        <div class="team-analogy">🔧 Facilities crew — maintains the physical technology floor</div>
+      </div>
+      <div class="team-card ple">
+        <div class="team-card-header">
+          <div class="team-icon">☁️</div>
+          <div>
+            <div class="team-name">Platform Eng</div>
+            <div class="team-full">Platform Engineering</div>
+          </div>
+        </div>
+        <div class="team-desc">Provides cloud environment, container platforms, network segmentation, and infrastructure-as-code foundations. Every other team builds on the platform they design and maintain.</div>
+        <div class="team-analogy">🌆 City planners — design the infrastructure everyone else builds on</div>
       </div>
     </div>
   </div>
@@ -261,7 +297,7 @@
     <div class="progress-pct" id="progressPct">0 / 10</div>
   </div>
 
-  <div class="tip"><div class="tip-icon">💡</div><div>Read each incident carefully. Click the team button that should respond. You will see immediate feedback explaining why. All 10 must be answered before the quiz unlocks.</div></div>
+  <div class="tip"><div class="tip-icon">💡</div><div>Read each incident carefully. Click the team that should respond. You will see immediate feedback explaining why. All 10 must be answered before the quiz unlocks.</div></div>
 
   <!-- INCIDENTS -->
   <div class="incidents-wrap" id="incidentsWrap">
@@ -285,6 +321,7 @@
       <div class="quiz-counter" id="quizCounter">Question 1 of 5</div>
     </div>
 
+    <!-- Q1 -->
     <div class="question-block show" id="q1">
       <div class="question-text">1. What is the primary difference between the SOC and the NOC?</div>
       <div class="options-list">
@@ -297,6 +334,7 @@
       <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt1" onclick="nextQ(2)" disabled>Next →</button></div>
     </div>
 
+    <!-- Q2 -->
     <div class="question-block" id="q2">
       <div class="question-text">2. An engineer notices that a NorthBridge application has been responding slowly for 20 minutes and is approaching its SLA breach threshold. Which team owns this incident?</div>
       <div class="options-list">
@@ -309,30 +347,33 @@
       <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt2" onclick="nextQ(3)" disabled>Next →</button></div>
     </div>
 
+    <!-- Q3 -->
     <div class="question-block" id="q3">
-      <div class="question-text">3. Why do technology organisations have separate teams for SOC, NOC, SRE, and DevOps — rather than one team that handles everything?</div>
+      <div class="question-text">3. NorthBridge needs to install a new physical server — rack it, run the cables, connect it to the network switch, and load a base operating system. Once complete, the SRE team will deploy an application onto it. Which team performs this provisioning work?</div>
       <div class="options-list">
-        <button class="option-btn" onclick="answer(3,'A')"><span class="option-letter">A</span>Because regulations require separate teams for compliance purposes</button>
-        <button class="option-btn" onclick="answer(3,'B')"><span class="option-letter">B</span>Because each domain requires specialised skills, tools, and focus — a single team would be overwhelmed and less effective at each</button>
-        <button class="option-btn" onclick="answer(3,'C')"><span class="option-letter">C</span>Because one team cannot work 24×7 without shift coverage</button>
-        <button class="option-btn" onclick="answer(3,'D')"><span class="option-letter">D</span>Because separate teams reduce the cost of salaries</button>
+        <button class="option-btn" onclick="answer(3,'A')"><span class="option-letter">A</span>SRE — the SRE team sets up the servers their applications run on</button>
+        <button class="option-btn" onclick="answer(3,'B')"><span class="option-letter">B</span>NOC — connecting new hardware to network switches is a NOC responsibility</button>
+        <button class="option-btn" onclick="answer(3,'C')"><span class="option-letter">C</span>Platform Engineering — cloud infrastructure provisioning is their domain</button>
+        <button class="option-btn" onclick="answer(3,'D')"><span class="option-letter">D</span>IT Operations — physical server racking, cabling, and base configuration is their responsibility</button>
       </div>
       <div class="feedback-box" id="fb3"></div>
       <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt3" onclick="nextQ(4)" disabled>Next →</button></div>
     </div>
 
+    <!-- Q4 -->
     <div class="question-block" id="q4">
       <div class="question-text">4. A deployment of new banking software fails halfway through — some servers have the new version, some have the old version, and transactions are behaving inconsistently. Which team responds first?</div>
       <div class="options-list">
         <button class="option-btn" onclick="answer(4,'A')"><span class="option-letter">A</span>NOC — network configuration needs to be checked first</button>
         <button class="option-btn" onclick="answer(4,'B')"><span class="option-letter">B</span>SOC — inconsistent behaviour could indicate a breach</button>
         <button class="option-btn" onclick="answer(4,'C')"><span class="option-letter">C</span>DevOps — the deployment pipeline owns releases and must roll back or fix the failed deployment</button>
-        <button class="option-btn" onclick="answer(4,'D')"><span class="option-letter">D</span>SRE — service reliability has been affected</button>
+        <button class="option-btn" onclick="answer(4,'D')"><span class="option-letter">D</span>IT Operations — the physical servers hosting the new version need to be inspected</button>
       </div>
       <div class="feedback-box" id="fb4"></div>
       <div class="quiz-nav"><div></div><button class="next-q-btn" id="nxt4" onclick="nextQ(5)" disabled>Next →</button></div>
     </div>
 
+    <!-- Q5 -->
     <div class="question-block" id="q5">
       <div class="question-text">5. Multiple NorthBridge customers report that their account details have appeared on an external website. Which team leads the response to this incident?</div>
       <div class="options-list">
@@ -365,17 +406,17 @@ const incidents = [
     answer: 'SOC',
     feedback: {
       correct: '✓ Correct — SOC. This is a security event: a potential brute-force attack or credential stuffing attempt from an unknown external IP. The SOC monitors for exactly this type of threat and will investigate, potentially block the IP, and determine if any accounts were compromised.',
-      wrong: 'This is a security incident — suspicious login activity from an unknown external source. The SOC monitors for threats and intrusions 24×7 and owns this response. Network, reliability, and deployment teams are not equipped to handle threat investigation.'
+      wrong: 'This is a security incident — suspicious login activity from an unknown external source. The SOC monitors for threats and intrusions 24×7 and owns this response. Network, reliability, physical, and deployment teams are not equipped to handle threat investigation.'
     }
   },
   {
     id: 2,
-    title: 'Core network switch failure in the Mumbai data centre',
-    detail: 'A core switch has gone offline. Approximately 30% of internal server-to-server traffic is being rerouted through backup paths, causing latency increases across multiple services.',
-    answer: 'NOC',
+    title: 'Data centre — power distribution unit failure in Server Rack B-04',
+    detail: 'A power distribution unit (PDU) in Server Rack B-04 has failed. Three production servers are now running on UPS battery backup with approximately 40 minutes remaining. Physical hardware replacement is required before the servers shut down.',
+    answer: 'ITOps',
     feedback: {
-      correct: '✓ Correct — NOC. A physical network switch failure is infrastructure — the NOC owns all network hardware, routing, and connectivity. They will diagnose the switch failure, activate redundancy, and restore normal routing.',
-      wrong: 'A network switch failure is infrastructure — it belongs to the NOC, whose responsibility is network availability and performance. This is not a security incident, application failure, or deployment issue.'
+      correct: '✓ Correct — IT Operations. A power distribution unit failure in the data centre is a physical hardware incident. IT Operations owns all physical infrastructure — server racks, cabling, and power systems. They will replace the PDU and restore mains power to the affected servers before the UPS runs out.',
+      wrong: 'A PDU failure in a server rack is a physical data centre hardware incident. IT Operations manages everything in the physical layer — hardware, racks, power systems, and cabling. The NOC handles network devices; SRE handles application-level reliability. This is a hands-on physical task that belongs to IT Operations.'
     }
   },
   {
@@ -400,12 +441,12 @@ const incidents = [
   },
   {
     id: 5,
-    title: 'Internet firewall — bandwidth utilisation at 94%',
-    detail: 'The internet-facing firewall is reporting 94% bandwidth utilisation. Normal baseline is 40-60%. No specific security alerts have been triggered. Customer traffic appears to be flowing normally.',
-    answer: 'NOC',
+    title: 'Cloud container platform — pods failing to schedule across three services',
+    detail: 'The NorthBridge Kubernetes cluster is rejecting new pod scheduling requests. Error logs show "Insufficient CPU: 0/12 nodes available". The payment-service, auth-service, and api-gateway cannot scale under current load. Node resource quotas have not been reviewed in six months.',
+    answer: 'PlatEng',
     feedback: {
-      correct: '✓ Correct — NOC. High bandwidth utilisation on a network device is a network infrastructure concern — the NOC monitors network capacity and performance. They will investigate the cause (could be legitimate traffic spike, backup jobs, or a misconfiguration) and take action to prevent a saturation event.',
-      wrong: 'Bandwidth utilisation on a network device is a network infrastructure metric — the NOC monitors and manages this. No security alert was triggered, no application has failed, and no deployment is involved.'
+      correct: '✓ Correct — Platform Engineering. Container platform configuration — including Kubernetes node capacity, resource quotas, and cluster scaling policies — is owned by Platform Engineering. They design and maintain the cloud infrastructure foundation that all NorthBridge services run on. They will audit the cluster resource configuration and scale out additional nodes.',
+      wrong: 'This is a cloud container platform incident. Platform Engineering owns the cloud environment, container platforms, and infrastructure resource configuration. When the underlying platform that applications run on is under-resourced or misconfigured, Platform Engineering responds — not the SRE team (which owns application-level SLA metrics) or the NOC (which handles network devices).'
     }
   },
   {
@@ -415,17 +456,17 @@ const incidents = [
     answer: 'SOC',
     feedback: {
       correct: '✓ Correct — SOC. A malware detection on an employee endpoint is a security incident. The SOC owns endpoint security events, malware response, and threat investigation. They will conduct forensic analysis of the laptop, determine the scope of the compromise, and ensure no lateral movement occurred.',
-      wrong: 'Malware on an employee endpoint is a security incident — the SOC responds. The SOC owns threat detection, investigation, and containment. Network isolation has already been done automatically; now forensic investigation is needed.'
+      wrong: 'Malware on an employee endpoint is a security incident — the SOC responds. The SOC owns threat detection, investigation, and containment. Network isolation has already been done automatically; now forensic investigation is needed — that is the SOC\'s domain.'
     }
   },
   {
     id: 7,
-    title: 'Database response time has degraded — queries taking 8x longer than normal',
+    title: 'Database response time has degraded — queries taking 8× longer than normal',
     detail: 'The primary database cluster is responding to queries in 800ms on average, compared to the normal 100ms. No deployment has been made. The database CPU is at 78% and memory at 91%.',
     answer: 'SRE',
     feedback: {
       correct: '✓ Correct — SRE. Database performance degradation is a service reliability issue — SRE owns the reliability of all infrastructure components including databases. They will investigate the root cause (possible memory pressure, a runaway query, or a locking issue) and restore normal performance.',
-      wrong: 'Database performance degradation is a service reliability incident — SRE owns this. It is not a security event (no threat indicators), not a network issue, and no deployment was made. SRE will investigate the database resource usage and restore normal response times.'
+      wrong: 'Database performance degradation is a service reliability incident — SRE owns this. It is not a security event (no threat indicators), not a network issue, not a hardware failure, and no deployment was made. SRE will investigate the database resource usage and restore normal response times.'
     }
   },
   {
@@ -460,13 +501,48 @@ const incidents = [
   }
 ];
 
-const correct = { 1:'B', 2:'C', 3:'B', 4:'C', 5:'D' };
-const feedbacks = {
-  1: { B: '✓ Correct. SOC = security threats and intrusions. NOC = network infrastructure availability. These are distinct specialisations requiring different skills, tools, and focus.', wrong: 'Not quite. The SOC is the Security Operations Centre — it monitors and responds to threats, attacks, and intrusions. The NOC is the Network Operations Centre — it keeps network infrastructure running and available.' },
-  2: { C: '✓ Correct. SRE owns service reliability and SLA compliance. An application approaching its SLA breach threshold is exactly the type of incident SRE responds to, regardless of the underlying cause.', wrong: 'Not quite. SRE owns service availability and SLA compliance. When an application is degrading and approaching an SLA threshold, SRE responds — they own reliability metrics across all services.' },
-  3: { B: '✓ Correct. Each domain — security, network, reliability, deployment — requires deep specialisation. A team that tries to cover all four would be spread too thin and less effective in each area.', wrong: 'Not quite. The reason for separate teams is specialisation. Each domain requires different skills, tools, and mindsets. A network engineer and a malware analyst need fundamentally different training and toolsets.' },
-  4: { C: '✓ Correct. DevOps owns the deployment pipeline and release process. A failed deployment with a mixed-version environment is their direct responsibility — they will roll back and fix the pipeline.', wrong: 'Not quite. A failed deployment is owned by DevOps — they own the release process and are responsible for rollbacks when deployments fail. While SRE may be involved in restoring service, the root cause owner is DevOps.' },
-  5: { D: '✓ Correct. A data breach — customer data appearing externally — is a critical security incident. The SOC leads the response: threat investigation, containment, forensics, and regulatory notification.', wrong: 'Not quite. Customer data appearing on an external website is a data breach — a security incident of the highest severity. The SOC leads all security incident responses including breaches, exfiltration, and unauthorised disclosures.' }
+const quizCorrect = { 1:'B', 2:'C', 3:'D', 4:'C', 5:'D' };
+const quizFeedbacks = {
+  1: {
+    B: '✓ Correct. SOC = security threats and intrusions. NOC = network infrastructure availability. These are distinct specialisations requiring different skills, tools, and focus.',
+    wrong: 'Not quite. The SOC is the Security Operations Centre — it monitors and responds to threats, attacks, and intrusions. The NOC is the Network Operations Centre — it keeps network infrastructure running and available. They are completely separate domains.'
+  },
+  2: {
+    C: '✓ Correct. SRE owns service reliability and SLA compliance. An application approaching its SLA breach threshold is exactly the type of incident SRE responds to, regardless of the underlying cause.',
+    wrong: 'Not quite. SRE owns service availability and SLA compliance. When an application is degrading and approaching an SLA threshold, SRE responds — they own reliability metrics across all services.'
+  },
+  3: {
+    D: '✓ Correct. IT Operations handles all physical provisioning — installing servers into racks, running cables, connecting to network switches, and loading base operating systems. Once IT Operations hands over a provisioned server, other teams build their layers on top.',
+    wrong: 'Not quite. Physical server provisioning — racking, cabling, and base OS installation — belongs to IT Operations. They manage the physical data centre layer. Platform Engineering handles cloud infrastructure; the NOC handles network device management; SRE handles application performance. IT Operations is the team that physically handles hardware.'
+  },
+  4: {
+    C: '✓ Correct. DevOps owns the deployment pipeline and release process. A failed deployment with a mixed-version environment is their direct responsibility — they will roll back and fix the pipeline.',
+    wrong: 'Not quite. A failed deployment is owned by DevOps — they own the release process and are responsible for rollbacks when deployments fail. While SRE may be involved in restoring service, the root cause owner is DevOps.'
+  },
+  5: {
+    D: '✓ Correct. A data breach — customer data appearing externally — is a critical security incident. The SOC leads the response: threat investigation, containment, forensics, and regulatory notification.',
+    wrong: 'Not quite. Customer data appearing on an external website is a data breach — a security incident of the highest severity. The SOC leads all security incident responses including breaches, exfiltration, and unauthorised disclosures.'
+  }
+};
+
+/* map answer values to button CSS classes for correct highlighting */
+const teamBtnClass = {
+  'SOC':     'soc-btn',
+  'NOC':     'noc-btn',
+  'SRE':     'sre-btn',
+  'DevOps':  'dev-btn',
+  'ITOps':   'ito-btn',
+  'PlatEng': 'ple-btn'
+};
+
+/* map answer values to display labels on buttons */
+const teamLabel = {
+  'SOC':     '🔴 SOC',
+  'NOC':     '🔵 NOC',
+  'SRE':     '🟢 SRE',
+  'DevOps':  '🟣 DevOps',
+  'ITOps':   '🟠 IT Ops',
+  'PlatEng': '☁️ Platform Eng'
 };
 
 let answered = {};
@@ -488,6 +564,8 @@ function buildIncidents() {
         <button class="team-btn noc-btn" onclick="matchTeam(${inc.id},'NOC')">🔵 NOC</button>
         <button class="team-btn sre-btn" onclick="matchTeam(${inc.id},'SRE')">🟢 SRE</button>
         <button class="team-btn dev-btn" onclick="matchTeam(${inc.id},'DevOps')">🟣 DevOps</button>
+        <button class="team-btn ito-btn" onclick="matchTeam(${inc.id},'ITOps')">🟠 IT Ops</button>
+        <button class="team-btn ple-btn" onclick="matchTeam(${inc.id},'PlatEng')">☁️ Platform Eng</button>
       </div>
       <div class="incident-feedback" id="ifb-${inc.id}"></div>
     </div>
@@ -504,8 +582,10 @@ function matchTeam(id, team) {
   const btns = document.querySelectorAll(`#btns-${id} .team-btn`);
   btns.forEach(b => {
     b.disabled = true;
-    if (b.textContent.includes(inc.answer)) b.classList.add('correct');
-    if (b.textContent.includes(team) && !isCorrect) b.classList.add('wrong');
+    /* highlight the correct button */
+    if (b.classList.contains(teamBtnClass[inc.answer])) b.classList.add('correct');
+    /* mark the wrong choice if different from correct */
+    if (b.classList.contains(teamBtnClass[team]) && !isCorrect) b.classList.add('wrong');
   });
 
   const fb = document.getElementById('ifb-' + id);
@@ -515,7 +595,6 @@ function matchTeam(id, team) {
   document.getElementById('ic-' + id).classList.add('answered');
 
   updateProgress();
-
   if (Object.keys(answered).length === 10) showScoreboard();
 }
 
@@ -549,13 +628,13 @@ function answer(q, opt) {
   btns.forEach(b => {
     b.disabled = true;
     const letter = b.querySelector('.option-letter').textContent;
-    if (letter === correct[q]) b.classList.add('correct');
-    if (letter === opt && opt !== correct[q]) b.classList.add('wrong');
+    if (letter === quizCorrect[q]) b.classList.add('correct');
+    if (letter === opt && opt !== quizCorrect[q]) b.classList.add('wrong');
   });
-  const isRight = opt === correct[q];
+  const isRight = opt === quizCorrect[q];
   quizScores[q] = isRight ? 1 : 0;
   const fb = document.getElementById('fb' + q);
-  fb.textContent = isRight ? feedbacks[q][opt] : feedbacks[q].wrong;
+  fb.textContent = isRight ? quizFeedbacks[q][opt] : quizFeedbacks[q].wrong;
   fb.className = 'feedback-box show ' + (isRight ? 'correct-fb' : 'wrong-fb');
   document.getElementById('nxt' + q).disabled = false;
 }
@@ -575,11 +654,14 @@ function showResult() {
   document.getElementById('resultScore').textContent = `${total} / 5`;
   let icon, msg;
   if (total === 5) {
-    icon = '🏆'; msg = 'Perfect score. You understand which team owns which type of incident and why. You are ready for Lesson 11.';
+    icon = '🏆';
+    msg = 'Perfect score. You can identify which of the six teams owns which type of incident and why. You are ready for Lesson 6.';
   } else if (total >= 3) {
-    icon = '✅'; msg = 'Good work. You have the main distinctions. Review the questions you missed and move on to Lesson 11.';
+    icon = '✅';
+    msg = 'Good work. You have the main distinctions across the six teams. Review the questions you missed — then move on to Lesson 6.';
   } else {
-    icon = '📖'; msg = 'Revisit the team reference guide at the top of this lab. Focus on the key distinction: SOC = security threats, NOC = network infrastructure, SRE = service reliability, DevOps = deployments and code.';
+    icon = '📖';
+    msg = 'Revisit the team reference guide at the top of this lab. Focus on the key distinctions: SOC = security threats, NOC = network infrastructure, SRE = service reliability, DevOps = deployments and code, IT Operations = physical hardware, Platform Engineering = cloud foundations.';
   }
   document.getElementById('resultIcon').textContent = icon;
   document.getElementById('resultMsg').textContent = msg;
@@ -592,7 +674,10 @@ function retryQuiz() {
     document.getElementById('fb' + i).className = 'feedback-box';
     document.getElementById('fb' + i).textContent = '';
     document.getElementById('nxt' + i).disabled = true;
-    document.querySelectorAll(`#q${i} .option-btn`).forEach(b => { b.disabled = false; b.classList.remove('correct','wrong'); });
+    document.querySelectorAll(`#q${i} .option-btn`).forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct','wrong');
+    });
   }
   document.getElementById('q1').classList.add('show');
   for (let i = 2; i <= 5; i++) document.getElementById('q'+i).classList.remove('show');
